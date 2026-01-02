@@ -3,115 +3,114 @@
     <picture>
       <source srcset="packages/console/app/src/asset/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
       <source srcset="packages/console/app/src/asset/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
-      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenCode logo">
+      <img src="packages/console/app/src/asset/logo-ornate-light.svg" alt="OpenCode 标志">
     </picture>
   </a>
 </p>
-<p align="center">The open source AI coding agent.</p>
+<p align="center">开源AI编码智能体。</p>
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
-  <a href="https://github.com/sst/opencode/actions/workflows/publish.yml"><img alt="Build status" src="https://img.shields.io/github/actions/workflow/status/sst/opencode/publish.yml?style=flat-square&branch=dev" /></a>
+  <a href="https://github.com/sst/opencode/actions/workflows/publish.yml"><img alt="构建状态" src="https://img.shields.io/github/actions/workflow/status/sst/opencode/publish.yml?style=flat-square&branch=dev" /></a>
 </p>
 
-[![OpenCode Terminal UI](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
+[![OpenCode 终端界面](packages/web/src/assets/lander/screenshot.png)](https://opencode.ai)
 
 ---
 
-### Installation
+### 安装
 
 ```bash
-# YOLO
+# YOLO 快速安装
 curl -fsSL https://opencode.ai/install | bash
 
-# Package managers
-npm i -g opencode-ai@latest        # or bun/pnpm/yarn
+# 包管理器安装
+npm i -g opencode-ai@latest        # 或使用 bun/pnpm/yarn
 scoop bucket add extras; scoop install extras/opencode  # Windows
 choco install opencode             # Windows
-brew install opencode              # macOS and Linux
+brew install opencode              # macOS 和 Linux
 paru -S opencode-bin               # Arch Linux
-mise use -g opencode               # Any OS
-nix run nixpkgs#opencode           # or github:sst/opencode for latest dev branch
+mise use -g opencode               # 任何操作系统
+nix run nixpkgs#opencode           # 或使用 github:sst/opencode 获取最新开发分支
 ```
 
 > [!TIP]
-> Remove versions older than 0.1.x before installing.
+> 安装前请移除 0.1.x 之前的旧版本。
 
-### Desktop App (BETA)
+### 桌面应用 (BETA)
 
-OpenCode is also available as a desktop application. Download directly from the [releases page](https://github.com/sst/opencode/releases) or [opencode.ai/download](https://opencode.ai/download).
+OpenCode 也提供桌面应用版本。可直接从 [发布页面](https://github.com/sst/opencode/releases) 或 [opencode.ai/download](https://opencode.ai/download) 下载。
 
-| Platform              | Download                              |
+| 平台                  | 下载文件                              |
 | --------------------- | ------------------------------------- |
 | macOS (Apple Silicon) | `opencode-desktop-darwin-aarch64.dmg` |
 | macOS (Intel)         | `opencode-desktop-darwin-x64.dmg`     |
 | Windows               | `opencode-desktop-windows-x64.exe`    |
-| Linux                 | `.deb`, `.rpm`, or AppImage           |
+| Linux                 | `.deb`, `.rpm`, 或 AppImage           |
 
 ```bash
 # macOS (Homebrew)
 brew install --cask opencode-desktop
 ```
 
-#### Installation Directory
+#### 安装目录
 
-The install script respects the following priority order for the installation path:
+安装脚本会按照以下优先级顺序选择安装路径：
 
-1. `$OPENCODE_INSTALL_DIR` - Custom installation directory
-2. `$XDG_BIN_DIR` - XDG Base Directory Specification compliant path
-3. `$HOME/bin` - Standard user binary directory (if exists or can be created)
-4. `$HOME/.opencode/bin` - Default fallback
+1. `$OPENCODE_INSTALL_DIR` - 自定义安装目录
+2. `$XDG_BIN_DIR` - 符合XDG基本目录规范的路径
+3. `$HOME/bin` - 标准用户二进制目录（如果存在或可创建）
+4. `$HOME/.opencode/bin` - 默认回退路径
 
 ```bash
-# Examples
+# 示例
 OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash
 XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
 ```
 
-### Agents
+### 智能体（Agents）
 
-OpenCode includes two built-in agents you can switch between,
-you can switch between these using the `Tab` key.
+OpenCode 包含两个可切换的内置智能体，您可以使用 `Tab` 键在它们之间切换。
 
-- **build** - Default, full access agent for development work
-- **plan** - Read-only agent for analysis and code exploration
-  - Denies file edits by default
-  - Asks permission before running bash commands
-  - Ideal for exploring unfamiliar codebases or planning changes
+- **build** - 默认智能体，具有完整访问权限，适用于开发工作
+- **plan** - 只读智能体，用于分析和代码探索
+  - 默认拒绝文件编辑
+  - 执行 bash 命令前会请求权限
+  - 非常适合探索不熟悉的代码库或规划更改
 
-Also, included is a **general** subagent for complex searches and multistep tasks.
-This is used internally and can be invoked using `@general` in messages.
+此外，还包含一个 **general** 子智能体，用于复杂搜索和多步骤任务。
+它在内部使用，您可以在消息中使用 `@general` 调用它。
 
-Learn more about [agents](https://opencode.ai/docs/agents).
+了解更多关于 [智能体](https://opencode.ai/docs/agents) 的信息。
 
-### Documentation
+### 文档
 
-For more info on how to configure OpenCode [**head over to our docs**](https://opencode.ai/docs).
+要了解更多关于如何配置OpenCode的信息，请[**查看我们的文档**](https://opencode.ai/docs)。
 
-### Contributing
+### 贡献
 
-If you're interested in contributing to OpenCode, please read our [contributing docs](./CONTRIBUTING.md) before submitting a pull request.
+如果您有兴趣为OpenCode做贡献，请在提交拉取请求前阅读我们的[贡献文档](./CONTRIBUTING.md)。
 
-### Building on OpenCode
+### 基于OpenCode构建
 
-If you are working on a project that's related to OpenCode and is using "opencode" as a part of its name; for example, "opencode-dashboard" or "opencode-mobile", please add a note to your README to clarify that it is not built by the OpenCode team and is not affiliated with us in any way.
+如果您正在开发与OpenCode相关的项目，并在项目名称中使用了'opencode'（例如'opencode-dashboard'或'opencode-mobile'），请在您的README中添加说明，澄清该项目并非由OpenCode团队构建，也与我们没有任何关联。
 
-### FAQ
+### 常见问题（FAQ）
 
-#### How is this different from Claude Code?
+#### 这与Claude Code有什么不同？
 
-It's very similar to Claude Code in terms of capability. Here are the key differences:
+在功能方面，它与Claude Code非常相似。以下是主要区别：
 
-- 100% open source
-- Not coupled to any provider. Although we recommend the models we provide through [OpenCode Zen](https://opencode.ai/zen); OpenCode can be used with Claude, OpenAI, Google or even local models. As models evolve the gaps between them will close and pricing will drop so being provider-agnostic is important.
-- Out of the box LSP support
-- A focus on TUI. OpenCode is built by neovim users and the creators of [terminal.shop](https://terminal.shop); we are going to push the limits of what's possible in the terminal.
-- A client/server architecture. This for example can allow OpenCode to run on your computer, while you can drive it remotely from a mobile app. Meaning that the TUI frontend is just one of the possible clients.
+- 100%开源
+- 不依赖于任何提供商。虽然我们推荐通过[OpenCode Zen](https://opencode.ai/zen)提供的模型，但OpenCode可以与Claude、OpenAI、Google甚至本地模型一起使用。随着模型的发展，它们之间的差距将缩小，价格也会下降，因此不绑定特定提供商非常重要。
+- 开箱即用的LSP（语言服务器协议）支持
+- 专注于TUI（终端用户界面）。OpenCode由neovim用户和[terminal.shop](https://terminal.shop)的创建者构建；我们将突破终端中可能实现的极限。
+- 客户端/服务器架构。例如，这可以让OpenCode在您的计算机上运行，而您可以通过移动应用远程控制它。这意味着TUI前端只是可能的客户端之一。
 
-#### What's the other repo?
+#### 另一个仓库是什么？
 
-The other confusingly named repo has no relation to this one. You can [read the story behind it here](https://x.com/thdxr/status/1933561254481666466).
+另一个名称相似的仓库与本项目没有任何关系。您可以[在这里阅读背后的故事](https://x.com/thdxr/status/1933561254481666466)。
 
 ---
 
-**Join our community** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
+**加入我们的社区** [Discord](https://discord.gg/opencode) | [X.com](https://x.com/opencode)
