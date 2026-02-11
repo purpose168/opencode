@@ -45,8 +45,13 @@ export function createSimpleContext<T, Props extends Record<string, any>>(input:
       // 1. 如果 init 是对象且包含 ready 属性，则根据 ready 决定是否提供上下文
       // 2. 如果 init 不包含 ready 属性或 ready 为 true，则正常提供上下文
 
+      // 类型守卫：检查对象是否有 ready 属性
+      const hasReadyProperty = (obj: any): obj is { ready: boolean } => {
+        return obj && typeof obj === 'object' && 'ready' in obj
+      }
+
       return (
-        <Show when={init.ready === undefined || init.ready === true}>
+        <Show when={!hasReadyProperty(init) || init.ready === true}>
           <ctx.Provider value={init}>{props.children}</ctx.Provider>
         </Show>
       )
