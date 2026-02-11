@@ -1,105 +1,105 @@
-import path from "path"  // 导入路径模块
-import os from "os"  // 导入操作系统模块
-import fs from "fs/promises"  // 导入文件系统 Promise 模块
-import z from "zod"  // 导入 Zod 数据验证库
-import { Identifier } from "../id/id"  // 导入标识符工具
-import { MessageV2 } from "./message-v2"  // 导入消息 V2 模块
-import { Log } from "../util/log"  // 导入日志工具
-import { SessionRevert } from "./revert"  // 导入会话回滚模块
-import { Session } from "."  // 导入会话模块
-import { Agent } from "../agent/agent"  // 导入智能体模块
-import { Provider } from "../provider/provider"  // 导入提供商模块
-import { type Tool as AITool, tool, jsonSchema, type ToolCallOptions } from "ai"  // 导入 AI 工具类型
-import { SessionCompaction } from "./compaction"  // 导入会话压缩模块
-import { Instance } from "../project/instance"  // 导入项目实例模块
-import { Bus } from "../bus"  // 导入总线模块
-import { ProviderTransform } from "../provider/transform"  // 导入提供商转换模块
-import { SystemPrompt } from "./system"  // 导入系统提示词模块
-import { Plugin } from "../plugin"  // 导入插件模块
-import PROMPT_PLAN from "../session/prompt/plan.txt"  // 导入计划提示词
-import BUILD_SWITCH from "../session/prompt/build-switch.txt"  // 导入构建切换提示词
-import MAX_STEPS from "../session/prompt/max-steps.txt"  // 导入最大步骤提示词
-import { defer } from "../util/defer"  // 导入延迟执行工具
-import { clone } from "remeda"  // 导入克隆工具
-import { ToolRegistry } from "../tool/registry"  // 导入工具注册表
-import { MCP } from "../mcp"  // 导入 MCP 模块
-import { LSP } from "../lsp"  // 导入 LSP 模块
-import { ReadTool } from "../tool/read"  // 导入读取工具
-import { ListTool } from "../tool/ls"  // 导入列表工具
-import { FileTime } from "../file/time"  // 导入文件时间模块
-import { Flag } from "../flag/flag"  // 导入标志模块
-import { ulid } from "ulid"  // 导入 ULID 生成器
-import { spawn } from "child_process"  // 导入子进程模块
-import { Command } from "../command"  // 导入命令模块
-import { $, fileURLToPath } from "bun"  // 导入 Bun 工具
-import { ConfigMarkdown } from "../config/markdown"  // 导入 Markdown 配置模块
-import { SessionSummary } from "./summary"  // 导入会话摘要模块
-import { NamedError } from "@opencode-ai/util/error"  // 导入命名错误类
-import { fn } from "@/util/fn"  // 导入函数工具
-import { SessionProcessor } from "./processor"  // 导入会话处理器模块
-import { TaskTool } from "@/tool/task"  // 导入任务工具
-import { Tool } from "@/tool/tool"  // 导入工具模块
-import { PermissionNext } from "@/permission/next"  // 导入权限模块
-import { SessionStatus } from "./status"  // 导入会话状态模块
-import { LLM } from "./llm"  // 导入 LLM 模块
-import { iife } from "@/util/iife"  // 导入立即执行函数工具
-import { Shell } from "@/shell/shell"  // 导入 Shell 模块
+import path from "path"
+import os from "os"
+import fs from "fs/promises"
+import z from "zod"
+import { Identifier } from "../id/id"
+import { MessageV2 } from "./message-v2"
+import { Log } from "../util/log"
+import { SessionRevert } from "./revert"
+import { Session } from "."
+import { Agent } from "../agent/agent"
+import { Provider } from "../provider/provider"
+import { type Tool as AITool, tool, jsonSchema, type ToolCallOptions } from "ai"
+import { SessionCompaction } from "./compaction"
+import { Instance } from "../project/instance"
+import { Bus } from "../bus"
+import { ProviderTransform } from "../provider/transform"
+import { SystemPrompt } from "./system"
+import { Plugin } from "../plugin"
+import PROMPT_PLAN from "../session/prompt/plan.txt"
+import BUILD_SWITCH from "../session/prompt/build-switch.txt"
+import MAX_STEPS from "../session/prompt/max-steps.txt"
+import { defer } from "../util/defer"
+import { clone } from "remeda"
+import { ToolRegistry } from "../tool/registry"
+import { MCP } from "../mcp"
+import { LSP } from "../lsp"
+import { ReadTool } from "../tool/read"
+import { ListTool } from "../tool/ls"
+import { FileTime } from "../file/time"
+import { Flag } from "../flag/flag"
+import { ulid } from "ulid"
+import { spawn } from "child_process"
+import { Command } from "../command"
+import { $, fileURLToPath } from "bun"
+import { ConfigMarkdown } from "../config/markdown"
+import { SessionSummary } from "./summary"
+import { NamedError } from "@opencode-ai/util/error"
+import { fn } from "@/util/fn"
+import { SessionProcessor } from "./processor"
+import { TaskTool } from "@/tool/task"
+import { Tool } from "@/tool/tool"
+import { PermissionNext } from "@/permission/next"
+import { SessionStatus } from "./status"
+import { LLM } from "./llm"
+import { iife } from "@/util/iife"
+import { Shell } from "@/shell/shell"
 
 // @ts-ignore
-globalThis.AI_SDK_LOG_WARNINGS = false  // 禁用 AI SDK 日志警告
+globalThis.AI_SDK_LOG_WARNINGS = false
 
 export namespace SessionPrompt {
-  const log = Log.create({ service: "session.prompt" })  // 创建日志实例
-  export const OUTPUT_TOKEN_MAX = Flag.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX || 32_000  // 输出 token 最大值
+  const log = Log.create({ service: "session.prompt" })
+  export const OUTPUT_TOKEN_MAX = Flag.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX || 32_000
 
-  const state = Instance.state(  // 创建实例状态
+  const state = Instance.state(
     () => {
-      const data: Record<  // 数据记录类型
+      const data: Record<
         string,
         {
-          abort: AbortController  // 中止控制器
-          callbacks: {  // 回调函数数组
-            resolve(input: MessageV2.WithParts): void  // 解析函数
-            reject(): void  // 拒绝函数
+          abort: AbortController
+          callbacks: {
+            resolve(input: MessageV2.WithParts): void
+            reject(): void
           }[]
         }
       > = {}
       return data
     },
-    async (current) => {  // 清理函数
+    async (current) => {
       for (const item of Object.values(current)) {
-        item.abort.abort()  // 中止所有控制器
+        item.abort.abort()
       }
     },
   )
 
-  export function assertNotBusy(sessionID: string) {  // 断言会话不忙碌
+  export function assertNotBusy(sessionID: string) {
     const match = state()[sessionID]
-    if (match) throw new Session.BusyError(sessionID)  // 如果忙碌，抛出错误
+    if (match) throw new Session.BusyError(sessionID)
   }
 
-  export const PromptInput = z.object({  // 提示词输入类型
-    sessionID: Identifier.schema("session"),  // 会话 ID
-    messageID: Identifier.schema("message").optional(),  // 消息 ID（可选）
-    model: z  // 模型（可选）
+  export const PromptInput = z.object({
+    sessionID: Identifier.schema("session"),
+    messageID: Identifier.schema("message").optional(),
+    model: z
       .object({
-        providerID: z.string(),  // 提供商 ID
-        modelID: z.string(),  // 模型 ID
+        providerID: z.string(),
+        modelID: z.string(),
       })
       .optional(),
-    agent: z.string().optional(),  // 智能体（可选）
-    noReply: z.boolean().optional(),  // 不回复（可选）
-    tools: z  // 工具（可选，已弃用）
+    agent: z.string().optional(),
+    noReply: z.boolean().optional(),
+    tools: z
       .record(z.string(), z.boolean())
       .optional()
       .describe(
-        "@deprecated tools and permissions have been merged, you can set permissions on the session itself now",  // 工具和权限已合并，现在可以在会话本身上设置权限
+        "@deprecated tools and permissions have been merged, you can set permissions on the session itself now",
       ),
-    system: z.string().optional(),  // 系统提示词（可选）
-    variant: z.string().optional(),  // 变体（可选）
-    parts: z.array(  // 部分数组
-      z.discriminatedUnion("type", [  // 根据类型区分
-        MessageV2.TextPart.omit({  // 文本部分输入
+    system: z.string().optional(),
+    variant: z.string().optional(),
+    parts: z.array(
+      z.discriminatedUnion("type", [
+        MessageV2.TextPart.omit({
           messageID: true,
           sessionID: true,
         })
@@ -107,9 +107,9 @@ export namespace SessionPrompt {
             id: true,
           })
           .meta({
-            ref: "TextPartInput",  // 引用名称
+            ref: "TextPartInput",
           }),
-        MessageV2.FilePart.omit({  // 文件部分输入
+        MessageV2.FilePart.omit({
           messageID: true,
           sessionID: true,
         })
@@ -117,9 +117,9 @@ export namespace SessionPrompt {
             id: true,
           })
           .meta({
-            ref: "FilePartInput",  // 引用名称
+            ref: "FilePartInput",
           }),
-        MessageV2.AgentPart.omit({  // 智能体部分输入
+        MessageV2.AgentPart.omit({
           messageID: true,
           sessionID: true,
         })
@@ -127,9 +127,9 @@ export namespace SessionPrompt {
             id: true,
           })
           .meta({
-            ref: "AgentPartInput",  // 引用名称
+            ref: "AgentPartInput",
           }),
-        MessageV2.SubtaskPart.omit({  // 子任务部分输入
+        MessageV2.SubtaskPart.omit({
           messageID: true,
           sessionID: true,
         })
@@ -137,316 +137,313 @@ export namespace SessionPrompt {
             id: true,
           })
           .meta({
-            ref: "SubtaskPartInput",  // 引用名称
+            ref: "SubtaskPartInput",
           }),
       ]),
     ),
   })
-  export type PromptInput = z.infer<typeof PromptInput>  // 提示词输入类型
+  export type PromptInput = z.infer<typeof PromptInput>
 
-  export const prompt = fn(PromptInput, async (input) => {  // 提示词函数
-    const session = await Session.get(input.sessionID)  // 获取会话
-    await SessionRevert.cleanup(session)  // 清理回滚
+  export const prompt = fn(PromptInput, async (input) => {
+    const session = await Session.get(input.sessionID)
+    await SessionRevert.cleanup(session)
 
-    const message = await createUserMessage(input)  // 创建用户消息
-    await Session.touch(input.sessionID)  // 更新会话时间
+    const message = await createUserMessage(input)
+    await Session.touch(input.sessionID)
 
     // this is backwards compatibility for allowing `tools` to be specified when
     // prompting
-    // 这是向后兼容性，允许在提示时指定 `tools`
-    const permissions: PermissionNext.Ruleset = []  // 权限规则集
-    for (const [tool, enabled] of Object.entries(input.tools ?? {})) {  // 遍历工具
-      permissions.push({  // 添加权限规则
-        permission: tool,  // 工具名称
-        action: enabled ? "allow" : "deny",  // 允许或拒绝
-        pattern: "*",  // 匹配所有模式
+    const permissions: PermissionNext.Ruleset = []
+    for (const [tool, enabled] of Object.entries(input.tools ?? {})) {
+      permissions.push({
+        permission: tool,
+        action: enabled ? "allow" : "deny",
+        pattern: "*",
       })
     }
-    if (permissions.length > 0) {  // 如果有权限规则
-      session.permission = permissions  // 设置会话权限
-      await Session.update(session.id, (draft) => {  // 更新会话
-        draft.permission = permissions  // 设置权限
+    if (permissions.length > 0) {
+      session.permission = permissions
+      await Session.update(session.id, (draft) => {
+        draft.permission = permissions
       })
     }
 
-    if (input.noReply === true) {  // 如果不回复
-      return message  // 返回消息
+    if (input.noReply === true) {
+      return message
     }
 
-    return loop(input.sessionID)  // 返回循环结果
+    return loop(input.sessionID)
   })
 
-  export async function resolvePromptParts(template: string): Promise<PromptInput["parts"]> {  // 解析提示词部分
-    const parts: PromptInput["parts"] = [  // 部分数组
+  export async function resolvePromptParts(template: string): Promise<PromptInput["parts"]> {
+    const parts: PromptInput["parts"] = [
       {
-        type: "text",  // 类型为文本
-        text: template,  // 模板文本
+        type: "text",
+        text: template,
       },
     ]
-    const files = ConfigMarkdown.files(template)  // 获取文件引用
-    const seen = new Set<string>()  // 已处理的文件集合
-    await Promise.all(  // 并行处理所有文件
+    const files = ConfigMarkdown.files(template)
+    const seen = new Set<string>()
+    await Promise.all(
       files.map(async (match) => {
-        const name = match[1]  // 文件名
-        if (seen.has(name)) return  // 如果已处理，跳过
-        seen.add(name)  // 标记为已处理
-        const filepath = name.startsWith("~/")  // 判断是否为家目录路径
-          ? path.join(os.homedir(), name.slice(2))  // 拼接家目录
-          : path.resolve(Instance.worktree, name)  // 解析为工作树路径
+        const name = match[1]
+        if (seen.has(name)) return
+        seen.add(name)
+        const filepath = name.startsWith("~/")
+          ? path.join(os.homedir(), name.slice(2))
+          : path.resolve(Instance.worktree, name)
 
-        const stats = await fs.stat(filepath).catch(() => undefined)  // 获取文件状态
-        if (!stats) {  // 如果文件不存在
-          const agent = await Agent.get(name)  // 尝试获取智能体
-          if (agent) {  // 如果找到智能体
-            parts.push({  // 添加智能体部分
-              type: "agent",  // 类型为智能体
-              name: agent.name,  // 智能体名称
+        const stats = await fs.stat(filepath).catch(() => undefined)
+        if (!stats) {
+          const agent = await Agent.get(name)
+          if (agent) {
+            parts.push({
+              type: "agent",
+              name: agent.name,
             })
           }
           return
         }
 
-        if (stats.isDirectory()) {  // 如果是目录
-          parts.push({  // 添加目录部分
-            type: "file",  // 类型为文件
-            url: `file://${filepath}`,  // 文件 URL
-            filename: name,  // 文件名
-            mime: "application/x-directory",  // MIME 类型为目录
+        if (stats.isDirectory()) {
+          parts.push({
+            type: "file",
+            url: `file://${filepath}`,
+            filename: name,
+            mime: "application/x-directory",
           })
           return
         }
 
-        parts.push({  // 添加文件部分
-          type: "file",  // 类型为文件
-          url: `file://${filepath}`,  // 文件 URL
-          filename: name,  // 文件名
-          mime: "text/plain",  // MIME 类型为纯文本
+        parts.push({
+          type: "file",
+          url: `file://${filepath}`,
+          filename: name,
+          mime: "text/plain",
         })
       }),
     )
-    return parts  // 返回部分列表
+    return parts
   }
 
-  function start(sessionID: string) {  // 启动会话
-    const s = state()  // 获取状态
-    if (s[sessionID]) return  // 如果已存在，返回
-    const controller = new AbortController()  // 创建中止控制器
-    s[sessionID] = {  // 设置会话状态
-      abort: controller,  // 中止控制器
-      callbacks: [],  // 回调函数数组
+  function start(sessionID: string) {
+    const s = state()
+    if (s[sessionID]) return
+    const controller = new AbortController()
+    s[sessionID] = {
+      abort: controller,
+      callbacks: [],
     }
-    return controller.signal  // 返回中止信号
+    return controller.signal
   }
 
-  export function cancel(sessionID: string) {  // 取消会话
-    log.info("cancel", { sessionID })  // 记录取消日志
-    const s = state()  // 获取状态
-    const match = s[sessionID]  // 查找会话
-    if (!match) return  // 如果不存在，返回
-    match.abort.abort()  // 中止控制器
-    for (const item of match.callbacks) {  // 遍历回调函数
-      item.reject()  // 拒绝所有回调
+  export function cancel(sessionID: string) {
+    log.info("cancel", { sessionID })
+    const s = state()
+    const match = s[sessionID]
+    if (!match) return
+    match.abort.abort()
+    for (const item of match.callbacks) {
+      item.reject()
     }
-    delete s[sessionID]  // 删除会话状态
-    SessionStatus.set(sessionID, { type: "idle" })  // 设置会话状态为空闲
+    delete s[sessionID]
+    SessionStatus.set(sessionID, { type: "idle" })
     return
   }
 
-  export const loop = fn(Identifier.schema("session"), async (sessionID) => {  // 循环函数
-    const abort = start(sessionID)  // 启动会话
-    if (!abort) {  // 如果已存在
-      return new Promise<MessageV2.WithParts>((resolve, reject) => {  // 返回 Promise
-        const callbacks = state()[sessionID].callbacks  // 获取回调函数数组
-        callbacks.push({ resolve, reject })  // 添加回调函数
+  export const loop = fn(Identifier.schema("session"), async (sessionID) => {
+    const abort = start(sessionID)
+    if (!abort) {
+      return new Promise<MessageV2.WithParts>((resolve, reject) => {
+        const callbacks = state()[sessionID].callbacks
+        callbacks.push({ resolve, reject })
       })
     }
 
-    using _ = defer(() => cancel(sessionID))  // 延迟取消会话
+    using _ = defer(() => cancel(sessionID))
 
-    let step = 0  // 步骤计数器
-    const session = await Session.get(sessionID)  // 获取会话
-    while (true) {  // 主循环
-      SessionStatus.set(sessionID, { type: "busy" })  // 设置会话状态为忙碌
-      log.info("loop", { step, sessionID })  // 记录循环日志
-      if (abort.aborted) break  // 如果已中止，退出循环
-      let msgs = await MessageV2.filterCompacted(MessageV2.stream(sessionID))  // 获取过滤后的消息
+    let step = 0
+    const session = await Session.get(sessionID)
+    while (true) {
+      SessionStatus.set(sessionID, { type: "busy" })
+      log.info("loop", { step, sessionID })
+      if (abort.aborted) break
+      let msgs = await MessageV2.filterCompacted(MessageV2.stream(sessionID))
 
-      let lastUser: MessageV2.User | undefined  // 最后的用户消息
-      let lastAssistant: MessageV2.Assistant | undefined  // 最后的助手消息
-      let lastFinished: MessageV2.Assistant | undefined  // 最后完成的助手消息
-      let tasks: (MessageV2.CompactionPart | MessageV2.SubtaskPart)[] = []  // 任务列表
-      for (let i = msgs.length - 1; i >= 0; i--) {  // 从后往前遍历消息
-        const msg = msgs[i]  // 获取消息
-        if (!lastUser && msg.info.role === "user") lastUser = msg.info as MessageV2.User  // 查找最后用户消息
-        if (!lastAssistant && msg.info.role === "assistant") lastAssistant = msg.info as MessageV2.Assistant  // 查找最后助手消息
-        if (!lastFinished && msg.info.role === "assistant" && msg.info.finish)  // 查找最后完成的助手消息
+      let lastUser: MessageV2.User | undefined
+      let lastAssistant: MessageV2.Assistant | undefined
+      let lastFinished: MessageV2.Assistant | undefined
+      let tasks: (MessageV2.CompactionPart | MessageV2.SubtaskPart)[] = []
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        const msg = msgs[i]
+        if (!lastUser && msg.info.role === "user") lastUser = msg.info as MessageV2.User
+        if (!lastAssistant && msg.info.role === "assistant") lastAssistant = msg.info as MessageV2.Assistant
+        if (!lastFinished && msg.info.role === "assistant" && msg.info.finish)
           lastFinished = msg.info as MessageV2.Assistant
-        if (lastUser && lastFinished) break  // 如果找到用户和完成消息，停止遍历
-        const task = msg.parts.filter((part) => part.type === "compaction" || part.type === "subtask")  // 过滤任务部分
-        if (task && !lastFinished) {  // 如果有任务且未完成
-          tasks.push(...task)  // 添加任务到列表
+        if (lastUser && lastFinished) break
+        const task = msg.parts.filter((part) => part.type === "compaction" || part.type === "subtask")
+        if (task && !lastFinished) {
+          tasks.push(...task)
         }
       }
 
-      if (!lastUser) throw new Error("在流中未找到用户消息。这不应该发生。")  // 如果没有用户消息，抛出错误
+      if (!lastUser) throw new Error("No user message found in stream. This should never happen.")
       if (
-        lastAssistant?.finish &&  // 如果助手已完成
-        !["tool-calls", "unknown"].includes(lastAssistant.finish) &&  // 且完成原因不是工具调用或未知
-        lastUser.id < lastAssistant.id  // 且用户消息在助手消息之前
+        lastAssistant?.finish &&
+        !["tool-calls", "unknown"].includes(lastAssistant.finish) &&
+        lastUser.id < lastAssistant.id
       ) {
-        log.info("exiting loop", { sessionID })  // 记录退出循环日志
-        break  // 退出循环
+        log.info("exiting loop", { sessionID })
+        break
       }
 
-      step++  // 增加步骤计数
-      if (step === 1)  // 如果是第一步
-        ensureTitle({  // 确保标题
+      step++
+      if (step === 1)
+        ensureTitle({
           session,
-          modelID: lastUser.model.modelID,  // 模型 ID
-          providerID: lastUser.model.providerID,  // 提供商 ID
-          message: msgs.find((m) => m.info.role === "user")!,  // 用户消息
-          history: msgs,  // 消息历史
+          modelID: lastUser.model.modelID,
+          providerID: lastUser.model.providerID,
+          message: msgs.find((m) => m.info.role === "user")!,
+          history: msgs,
         })
 
-      const model = await Provider.getModel(lastUser.model.providerID, lastUser.model.modelID)  // 获取模型
-      const task = tasks.pop()  // 获取下一个任务
+      const model = await Provider.getModel(lastUser.model.providerID, lastUser.model.modelID)
+      const task = tasks.pop()
 
       // pending subtask
-      // 待处理的子任务
       // TODO: centralize "invoke tool" logic
-      // TODO: 集中化"调用工具"逻辑
-      if (task?.type === "subtask") {  // 如果是子任务
-        const taskTool = await TaskTool.init()  // 初始化任务工具
-        const assistantMessage = (await Session.updateMessage({  // 更新助手消息
-          id: Identifier.ascending("message"),  // 生成消息 ID
-          role: "assistant",  // 角色为助手
-          parentID: lastUser.id,  // 父消息 ID
+      if (task?.type === "subtask") {
+        const taskTool = await TaskTool.init()
+        const assistantMessage = (await Session.updateMessage({
+          id: Identifier.ascending("message"),
+          role: "assistant",
+          parentID: lastUser.id,
           sessionID,
-          mode: task.agent,  // 模式
-          agent: task.agent,  // 智能体
-          path: {  // 路径信息
-            cwd: Instance.directory,  // 当前工作目录
-            root: Instance.worktree,  // 工作树根目录
+          mode: task.agent,
+          agent: task.agent,
+          path: {
+            cwd: Instance.directory,
+            root: Instance.worktree,
           },
-          cost: 0,  // 成本
-          tokens: {  // token 统计
-            input: 0,  // 输入 token
-            output: 0,  // 输出 token
-            reasoning: 0,  // 推理 token
-            cache: { read: 0, write: 0 },  // 缓存 token
+          cost: 0,
+          tokens: {
+            input: 0,
+            output: 0,
+            reasoning: 0,
+            cache: { read: 0, write: 0 },
           },
-          modelID: model.id,  // 模型 ID
-          providerID: model.providerID,  // 提供商 ID
-          time: {  // 时间信息
-            created: Date.now(),  // 创建时间
+          modelID: model.id,
+          providerID: model.providerID,
+          time: {
+            created: Date.now(),
           },
         })) as MessageV2.Assistant
-        let part = (await Session.updatePart({  // 更新部分
-          id: Identifier.ascending("part"),  // 生成部分 ID
-          messageID: assistantMessage.id,  // 消息 ID
-          sessionID: assistantMessage.sessionID,  // 会话 ID
-          type: "tool",  // 类型为工具
-          callID: ulid(),  // 调用 ID
-          tool: TaskTool.id,  // 工具 ID
-          state: {  // 状态
-            status: "running",  // 状态为运行中
-            input: {  // 输入参数
-              prompt: task.prompt,  // 提示词
-              description: task.description,  // 描述
-              subagent_type: task.agent,  // 子智能体类型
-              command: task.command,  // 命令
+        let part = (await Session.updatePart({
+          id: Identifier.ascending("part"),
+          messageID: assistantMessage.id,
+          sessionID: assistantMessage.sessionID,
+          type: "tool",
+          callID: ulid(),
+          tool: TaskTool.id,
+          state: {
+            status: "running",
+            input: {
+              prompt: task.prompt,
+              description: task.description,
+              subagent_type: task.agent,
+              command: task.command,
             },
-            time: {  // 时间信息
-              start: Date.now(),  // 开始时间
+            time: {
+              start: Date.now(),
             },
           },
         })) as MessageV2.ToolPart
-        const taskArgs = {  // 任务参数
-          prompt: task.prompt,  // 提示词
-          description: task.description,  // 描述
-          subagent_type: task.agent,  // 子智能体类型
-          command: task.command,  // 命令
+        const taskArgs = {
+          prompt: task.prompt,
+          description: task.description,
+          subagent_type: task.agent,
+          command: task.command,
         }
-        await Plugin.trigger(  // 触发插件
-          "tool.execute.before",  // 工具执行前事件
+        await Plugin.trigger(
+          "tool.execute.before",
           {
-            tool: "task",  // 工具名称
-            sessionID,  // 会话 ID
-            callID: part.id,  // 调用 ID
+            tool: "task",
+            sessionID,
+            callID: part.id,
           },
-          { args: taskArgs },  // 参数
+          { args: taskArgs },
         )
-        let executionError: Error | undefined  // 执行错误
-        const taskAgent = await Agent.get(task.agent)  // 获取任务智能体
-        const taskCtx: Tool.Context = {  // 任务上下文
-          agent: task.agent,  // 智能体
-          messageID: assistantMessage.id,  // 消息 ID
-          sessionID: sessionID,  // 会话 ID
-          abort,  // 中止信号
-          async metadata(input) {  // 更新元数据
-            await Session.updatePart({  // 更新部分
-              ...part,  // 复制现有部分
-              type: "tool",  // 类型为工具
-              state: {  // 状态
-                ...part.state,  // 复制现有状态
-                ...input,  // 合并输入
+        let executionError: Error | undefined
+        const taskAgent = await Agent.get(task.agent)
+        const taskCtx: Tool.Context = {
+          agent: task.agent,
+          messageID: assistantMessage.id,
+          sessionID: sessionID,
+          abort,
+          async metadata(input) {
+            await Session.updatePart({
+              ...part,
+              type: "tool",
+              state: {
+                ...part.state,
+                ...input,
               },
             } satisfies MessageV2.ToolPart)
           },
-          async ask(req) {  // 询问权限
-            await PermissionNext.ask({  // 询问权限
-              ...req,  // 请求参数
-              sessionID: sessionID,  // 会话 ID
-              ruleset: PermissionNext.merge(taskAgent.permission, session.permission ?? []),  // 合并权限规则
+          async ask(req) {
+            await PermissionNext.ask({
+              ...req,
+              sessionID: sessionID,
+              ruleset: PermissionNext.merge(taskAgent.permission, session.permission ?? []),
             })
           },
         }
-        const result = await taskTool.execute(taskArgs, taskCtx).catch((error) => {  // 执行任务工具
-          executionError = error  // 记录执行错误
-          log.error("subtask execution failed", { error, agent: task.agent, description: task.description })  // 记录错误日志
-          return undefined  // 返回 undefined
+        const result = await taskTool.execute(taskArgs, taskCtx).catch((error) => {
+          executionError = error
+          log.error("subtask execution failed", { error, agent: task.agent, description: task.description })
+          return undefined
         })
-        await Plugin.trigger(  // 触发插件
-          "tool.execute.after",  // 工具执行后事件
+        await Plugin.trigger(
+          "tool.execute.after",
           {
-            tool: "task",  // 工具名称
-            sessionID,  // 会话 ID
-            callID: part.id,  // 调用 ID
+            tool: "task",
+            sessionID,
+            callID: part.id,
           },
-          result,  // 结果
+          result,
         )
-        assistantMessage.finish = "tool-calls"  // 设置完成原因
-        assistantMessage.time.completed = Date.now()  // 设置完成时间
-        await Session.updateMessage(assistantMessage)  // 更新消息
-        if (result && part.state.status === "running") {  // 如果有结果且正在运行
-          await Session.updatePart({  // 更新部分
-            ...part,  // 复制现有部分
-            state: {  // 状态
-              status: "completed",  // 状态为已完成
-              input: part.state.input,  // 输入参数
-              title: result.title,  // 标题
-              metadata: result.metadata,  // 元数据
-              output: result.output,  // 输出结果
-              attachments: result.attachments,  // 附件
-              time: {  // 时间信息
-                ...part.state.time,  // 复制现有时间
-                end: Date.now(),  // 结束时间
+        assistantMessage.finish = "tool-calls"
+        assistantMessage.time.completed = Date.now()
+        await Session.updateMessage(assistantMessage)
+        if (result && part.state.status === "running") {
+          await Session.updatePart({
+            ...part,
+            state: {
+              status: "completed",
+              input: part.state.input,
+              title: result.title,
+              metadata: result.metadata,
+              output: result.output,
+              attachments: result.attachments,
+              time: {
+                ...part.state.time,
+                end: Date.now(),
               },
             },
           } satisfies MessageV2.ToolPart)
         }
-        if (!result) {  // 如果没有结果
-          await Session.updatePart({  // 更新部分
-            ...part,  // 复制现有部分
-            state: {  // 状态
-              status: "error",  // 状态为错误
-              error: executionError ? `工具执行失败：${executionError.message}` : "工具执行失败",  // 错误信息
-              time: {  // 时间信息
-                start: part.state.status === "running" ? part.state.time.start : Date.now(),  // 开始时间
-                end: Date.now(),  // 结束时间
+        if (!result) {
+          await Session.updatePart({
+            ...part,
+            state: {
+              status: "error",
+              error: executionError ? `Tool execution failed: ${executionError.message}` : "Tool execution failed",
+              time: {
+                start: part.state.status === "running" ? part.state.time.start : Date.now(),
+                end: Date.now(),
               },
-              metadata: part.metadata,  // 元数据
-              input: part.state.input,  // 输入参数
+              metadata: part.metadata,
+              input: part.state.input,
             },
           } satisfies MessageV2.ToolPart)
         }
@@ -454,962 +451,1076 @@ export namespace SessionPrompt {
         // Add synthetic user message to prevent certain reasoning models from erroring
         // If we create assistant messages w/ out user ones following mid loop thinking signatures
         // will be missing and it can cause errors for models like gemini for example
-        // 添加合成用户消息以防止某些推理模型出错
-        // 如果我们创建助手消息而没有用户消息跟随中间循环思考签名
-        // 将会缺失，这可能导致像 gemini 这样的模型出错
-        const summaryUserMsg: MessageV2.User = {  // 创建摘要用户消息
-          id: Identifier.ascending("message"),  // 生成消息 ID
-          sessionID,  // 会话 ID
-          role: "user",  // 角色为用户
-          time: {  // 时间信息
-            created: Date.now(),  // 创建时间
+        const summaryUserMsg: MessageV2.User = {
+          id: Identifier.ascending("message"),
+          sessionID,
+          role: "user",
+          time: {
+            created: Date.now(),
           },
-          agent: lastUser.agent,  // 智能体
-          model: lastUser.model,  // 模型
+          agent: lastUser.agent,
+          model: lastUser.model,
         }
-        await Session.updateMessage(summaryUserMsg)  // 更新消息
-        await Session.updatePart({  // 更新部分
-          id: Identifier.ascending("part"),  // 生成部分 ID
-          messageID: summaryUserMsg.id,  // 消息 ID
-          sessionID,  // 会话 ID
-          type: "text",  // 类型为文本
-          text: "Summarize task tool output above and continue with your task.",  // 文本内容
-          synthetic: true,  // 合成标记
+        await Session.updateMessage(summaryUserMsg)
+        await Session.updatePart({
+          id: Identifier.ascending("part"),
+          messageID: summaryUserMsg.id,
+          sessionID,
+          type: "text",
+          text: "Summarize the task tool output above and continue with your task.",
+          synthetic: true,
         } satisfies MessageV2.TextPart)
 
-        continue  // 继续循环
+        continue
       }
 
       // pending compaction
-      // 待处理的压缩
-      if (task?.type === "compaction") {  // 如果是压缩任务
-        const result = await SessionCompaction.process({  // 处理压缩
-          messages: msgs,  // 消息列表
-          parentID: lastUser.id,  // 父消息 ID
-          abort,  // 中止信号
-          sessionID,  // 会话 ID
-          auto: task.auto,  // 是否自动
+      if (task?.type === "compaction") {
+        const result = await SessionCompaction.process({
+          messages: msgs,
+          parentID: lastUser.id,
+          abort,
+          sessionID,
+          auto: task.auto,
         })
-        if (result === "stop") break  // 如果结果为停止，退出循环
-        continue  // 继续循环
+        if (result === "stop") break
+        continue
       }
 
       // context overflow, needs compaction
-      // 上下文溢出，需要压缩
       if (
-        lastFinished &&  // 如果有完成的助手消息
-        lastFinished.summary !== true &&  // 且不是摘要
-        (await SessionCompaction.isOverflow({ tokens: lastFinished.tokens, model }))  // 且 token 溢出
+        lastFinished &&
+        lastFinished.summary !== true &&
+        (await SessionCompaction.isOverflow({ tokens: lastFinished.tokens, model }))
       ) {
-        await SessionCompaction.create({  // 创建压缩
-          sessionID,  // 会话 ID
-          agent: lastUser.agent,  // 智能体
-          model: lastUser.model,  // 模型
-          auto: true,  // 自动压缩
+        await SessionCompaction.create({
+          sessionID,
+          agent: lastUser.agent,
+          model: lastUser.model,
+          auto: true,
         })
-        continue  // 继续循环
+        continue
       }
 
       // normal processing
-      // 正常处理
-      const agent = await Agent.get(lastUser.agent)  // 获取智能体
-      const maxSteps = agent.steps ?? Infinity  // 最大步骤数
-      const isLastStep = step >= maxSteps  // 是否为最后一步
-      msgs = insertReminders({  // 插入提醒
-        messages: msgs,  // 消息列表
-        agent,  // 智能体
+      const agent = await Agent.get(lastUser.agent)
+      const maxSteps = agent.steps ?? Infinity
+      const isLastStep = step >= maxSteps
+      msgs = insertReminders({
+        messages: msgs,
+        agent,
       })
 
-      const processor = SessionProcessor.create({  // 创建处理器
-        assistantMessage: (await Session.updateMessage({  // 更新助手消息
-          id: Identifier.ascending("message"),  // 生成消息 ID
-          parentID: lastUser.id,  // 父消息 ID
-          role: "assistant",  // 角色为助手
-          mode: agent.name,  // 模式
-          agent: agent.name,  // 智能体
-          path: {  // 路径信息
-            cwd: Instance.directory,  // 当前工作目录
-            root: Instance.worktree,  // 工作树根目录
+      const processor = SessionProcessor.create({
+        assistantMessage: (await Session.updateMessage({
+          id: Identifier.ascending("message"),
+          parentID: lastUser.id,
+          role: "assistant",
+          mode: agent.name,
+          agent: agent.name,
+          path: {
+            cwd: Instance.directory,
+            root: Instance.worktree,
           },
-          cost: 0,  // 成本
-          tokens: {  // token 统计
-            input: 0,  // 输入 token
-            output: 0,  // 输出 token
-            reasoning: 0,  // 推理 token
-            cache: { read: 0, write: 0 },  // 缓存 token
+          cost: 0,
+          tokens: {
+            input: 0,
+            output: 0,
+            reasoning: 0,
+            cache: { read: 0, write: 0 },
           },
-          modelID: model.id,  // 模型 ID
-          providerID: model.providerID,  // 提供商 ID
-          time: {  // 时间信息
-            created: Date.now(),  // 创建时间
+          modelID: model.id,
+          providerID: model.providerID,
+          time: {
+            created: Date.now(),
           },
-          sessionID,  // 会话 ID
+          sessionID,
         })) as MessageV2.Assistant,
-        sessionID: sessionID,  // 会话 ID
-        model,  // 模型
-        abort,  // 中止信号
+        sessionID: sessionID,
+        model,
+        abort,
       })
-      const tools = await resolveTools({  // 解析工具
-        agent,  // 智能体
-        session,  // 会话
-        model,  // 模型
-        tools: lastUser.tools,  // 工具配置
-        processor,  // 处理器
+      const tools = await resolveTools({
+        agent,
+        session,
+        model,
+        tools: lastUser.tools,
+        processor,
       })
 
-      if (step === 1) {  // 如果是第一步
-        SessionSummary.summarize({  // 生成摘要
-          sessionID: sessionID,  // 会话 ID
-          messageID: lastUser.id,  // 消息 ID
+      if (step === 1) {
+        SessionSummary.summarize({
+          sessionID: sessionID,
+          messageID: lastUser.id,
         })
       }
 
-      const sessionMessages = clone(msgs)  // 克隆消息
+      const sessionMessages = clone(msgs)
 
-      await Plugin.trigger("experimental.chat.messages.transform", {}, { messages: sessionMessages })  // 触发插件转换消息
+      await Plugin.trigger("experimental.chat.messages.transform", {}, { messages: sessionMessages })
 
-      const result = await processor.process({  // 处理流
-        user: lastUser,  // 用户消息
-        agent,  // 智能体
-        abort,  // 中止信号
-        sessionID,  // 会话 ID
-        system: [...(await SystemPrompt.environment()), ...(await SystemPrompt.custom())],  // 系统提示词
-        messages: [  // 消息列表
-          ...MessageV2.toModelMessage(sessionMessages),  // 转换为模型消息
-          ...(isLastStep  // 如果是最后一步
+      const result = await processor.process({
+        user: lastUser,
+        agent,
+        abort,
+        sessionID,
+        system: [...(await SystemPrompt.environment()), ...(await SystemPrompt.custom())],
+        messages: [
+          ...MessageV2.toModelMessage(sessionMessages),
+          ...(isLastStep
             ? [
                 {
-                  role: "assistant" as const,  // 角色为助手
-                  content: MAX_STEPS,  // 最大步骤提示词
+                  role: "assistant" as const,
+                  content: MAX_STEPS,
                 },
               ]
             : []),
         ],
-        tools,  // 工具
-        model,  // 模型
+        tools,
+        model,
       })
-      if (result === "stop") break  // 如果结果为停止，退出循环
-      if (result === "compact") {  // 如果结果为压缩
-        await SessionCompaction.create({  // 创建压缩
-          sessionID,  // 会话 ID
-          agent: lastUser.agent,  // 智能体
-          model: lastUser.model,  // 模型
-          auto: true,  // 自动压缩
+      if (result === "stop") break
+      if (result === "compact") {
+        await SessionCompaction.create({
+          sessionID,
+          agent: lastUser.agent,
+          model: lastUser.model,
+          auto: true,
         })
       }
-      continue  // 继续循环
+      continue
     }
-    SessionCompaction.prune({ sessionID })  // 清理压缩
-    for await (const item of MessageV2.stream(sessionID)) {  // 遍历消息流
-      if (item.info.role === "user") continue  // 跳过用户消息
-      const queued = state()[sessionID]?.callbacks ?? []  // 获取队列回调
-      for (const q of queued) {  // 遍历队列回调
-        q.resolve(item)  // 解析回调
+    SessionCompaction.prune({ sessionID })
+    for await (const item of MessageV2.stream(sessionID)) {
+      if (item.info.role === "user") continue
+      const queued = state()[sessionID]?.callbacks ?? []
+      for (const q of queued) {
+        q.resolve(item)
       }
-      return item  // 返回消息
+      return item
     }
-    throw new Error("不可能")  // 不应该到达这里
+    throw new Error("Impossible")
   })
 
-  async function lastModel(sessionID: string) {  // 获取最后使用的模型
-    for await (const item of MessageV2.stream(sessionID)) {  // 遍历消息流
-      if (item.info.role === "user" && item.info.model) return item.info.model  // 返回用户消息的模型
+  async function lastModel(sessionID: string) {
+    for await (const item of MessageV2.stream(sessionID)) {
+      if (item.info.role === "user" && item.info.model) return item.info.model
     }
-    return Provider.defaultModel()  // 返回默认模型
+    return Provider.defaultModel()
   }
 
-  async function resolveTools(input: {  // 解析工具
-    agent: Agent.Info  // 智能体信息
-    model: Provider.Model  // 模型
-    session: Session.Info  // 会话信息
-    tools?: Record<string, boolean>  // 工具配置
-    processor: SessionProcessor.Info  // 处理器信息
+  async function resolveTools(input: {
+    agent: Agent.Info
+    model: Provider.Model
+    session: Session.Info
+    tools?: Record<string, boolean>
+    processor: SessionProcessor.Info
   }) {
-    using _ = log.time("resolveTools")  // 记录解析工具时间
-    const tools: Record<string, AITool> = {}  // 工具记录
+    using _ = log.time("resolveTools")
+    const tools: Record<string, AITool> = {}
 
-    const context = (args: any, options: ToolCallOptions): Tool.Context => ({  // 创建工具上下文
-      sessionID: input.session.id,  // 会话 ID
-      abort: options.abortSignal!,  // 中止信号
-      messageID: input.processor.message.id,  // 消息 ID
-      callID: options.toolCallId,  // 调用 ID
-      extra: { model: input.model },  // 额外信息
-      agent: input.agent.name,  // 智能体名称
-      metadata: async (val: { title?: string; metadata?: any }) => {  // 更新元数据
-        const match = input.processor.partFromToolCall(options.toolCallId)  // 查找工具调用部分
-        if (match && match.state.status === "running") {  // 如果找到且正在运行
-          await Session.updatePart({  // 更新部分
-            ...match,  // 复制现有部分
-            state: {  // 状态
-              title: val.title,  // 标题
-              metadata: val.metadata,  // 元数据
-              status: "running",  // 状态为运行中
-              input: args,  // 输入参数
-              time: {  // 时间信息
-                start: Date.now(),  // 开始时间
+    const context = (args: any, options: ToolCallOptions): Tool.Context => ({
+      sessionID: input.session.id,
+      abort: options.abortSignal!,
+      messageID: input.processor.message.id,
+      callID: options.toolCallId,
+      extra: { model: input.model },
+      agent: input.agent.name,
+      metadata: async (val: { title?: string; metadata?: any }) => {
+        const match = input.processor.partFromToolCall(options.toolCallId)
+        if (match && match.state.status === "running") {
+          await Session.updatePart({
+            ...match,
+            state: {
+              title: val.title,
+              metadata: val.metadata,
+              status: "running",
+              input: args,
+              time: {
+                start: Date.now(),
               },
             },
           })
         }
       },
-      async ask(req) {  // 询问权限
-        await PermissionNext.ask({  // 询问权限
-          ...req,  // 请求参数
-          sessionID: input.session.id,  // 会话 ID
-          tool: { messageID: input.processor.message.id, callID: options.toolCallId },  // 工具信息
-          ruleset: PermissionNext.merge(input.agent.permission, input.session.permission ?? []),  // 合并权限规则
+      async ask(req) {
+        await PermissionNext.ask({
+          ...req,
+          sessionID: input.session.id,
+          tool: { messageID: input.processor.message.id, callID: options.toolCallId },
+          ruleset: PermissionNext.merge(input.agent.permission, input.session.permission ?? []),
         })
       },
     })
 
-    for (const item of await ToolRegistry.tools(input.model.providerID)) {  // 遍历工具注册表
-      const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))  // 转换参数模式
-      tools[item.id] = tool({  // 创建工具
-        id: item.id as any,  // 工具 ID
-        description: item.description,  // 描述
-        inputSchema: jsonSchema(schema as any),  // 输入模式
-        async execute(args, options) {  // 执行函数
-          const ctx = context(args, options)  // 创建上下文
-          await Plugin.trigger(  // 触发插件
-            "tool.execute.before",  // 工具执行前事件
+    for (const item of await ToolRegistry.tools(input.model.providerID)) {
+      const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))
+      tools[item.id] = tool({
+        id: item.id as any,
+        description: item.description,
+        inputSchema: jsonSchema(schema as any),
+        async execute(args, options) {
+          const ctx = context(args, options)
+          await Plugin.trigger(
+            "tool.execute.before",
             {
-              tool: item.id,  // 工具 ID
-              sessionID: ctx.sessionID,  // 会话 ID
-              callID: ctx.callID,  // 调用 ID
+              tool: item.id,
+              sessionID: ctx.sessionID,
+              callID: ctx.callID,
             },
             {
-              args,  // 参数
+              args,
             },
           )
-          const result = await item.execute(args, ctx)  // 执行工具
-          await Plugin.trigger(  // 触发插件
-            "tool.execute.after",  // 工具执行后事件
+          const result = await item.execute(args, ctx)
+          await Plugin.trigger(
+            "tool.execute.after",
             {
-              tool: item.id,  // 工具 ID
-              sessionID: ctx.sessionID,  // 会话 ID
-              callID: ctx.callID,  // 调用 ID
+              tool: item.id,
+              sessionID: ctx.sessionID,
+              callID: ctx.callID,
             },
-            result,  // 结果
+            result,
           )
-          return result  // 返回结果
+          return result
         },
-        toModelOutput(result) {  // 转换为模型输出
+        toModelOutput(result) {
           return {
-            type: "text",  // 类型为文本
-            value: result.output,  // 输出值
+            type: "text",
+            value: result.output,
           }
         },
       })
     }
 
-    for (const [key, item] of Object.entries(await MCP.tools())) {  // 遍历 MCP 工具
-      const execute = item.execute  // 获取执行函数
-      if (!execute) continue  // 如果没有执行函数，跳过
+    for (const [key, item] of Object.entries(await MCP.tools())) {
+      const execute = item.execute
+      if (!execute) continue
 
       // Wrap execute to add plugin hooks and format output
-      // 包装执行函数以添加插件钩子和格式化输出
       item.execute = async (args, opts) => {
-        const ctx = context(args, opts)  // 创建上下文
+        const ctx = context(args, opts)
 
-        await Plugin.trigger(  // 触发插件
-          "tool.execute.before",  // 工具执行前事件
+        await Plugin.trigger(
+          "tool.execute.before",
           {
-            tool: key,  // 工具 ID
-            sessionID: ctx.sessionID,  // 会话 ID
-            callID: opts.toolCallId,  // 调用 ID
+            tool: key,
+            sessionID: ctx.sessionID,
+            callID: opts.toolCallId,
           },
           {
-            args,  // 参数
+            args,
           },
         )
 
-        await ctx.ask({  // 询问权限
-          permission: key,  // 权限
-          metadata: {},  // 元数据
-          patterns: ["*"],  // 模式
-          always: ["*"],  // 总是询问
+        await ctx.ask({
+          permission: key,
+          metadata: {},
+          patterns: ["*"],
+          always: ["*"],
         })
 
-        const result = await execute(args, opts)  // 执行工具
+        const result = await execute(args, opts)
 
-        await Plugin.trigger(  // 触发插件
-          "tool.execute.after",  // 工具执行后事件
+        await Plugin.trigger(
+          "tool.execute.after",
           {
-            tool: key,  // 工具 ID
-            sessionID: ctx.sessionID,  // 会话 ID
-            callID: opts.toolCallId,  // 调用 ID
+            tool: key,
+            sessionID: ctx.sessionID,
+            callID: opts.toolCallId,
           },
-          result,  // 结果
+          result,
         )
 
-        const textParts: string[] = []  // 文本部分列表
-        const attachments: MessageV2.FilePart[] = []  // 附件列表
+        const textParts: string[] = []
+        const attachments: MessageV2.FilePart[] = []
 
-        for (const contentItem of result.content) {  // 遍历内容
-          if (contentItem.type === "text") {  // 如果是文本
-            textParts.push(contentItem.text)  // 添加文本
-          } else if (contentItem.type === "image") {  // 如果是图像
-            attachments.push({  // 添加附件
-              id: Identifier.ascending("part"),  // 生成部分 ID
-              sessionID: input.session.id,  // 会话 ID
-              messageID: input.processor.message.id,  // 消息 ID
-              type: "file",  // 类型为文件
-              mime: contentItem.mimeType,  // MIME 类型
-              url: `data:${contentItem.mimeType};base64,${contentItem.data}`,  // 数据 URL
+        for (const contentItem of result.content) {
+          if (contentItem.type === "text") {
+            textParts.push(contentItem.text)
+          } else if (contentItem.type === "image") {
+            attachments.push({
+              id: Identifier.ascending("part"),
+              sessionID: input.session.id,
+              messageID: input.processor.message.id,
+              type: "file",
+              mime: contentItem.mimeType,
+              url: `data:${contentItem.mimeType};base64,${contentItem.data}`,
             })
           }
           // Add support for other types if needed
-          // 如果需要，添加对其他类型的支持
         }
 
-        return {  // 返回结果
-          title: "",  // 标题
-          metadata: result.metadata ?? {},  // 元数据
-          output: textParts.join("\n\n"),  // 输出文本
-          attachments,  // 附件
-          content: result.content,  // 直接返回内容以保持输出到模型时的顺序
-        }
-      }
-      item.toModelOutput = (result) => {  // 转换为模型输出
         return {
-          type: "text",  // 类型为文本
-          value: result.output,  // 输出值
+          title: "",
+          metadata: result.metadata ?? {},
+          output: textParts.join("\n\n"),
+          attachments,
+          content: result.content, // directly return content to preserve ordering when outputting to model
         }
       }
-      tools[key] = item  // 添加工具到记录
+      item.toModelOutput = (result) => {
+        return {
+          type: "text",
+          value: result.output,
+        }
+      }
+      tools[key] = item
     }
-    return tools  // 返回工具记录
+    return tools
   }
 
-  async function createUserMessage(input: PromptInput) {  // 创建用户消息
-    const agent = await Agent.get(input.agent ?? (await Agent.defaultAgent()))  // 获取智能体
-    const info: MessageV2.Info = {  // 消息信息
-      id: input.messageID ?? Identifier.ascending("message"),  // 消息 ID
-      role: "user",  // 角色为用户
-      sessionID: input.sessionID,  // 会话 ID
-      time: {  // 时间信息
-        created: Date.now(),  // 创建时间
+  async function createUserMessage(input: PromptInput) {
+    const agent = await Agent.get(input.agent ?? (await Agent.defaultAgent()))
+    const info: MessageV2.Info = {
+      id: input.messageID ?? Identifier.ascending("message"),
+      role: "user",
+      sessionID: input.sessionID,
+      time: {
+        created: Date.now(),
       },
-      tools: input.tools,  // 工具配置
-      agent: agent.name,  // 智能体名称
-      model: input.model ?? agent.model ?? (await lastModel(input.sessionID)),  // 模型
-      system: input.system,  // 系统提示词
-      variant: input.variant,  // 变体
+      tools: input.tools,
+      agent: agent.name,
+      model: input.model ?? agent.model ?? (await lastModel(input.sessionID)),
+      system: input.system,
+      variant: input.variant,
     }
 
-    const parts = await Promise.all(  // 并行处理所有部分
-      input.parts.map(async (part): Promise<MessageV2.Part[]> => {  // 映射部分
-        if (part.type === "file") {  // 如果是文件部分
-          const url = new URL(part.url)  // 解析 URL
-          switch (url.protocol) {  // 根据 URL 协议处理
-            case "data:":  // 数据 URL
-              if (part.mime === "text/plain") {  // 如果是纯文本
+    const parts = await Promise.all(
+      input.parts.map(async (part): Promise<MessageV2.Part[]> => {
+        if (part.type === "file") {
+          const url = new URL(part.url)
+          switch (url.protocol) {
+            case "data:":
+              if (part.mime === "text/plain") {
                 return [
                   {
-                    id: Identifier.ascending("part"),  // 生成部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
-                    type: "text",  // 类型为文本
-                    synthetic: true,  // 合成标记
-                    text: `Called Read tool with the following input: ${JSON.stringify({ filePath: part.filename })}`,  // 调用 Read 工具的输入
+                    id: Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
+                    type: "text",
+                    synthetic: true,
+                    text: `Called the Read tool with the following input: ${JSON.stringify({ filePath: part.filename })}`,
                   },
                   {
-                    id: Identifier.ascending("part"),  // 生成部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
-                    type: "text",  // 类型为文本
-                    synthetic: true,  // 合成标记
-                    text: Buffer.from(part.url, "base64url").toString(),  // 解码 base64url
+                    id: Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
+                    type: "text",
+                    synthetic: true,
+                    text: Buffer.from(part.url, "base64url").toString(),
                   },
                   {
-                    ...part,  // 复制现有部分
-                    id: part.id ?? Identifier.ascending("part"),  // 部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
+                    ...part,
+                    id: part.id ?? Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
                   },
                 ]
               }
               break
-            case "file:":  // 文件 URL
-              log.info("file", { mime: part.mime })  // 记录文件日志
+            case "file:":
+              log.info("file", { mime: part.mime })
               // have to normalize, symbol search returns absolute paths
-              // 需要规范化，符号搜索返回绝对路径
-              // Decode pathname since URL constructor doesn't automatically decode it
-              // 解码路径名，因为 URL 构造函数不会自动解码
-              const filepath = fileURLToPath(part.url)  // 转换为文件路径
-              const stat = await Bun.file(filepath).stat()  // 获取文件状态
+              // Decode the pathname since URL constructor doesn't automatically decode it
+              const filepath = fileURLToPath(part.url)
+              const stat = await Bun.file(filepath).stat()
 
-              if (stat.isDirectory()) {  // 如果是目录
-                part.mime = "application/x-directory"  // 设置 MIME 类型为目录
+              if (stat.isDirectory()) {
+                part.mime = "application/x-directory"
               }
 
-              if (part.mime === "text/plain") {  // 如果是纯文本
-                let offset: number | undefined = undefined  // 偏移量
-                let limit: number | undefined = undefined  // 限制
-                const range = {  // 范围
-                  start: url.searchParams.get("start"),  // 开始位置
-                  end: url.searchParams.get("end"),  // 结束位置
+              if (part.mime === "text/plain") {
+                let offset: number | undefined = undefined
+                let limit: number | undefined = undefined
+                const range = {
+                  start: url.searchParams.get("start"),
+                  end: url.searchParams.get("end"),
                 }
-                if (range.start != null) {  // 如果有开始位置
-                  const filePathURI = part.url.split("?")[0]  // 文件路径 URI
-                  let start = parseInt(range.start)  // 解析开始位置
-                  let end = range.end ? parseInt(range.end) : undefined  // 解析结束位置
+                if (range.start != null) {
+                  const filePathURI = part.url.split("?")[0]
+                  let start = parseInt(range.start)
+                  let end = range.end ? parseInt(range.end) : undefined
                   // some LSP servers (eg, gopls) don't give full range in
-                  // workspace/symbol searches, so we'll try to find
-                  // symbol in document to get full range
-                  // 一些 LSP 服务器（例如 gopls）在工作区/符号搜索中不提供完整范围
-                  // 所以我们将尝试在文档中查找符号以获取完整范围
-                  if (start === end) {  // 如果开始和结束相同
-                    const symbols = await LSP.documentSymbol(filePathURI)  // 获取文档符号
-                    for (const symbol of symbols) {  // 遍历符号
-                      let range: LSP.Range | undefined  // 符号范围
-                      if ("range" in symbol) {  // 如果有范围属性
-                        range = symbol.range  // 使用范围
-                      } else if ("location" in symbol) {  // 如果有位置属性
-                        range = symbol.location.range  // 使用位置的范围
+                  // workspace/symbol searches, so we'll try to find the
+                  // symbol in the document to get the full range
+                  if (start === end) {
+                    const symbols = await LSP.documentSymbol(filePathURI)
+                    for (const symbol of symbols) {
+                      let range: LSP.Range | undefined
+                      if ("range" in symbol) {
+                        range = symbol.range
+                      } else if ("location" in symbol) {
+                        range = symbol.location.range
                       }
-                      if (range?.start?.line && range?.start?.line === start) {  // 如果找到匹配的符号
-                        start = range.start.line  // 使用符号的开始行
-                        end = range?.end?.line ?? start  // 使用符号的结束行
-                        break  // 停止遍历
+                      if (range?.start?.line && range?.start?.line === start) {
+                        start = range.start.line
+                        end = range?.end?.line ?? start
+                        break
                       }
                     }
                   }
-                  offset = Math.max(start - 1, 0)  // 计算偏移量
-                  if (end) {  // 如果有结束位置
-                    limit = end - offset  // 计算限制
+                  offset = Math.max(start - 1, 0)
+                  if (end) {
+                    limit = end - offset
                   }
                 }
-                const args = { filePath: filepath, offset, limit }  // 文件读取参数
+                const args = { filePath: filepath, offset, limit }
 
-                const pieces: MessageV2.Part[] = [  // 部分列表
+                const pieces: MessageV2.Part[] = [
                   {
-                    id: Identifier.ascending("part"),  // 生成部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
-                    type: "text",  // 类型为文本
-                    synthetic: true,  // 合成标记
-                    text: `Called Read tool with the following input: ${JSON.stringify(args)}`,  // 调用 Read 工具的输入
+                    id: Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
+                    type: "text",
+                    synthetic: true,
+                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
                   },
                 ]
 
-                await ReadTool.init()  // 初始化 Read 工具
-                  .then(async (t) => {  // 然后执行
-                    const model = await Provider.getModel(info.model.providerID, info.model.modelID)  // 获取模型
-                    const readCtx: Tool.Context = {  // 读取上下文
-                      sessionID: input.sessionID,  // 会话 ID
-                      abort: new AbortController().signal,  // 中止信号
-                      agent: input.agent!,  // 智能体
-                      messageID: info.id,  // 消息 ID
-                      extra: { bypassCwdCheck: true, model },  // 额外信息
-                      metadata: async () => {},  // 元数据更新函数
-                      ask: async () => {},  // 权限询问函数
+                await ReadTool.init()
+                  .then(async (t) => {
+                    const model = await Provider.getModel(info.model.providerID, info.model.modelID)
+                    const readCtx: Tool.Context = {
+                      sessionID: input.sessionID,
+                      abort: new AbortController().signal,
+                      agent: input.agent!,
+                      messageID: info.id,
+                      extra: { bypassCwdCheck: true, model },
+                      metadata: async () => {},
+                      ask: async () => {},
                     }
-                    const result = await t.execute(args, readCtx)  // 执行读取
-                    pieces.push({  // 添加结果部分
-                      id: Identifier.ascending("part"),  // 生成部分 ID
-                      messageID: info.id,  // 消息 ID
-                      sessionID: input.sessionID,  // 会话 ID
-                      type: "text",  // 类型为文本
-                      synthetic: true,  // 合成标记
-                      text: result.output,  // 输出文本
+                    const result = await t.execute(args, readCtx)
+                    pieces.push({
+                      id: Identifier.ascending("part"),
+                      messageID: info.id,
+                      sessionID: input.sessionID,
+                      type: "text",
+                      synthetic: true,
+                      text: result.output,
                     })
-                    if (result.attachments?.length) {  // 如果有附件
-                      pieces.push(  // 添加附件
-                        ...result.attachments.map((attachment) => ({  // 映射附件
-                          ...attachment,  // 复制附件
-                          synthetic: true,  // 合成标记
-                          filename: attachment.filename ?? part.filename,  // 文件名
-                          messageID: info.id,  // 消息 ID
-                          sessionID: input.sessionID,  // 会话 ID
+                    if (result.attachments?.length) {
+                      pieces.push(
+                        ...result.attachments.map((attachment) => ({
+                          ...attachment,
+                          synthetic: true,
+                          filename: attachment.filename ?? part.filename,
+                          messageID: info.id,
+                          sessionID: input.sessionID,
                         })),
                       )
-                    } else {  // 如果没有附件
-                      pieces.push({  // 添加文件部分
-                        ...part,  // 复制现有部分
-                        id: part.id ?? Identifier.ascending("part"),  // 部分 ID
-                        messageID: info.id,  // 消息 ID
-                        sessionID: input.sessionID,  // 会话 ID
+                    } else {
+                      pieces.push({
+                        ...part,
+                        id: part.id ?? Identifier.ascending("part"),
+                        messageID: info.id,
+                        sessionID: input.sessionID,
                       })
                     }
                   })
-                  .catch((error) => {  // 捕获错误
-                    log.error("failed to read file", { error })  // 记录错误日志
-                    const message = error instanceof Error ? error.message : error.toString()  // 错误消息
-                    Bus.publish(Session.Event.Error, {  // 发布错误事件
-                      sessionID: input.sessionID,  // 会话 ID
-                      error: new NamedError.Unknown({  // 创建未知错误
-                        message,  // 错误消息
-                      }).toObject(),  // 转换为对象
+                  .catch((error) => {
+                    log.error("failed to read file", { error })
+                    const message = error instanceof Error ? error.message : error.toString()
+                    Bus.publish(Session.Event.Error, {
+                      sessionID: input.sessionID,
+                      error: new NamedError.Unknown({
+                        message,
+                      }).toObject(),
                     })
-                    pieces.push({  // 添加错误部分
-                      id: Identifier.ascending("part"),  // 生成部分 ID
-                      messageID: info.id,  // 消息 ID
-                      sessionID: input.sessionID,  // 会话 ID
-                      type: "text",  // 类型为文本
-                      synthetic: true,  // 合成标记
-                      text: `Read tool failed to read ${filepath} with the following error: ${message}`,  // 错误文本
+                    pieces.push({
+                      id: Identifier.ascending("part"),
+                      messageID: info.id,
+                      sessionID: input.sessionID,
+                      type: "text",
+                      synthetic: true,
+                      text: `Read tool failed to read ${filepath} with the following error: ${message}`,
                     })
                   })
 
-                return pieces  // 返回部分列表
+                return pieces
               }
 
-              if (part.mime === "application/x-directory") {  // 如果是目录
-                const args = { path: filepath }  // 目录参数
-                const listCtx: Tool.Context = {  // 列表上下文
-                  sessionID: input.sessionID,  // 会话 ID
-                  abort: new AbortController().signal,  // 中止信号
-                  agent: input.agent!,  // 智能体
-                  messageID: info.id,  // 消息 ID
-                  extra: { bypassCwdCheck: true },  // 额外信息
-                  metadata: async () => {},  // 元数据更新函数
-                  ask: async () => {},  // 权限询问函数
+              if (part.mime === "application/x-directory") {
+                const args = { path: filepath }
+                const listCtx: Tool.Context = {
+                  sessionID: input.sessionID,
+                  abort: new AbortController().signal,
+                  agent: input.agent!,
+                  messageID: info.id,
+                  extra: { bypassCwdCheck: true },
+                  metadata: async () => {},
+                  ask: async () => {},
                 }
-                const result = await ListTool.init().then((t) => t.execute(args, listCtx))  // 执行列表工具
-                return [  // 返回部分列表
+                const result = await ListTool.init().then((t) => t.execute(args, listCtx))
+                return [
                   {
-                    id: Identifier.ascending("part"),  // 生成部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
-                    type: "text",  // 类型为文本
-                    synthetic: true,  // 合成标记
-                    text: `Called list tool with the following input: ${JSON.stringify(args)}`,  // 调用列表工具的输入
+                    id: Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
+                    type: "text",
+                    synthetic: true,
+                    text: `Called the list tool with the following input: ${JSON.stringify(args)}`,
                   },
                   {
-                    id: Identifier.ascending("part"),  // 生成部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
-                    type: "text",  // 类型为文本
-                    synthetic: true,  // 合成标记
-                    text: result.output,  // 输出文本
+                    id: Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
+                    type: "text",
+                    synthetic: true,
+                    text: result.output,
                   },
                   {
-                    ...part,  // 复制现有部分
-                    id: part.id ?? Identifier.ascending("part"),  // 部分 ID
-                    messageID: info.id,  // 消息 ID
-                    sessionID: input.sessionID,  // 会话 ID
+                    ...part,
+                    id: part.id ?? Identifier.ascending("part"),
+                    messageID: info.id,
+                    sessionID: input.sessionID,
                   },
                 ]
               }
 
-              const file = Bun.file(filepath)  // 获取文件
-              FileTime.read(input.sessionID, filepath)  // 读取文件时间
-              return [  // 返回部分列表
+              const file = Bun.file(filepath)
+              FileTime.read(input.sessionID, filepath)
+              return [
                 {
-                  id: Identifier.ascending("part"),  // 生成部分 ID
-                  messageID: info.id,  // 消息 ID
-                  sessionID: input.sessionID,  // 会话 ID
-                  type: "text",  // 类型为文本
-                  text: `Called Read tool with the following input: {"filePath":"${filepath}"}`,  // 调用 Read 工具的输入
-                  synthetic: true,  // 合成标记
+                  id: Identifier.ascending("part"),
+                  messageID: info.id,
+                  sessionID: input.sessionID,
+                  type: "text",
+                  text: `Called the Read tool with the following input: {\"filePath\":\"${filepath}\"}`,
+                  synthetic: true,
                 },
                 {
-                  id: part.id ?? Identifier.ascending("part"),  // 部分 ID
-                  messageID: info.id,  // 消息 ID
-                  sessionID: input.sessionID,  // 会话 ID
-                  type: "file",  // 类型为文件
-                  url: `data:${part.mime};base64,` + Buffer.from(await file.bytes()).toString("base64"),  // 数据 URL
-                  mime: part.mime,  // MIME 类型
-                  filename: part.filename!,  // 文件名
-                  source: part.source,  // 来源
+                  id: part.id ?? Identifier.ascending("part"),
+                  messageID: info.id,
+                  sessionID: input.sessionID,
+                  type: "file",
+                  url: `data:${part.mime};base64,` + Buffer.from(await file.bytes()).toString("base64"),
+                  mime: part.mime,
+                  filename: part.filename!,
+                  source: part.source,
                 },
               ]
           }
         }
 
-        if (part.type === "agent") {  // 如果是智能体部分
+        if (part.type === "agent") {
           return [
             {
-              id: Identifier.ascending("part"),  // 生成部分 ID
-              ...part,  // 复制现有部分
-              messageID: info.id,  // 消息 ID
-              sessionID: input.sessionID,  // 会话 ID
+              id: Identifier.ascending("part"),
+              ...part,
+              messageID: info.id,
+              sessionID: input.sessionID,
             },
             {
-              id: Identifier.ascending("part"),  // 生成部分 ID
-              messageID: info.id,  // 消息 ID
-              sessionID: input.sessionID,  // 会话 ID
-              type: "text",  // 类型为文本
-              synthetic: true,  // 合成标记
-              text:  // 文本内容
-                "Use the above message and context to generate a prompt and call task tool with subagent: " +
-                part.name,  // 使用上述消息和上下文生成提示词并调用任务工具，子智能体为
+              id: Identifier.ascending("part"),
+              messageID: info.id,
+              sessionID: input.sessionID,
+              type: "text",
+              synthetic: true,
+              text:
+                "Use the above message and context to generate a prompt and call the task tool with subagent: " +
+                part.name,
             },
           ]
         }
 
-        return [  // 返回部分列表
+        return [
           {
-            id: Identifier.ascending("part"),  // 生成部分 ID
-            ...part,  // 复制现有部分
-            messageID: info.id,  // 消息 ID
-            sessionID: input.sessionID,  // 会话 ID
+            id: Identifier.ascending("part"),
+            ...part,
+            messageID: info.id,
+            sessionID: input.sessionID,
           },
         ]
       }),
-    ).then((x) => x.flat())  // 展平数组
+    ).then((x) => x.flat())
 
-    await Plugin.trigger(  // 触发插件
-      "chat.message",  // 聊天消息事件
+    await Plugin.trigger(
+      "chat.message",
       {
-        sessionID: input.sessionID,  // 会话 ID
-        agent: input.agent,  // 智能体
-        model: input.model,  // 模型
-        messageID: input.messageID,  // 消息 ID
+        sessionID: input.sessionID,
+        agent: input.agent,
+        model: input.model,
+        messageID: input.messageID,
       },
       {
-        message: info,  // 消息信息
-        parts,  // 部分列表
+        message: info,
+        parts,
       },
     )
 
-    await Session.updateMessage(info)  // 更新消息
-    for (const part of parts) {  // 遍历部分
-      await Session.updatePart(part)  // 更新部分
+    await Session.updateMessage(info)
+    for (const part of parts) {
+      await Session.updatePart(part)
     }
 
-    return {  // 返回带部分的消息
-      info,  // 消息信息
-      parts,  // 部分列表
+    return {
+      info,
+      parts,
     }
   }
 
-  function insertReminders(input: { messages: MessageV2.WithParts[]; agent: Agent.Info }) {  // 插入提醒
-    const userMessage = input.messages.findLast((msg) => msg.info.role === "user")  // 查找最后用户消息
-    if (!userMessage) return input.messages  // 如果没有用户消息，返回原消息列表
-    if (input.agent.name === "plan") {  // 如果智能体是计划
-      userMessage.parts.push({  // 添加计划提醒
-        id: Identifier.ascending("part"),  // 生成部分 ID
-        messageID: userMessage.info.id,  // 消息 ID
-        sessionID: userMessage.info.sessionID,  // 会话 ID
-        type: "text",  // 类型为文本
-        // TODO (for mr dax): update to use anthropic full fledged one (see plan-reminder-anthropic.txt)
-        // TODO（给 dax 先生）：更新为使用 anthropic 完整版本（参见 plan-reminder-anthropic.txt）
-        text: PROMPT_PLAN,  // 计划提示词
-        synthetic: true,  // 合成标记
+  function insertReminders(input: { messages: MessageV2.WithParts[]; agent: Agent.Info }) {
+    const userMessage = input.messages.findLast((msg) => msg.info.role === "user")
+    if (!userMessage) return input.messages
+    if (input.agent.name === "plan") {
+      userMessage.parts.push({
+        id: Identifier.ascending("part"),
+        messageID: userMessage.info.id,
+        sessionID: userMessage.info.sessionID,
+        type: "text",
+        // TODO (for mr dax): update to use the anthropic full fledged one (see plan-reminder-anthropic.txt)
+        text: PROMPT_PLAN,
+        synthetic: true,
       })
     }
-    const wasPlan = input.messages.some((msg) => msg.info.role === "assistant" && msg.info.agent === "plan")  // 是否使用过计划智能体
-    if (wasPlan && input.agent.name === "build") {  // 如果使用过计划且当前是构建智能体
-      userMessage.parts.push({  // 添加构建切换提醒
-        id: Identifier.ascending("part"),  // 生成部分 ID
-        messageID: userMessage.info.id,  // 消息 ID
-        sessionID: userMessage.info.sessionID,  // 会话 ID
-        type: "text",  // 类型为文本
-        text: BUILD_SWITCH,  // 构建切换提示词
-        synthetic: true,  // 合成标记
+    const wasPlan = input.messages.some((msg) => msg.info.role === "assistant" && msg.info.agent === "plan")
+    if (wasPlan && input.agent.name === "build") {
+      userMessage.parts.push({
+        id: Identifier.ascending("part"),
+        messageID: userMessage.info.id,
+        sessionID: userMessage.info.sessionID,
+        type: "text",
+        text: BUILD_SWITCH,
+        synthetic: true,
       })
     }
-    return input.messages  // 返回消息列表
+    return input.messages
   }
 
-  export const ShellInput = z.object({  // Shell 输入类型
-    sessionID: Identifier.schema("session"),  // 会话 ID
-    agent: z.string(),  // 智能体
-    model: z  // 模型（可选）
+  export const ShellInput = z.object({
+    sessionID: Identifier.schema("session"),
+    agent: z.string(),
+    model: z
       .object({
-        providerID: z.string(),  // 提供商 ID
-        modelID: z.string(),  // 模型 ID
+        providerID: z.string(),
+        modelID: z.string(),
       })
       .optional(),
-    command: z.string(),  // 命令
+    command: z.string(),
   })
-  export type ShellInput = z.infer<typeof ShellInput>  // Shell 输入类型
-  export async function shell(input: ShellInput) {  // Shell 函数
-    const abort = start(input.sessionID)  // 启动会话
-    if (!abort) {  // 如果已存在
-      throw new Session.BusyError(input.sessionID)  // 抛出忙碌错误
+  export type ShellInput = z.infer<typeof ShellInput>
+  export async function shell(input: ShellInput) {
+    const abort = start(input.sessionID)
+    if (!abort) {
+      throw new Session.BusyError(input.sessionID)
     }
-    using _ = defer(() => cancel(input.sessionID))  // 延迟取消会话
+    using _ = defer(() => cancel(input.sessionID))
 
-    const session = await Session.get(input.sessionID)  // 获取会话
-    if (session.revert) {  // 如果需要回滚
-      SessionRevert.cleanup(session)  // 清理回滚
+    const session = await Session.get(input.sessionID)
+    if (session.revert) {
+      SessionRevert.cleanup(session)
     }
-    const agent = await Agent.get(input.agent)  // 获取智能体
-    const model = input.model ?? agent.model ?? (await lastModel(input.sessionID))  // 获取模型
-    const userMsg: MessageV2.User = {  // 用户消息
-      id: Identifier.ascending("message"),  // 生成消息 ID
-      sessionID: input.sessionID,  // 会话 ID
-      time: {  // 时间信息
-        created: Date.now(),  // 创建时间
+    const agent = await Agent.get(input.agent)
+    const model = input.model ?? agent.model ?? (await lastModel(input.sessionID))
+    const userMsg: MessageV2.User = {
+      id: Identifier.ascending("message"),
+      sessionID: input.sessionID,
+      time: {
+        created: Date.now(),
       },
-      role: "user",  // 角色为用户
-      agent: input.agent,  // 智能体
-      model: {  // 模型
-        providerID: model.providerID,  // 提供商 ID
-        modelID: model.modelID,  // 模型 ID
+      role: "user",
+      agent: input.agent,
+      model: {
+        providerID: model.providerID,
+        modelID: model.modelID,
       },
     }
-    await Session.updateMessage(userMsg)  // 更新消息
-    const userPart: MessageV2.Part = {  // 用户部分
-      type: "text",  // 类型为文本
-      id: Identifier.ascending("part"),  // 生成部分 ID
-      messageID: userMsg.id,  // 消息 ID
-      sessionID: input.sessionID,  // 会话 ID
-      text: "The following tool was executed by the user",  // 文本内容
-      synthetic: true,  // 合成标记
+    await Session.updateMessage(userMsg)
+    const userPart: MessageV2.Part = {
+      type: "text",
+      id: Identifier.ascending("part"),
+      messageID: userMsg.id,
+      sessionID: input.sessionID,
+      text: "The following tool was executed by the user",
+      synthetic: true,
     }
-    await Session.updatePart(userPart)  // 更新部分
+    await Session.updatePart(userPart)
 
-    const msg: MessageV2.Assistant = {  // 助手消息
-      id: Identifier.ascending("message"),  // 生成消息 ID
-      sessionID: input.sessionID,  // 会话 ID
-      parentID: userMsg.id,  // 父消息 ID
-      mode: input.agent,  // 模式
-      agent: input.agent,  // 智能体
-      cost: 0,  // 成本
-      path: {  // 路径信息
-        cwd: Instance.directory,  // 当前工作目录
-        root: Instance.worktree,  // 工作树根目录
+    const msg: MessageV2.Assistant = {
+      id: Identifier.ascending("message"),
+      sessionID: input.sessionID,
+      parentID: userMsg.id,
+      mode: input.agent,
+      agent: input.agent,
+      cost: 0,
+      path: {
+        cwd: Instance.directory,
+        root: Instance.worktree,
       },
-      time: {  // 时间信息
-        created: Date.now(),  // 创建时间
+      time: {
+        created: Date.now(),
       },
-      role: "assistant",  // 角色为助手
-      tokens: {  // token 统计
-        input: 0,  // 输入 token
-        output: 0,  // 输出 token
-        reasoning: 0,  // 推理 token
-        cache: { read: 0, write: 0 },  // 缓存 token
+      role: "assistant",
+      tokens: {
+        input: 0,
+        output: 0,
+        reasoning: 0,
+        cache: { read: 0, write: 0 },
       },
-      modelID: model.modelID,  // 模型 ID
-      providerID: model.providerID,  // 提供商 ID
+      modelID: model.modelID,
+      providerID: model.providerID,
     }
-    await Session.updateMessage(msg)  // 更新消息
-    const part: MessageV2.Part = {  // 工具部分
-      type: "tool",  // 类型为工具
-      id: Identifier.ascending("part"),  // 生成部分 ID
-      messageID: msg.id,  // 消息 ID
-      sessionID: input.sessionID,  // 会话 ID
-      tool: "bash",  // 工具名称
-      callID: ulid(),  // 调用 ID
-      state: {  // 状态
-        status: "running",  // 状态为运行中
-        time: {  // 时间信息
-          start: Date.now(),  // 开始时间
+    await Session.updateMessage(msg)
+    const part: MessageV2.Part = {
+      type: "tool",
+      id: Identifier.ascending("part"),
+      messageID: msg.id,
+      sessionID: input.sessionID,
+      tool: "bash",
+      callID: ulid(),
+      state: {
+        status: "running",
+        time: {
+          start: Date.now(),
         },
-        input: {  // 输入参数
-          command: input.command,  // 命令
+        input: {
+          command: input.command,
         },
       },
     }
-    await Session.updatePart(part)  // 更新部分
-    const shell = Shell.preferred()  // 获取首选 Shell
-    const shellName = (  // Shell 名称
-      process.platform === "win32" ? path.win32.basename(shell, ".exe") : path.basename(shell)  // Windows 或其他平台
+    await Session.updatePart(part)
+    const shell = Shell.preferred()
+    const shellName = (
+      process.platform === "win32" ? path.win32.basename(shell, ".exe") : path.basename(shell)
     ).toLowerCase()
 
-    const invocations: Record<string, { args: string[] }> = {  // Shell 调用配置
-      nu: {  // Nushell
-        args: ["-c", input.command],  // 参数
+    const invocations: Record<string, { args: string[] }> = {
+      nu: {
+        args: ["-c", input.command],
       },
-      fish: {  // Fish
-        args: ["-c", input.command],  // 参数
+      fish: {
+        args: ["-c", input.command],
       },
-      zsh: {  // Zsh
-        args: [  // 参数
-          "-c",  // 命令模式
-          "-l",  // 登录模式
+      zsh: {
+        args: [
+          "-c",
+          "-l",
           `
             [[ -f ~/.zshenv ]] && source ~/.zshenv >/dev/null 2>&1 || true
             [[ -f "\${ZDOTDIR:-$HOME}/.zshrc" ]] && source "\${ZDOTDIR:-$HOME}/.zshrc" >/dev/null 2>&1 || true
             eval ${JSON.stringify(input.command)}
-          `,  // Shell 脚本
+          `,
         ],
       },
-      bash: {  // Bash
-        args: [  // 参数
-          "-c",  // 命令模式
-          "-l",  // 登录模式
+      bash: {
+        args: [
+          "-c",
+          "-l",
           `
-            shopt -s expand_aliases  // 启用别名扩展
+            shopt -s expand_aliases
             [[ -f ~/.bashrc ]] && source ~/.bashrc >/dev/null 2>&1 || true
             eval ${JSON.stringify(input.command)}
-          `,  // Shell 脚本
+          `,
         ],
       },
       // Windows cmd
-      // Windows 命令提示符
       cmd: {
-        args: ["/c", input.command],  // 参数
+        args: ["/c", input.command],
       },
-      // Windows PowerShell
       // Windows PowerShell
       powershell: {
-        args: ["-NoProfile", "-Command", input.command],  // 参数
+        args: ["-NoProfile", "-Command", input.command],
       },
-      pwsh: {  // PowerShell Core
-        args: ["-NoProfile", "-Command", input.command],  // 参数
+      pwsh: {
+        args: ["-NoProfile", "-Command", input.command],
       },
       // Fallback: any shell that doesn't match those above
-      // 回退：任何不匹配上述内容的 Shell
       //  - No -l, for max compatibility
-      //  - 无 -l，以获得最大兼容性
       "": {
-        args: ["-c", `${input.command}`],  // 参数
+        args: ["-c", `${input.command}`],
       },
     }
 
-    const matchingInvocation = invocations[shellName] ?? invocations[""]  // 匹配的调用配置
-    const args = matchingInvocation?.args  // 参数
+    const matchingInvocation = invocations[shellName] ?? invocations[""]
+    const args = matchingInvocation?.args
 
-    const proc = spawn(shell, args, {  // 生成子进程
-      cwd: Instance.directory,  // 工作目录
-      detached: process.platform !== "win32",  // 是否分离（非 Windows）
-      stdio: ["ignore", "pipe", "pipe"],  // 标准输入输出
-      env: {  // 环境变量
-        ...process.env,  // 继承现有环境变量
-        TERM: "dumb",  // 终端类型
+    const proc = spawn(shell, args, {
+      cwd: Instance.directory,
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        TERM: "dumb",
       },
     })
 
-    let output = ""  // 输出文本
+    let output = ""
 
-    proc.stdout?.on("data", (chunk) => {  // 标准输出处理
-      output += chunk.toString()  // 追加输出
-      if (part.state.status === "running") {  // 如果正在运行
-        part.state.metadata = {  // 更新元数据
-          output: output,  // 输出文本
-          description: "",  // 描述
+    proc.stdout?.on("data", (chunk) => {
+      output += chunk.toString()
+      if (part.state.status === "running") {
+        part.state.metadata = {
+          output: output,
+          description: "",
         }
-        Session.updatePart(part)  // 更新部分
+        Session.updatePart(part)
       }
     })
 
-    proc.stderr?.on("data", (chunk) => {  // 标准错误处理
-      output += chunk.toString()  // 追加输出
-      if (part.state.status === "running") {  // 如果正在运行
-        part.state.metadata = {  // 更新元数据
-          output: output,  // 输出文本
-          description: "",  // 描述
+    proc.stderr?.on("data", (chunk) => {
+      output += chunk.toString()
+      if (part.state.status === "running") {
+        part.state.metadata = {
+          output: output,
+          description: "",
         }
-        Session.updatePart(part)  // 更新部分
+        Session.updatePart(part)
       }
     })
 
-    let aborted = false  // 是否中止
-    let exited = false  // 是否退出
+    let aborted = false
+    let exited = false
 
-    const kill = () => Shell.killTree(proc, { exited: () => exited })  // 杀死进程树
-    if (abort.aborted) {  // 如果已中止
-      aborted = true  // 设置中止标志
-      await kill()  // 杀死进程
+    const kill = () => Shell.killTree(proc, { exited: () => exited })
+
+    if (abort.aborted) {
+      aborted = true
+      await kill()
     }
 
-    const abortHandler = () => {  // 中止处理函数
-      aborted = true  // 设置中止标志
-      void kill()  // 杀死进程
+    const abortHandler = () => {
+      aborted = true
+      void kill()
     }
 
-    abort.addEventListener("abort", abortHandler, { once: true })  // 添加中止事件监听器
+    abort.addEventListener("abort", abortHandler, { once: true })
 
-    await new Promise<void>((resolve) => {  // 等待进程退出
-      proc.on("close", () => {  // 进程关闭事件
-        exited = true  // 设置退出标志
-        abort.removeEventListener("abort", abortHandler)  // 移除中止事件监听器
-        resolve()  // 解析 Promise
+    await new Promise<void>((resolve) => {
+      proc.on("close", () => {
+        exited = true
+        abort.removeEventListener("abort", abortHandler)
+        resolve()
       })
     })
 
-    if (aborted) {  // 如果已中止
-      output += "\n\n" + ["<metadata>", "User aborted the command", "</metadata>"].join("\n")  // 添加中止信息
+    if (aborted) {
+      output += "\n\n" + ["<metadata>", "User aborted the command", "</metadata>"].join("\n")
     }
-    msg.time.completed = Date.now()  // 设置完成时间
-    await Session.updateMessage(msg)  // 更新消息
-    if (part.state.status === "running") {  // 如果正在运行
-      part.state = {  // 更新状态
-        status: "completed",  // 状态为已完成
-        time: {  // 时间信息
-          ...part.state.time,  // 复制现有时间
-          end: Date.now(),  // 结束时间
+    msg.time.completed = Date.now()
+    await Session.updateMessage(msg)
+    if (part.state.status === "running") {
+      part.state = {
+        status: "completed",
+        time: {
+          ...part.state.time,
+          end: Date.now(),
         },
-        input: part.state.input,  // 输入参数
-        title: "",  // 标题
-        metadata: {  // 元数据
-          output,  // 输出文本
-          description: "",  // 描述
+        input: part.state.input,
+        title: "",
+        metadata: {
+          output,
+          description: "",
         },
-        output,  // 输出文本
+        output,
       }
-      await Session.updatePart(part)  // 更新部分
+      await Session.updatePart(part)
     }
-    return { info: msg, parts: [part] }  // 返回带部分的消息
+    return { info: msg, parts: [part] }
   }
 
-  export const CommandInput = z.object({  // 命令输入类型
-    messageID: Identifier.schema("message").optional(),  // 消息 ID（可选）
-    sessionID: Identifier.schema("session"),  // 会话 ID
-    agent: z.string().optional(),  // 智能体（可选）
-    model: z.string().optional(),  // 模型（可选）
-    arguments: z.string(),  // 参数
-    command: z.string(),  // 命令
-    variant: z.string().optional(),  // 变体（可选）
+  export const CommandInput = z.object({
+    messageID: Identifier.schema("message").optional(),
+    sessionID: Identifier.schema("session"),
+    agent: z.string().optional(),
+    model: z.string().optional(),
+    arguments: z.string(),
+    command: z.string(),
+    variant: z.string().optional(),
   })
-  export type CommandInput = z.infer<typeof CommandInput>  // 命令输入类型
-  const bashRegex = /!`([^`]+)`/g  // Bash 正则表达式
-  const argsRegex = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g  // 参数正则表达式
-  const placeholderRegex = /\$(\d+)/g  // 占位符正则表达式
-  const quoteTrimRegex = /^["']|["']$/g  // 引号修剪正则表达式
+  export type CommandInput = z.infer<typeof CommandInput>
+  const bashRegex = /!`([^`]+)`/g
+  const argsRegex = /(?:[^\s"']+|"[^"]*"|'[^']*')+/g
+  const placeholderRegex = /\$(\d+)/g
+  const quoteTrimRegex = /^["']|["']$/g
   /**
    * Regular expression to match @ file references in text
    * Matches @ followed by file paths, excluding commas, periods at end of sentences, and backticks
    * Does not match when preceded by word characters or backticks (to avoid email addresses and quoted references)
    */
-  /**
-   * 匹配文本中 @ 文件引用的正则表达式
-   * 匹配 @ 后跟文件路径，排除逗号、句末的句号和反引号
-   * 不匹配前面有单词字符或反引号的情况（以避免电子邮件地址和引用）
-   */
 
-  export async function command(input: CommandInput) {  // 命令函数
-    log.info("command", input)  // 记录命令日志
-    const command = await Command.get(input.command)  // 获取命令
-    const agentName = command.agent ?? input.agent ?? (await Agent.defaultAgent())  // 智能体名称
+  export async function command(input: CommandInput) {
+    log.info("command", input)
+    const command = await Command.get(input.command)
+    const agentName = command.agent ?? input.agent ?? (await Agent.defaultAgent())
 
-    const raw = input.arguments.match(argsRegex) ?? []  // 匹配参数
-    const args = raw.map((arg) => arg.replace(quoteTrimRegex, ""))  // 修剪引号
+    const raw = input.arguments.match(argsRegex) ?? []
+    const args = raw.map((arg) => arg.replace(quoteTrimRegex, ""))
 
-    const templateCommand = await command.template  // 模板命令
+    const templateCommand = await command.template
 
-    const placeholders = templateCommand.match(placeholderRegex) ?? []  // 匹配占位符
-    let last = 0  // 最后占位符位置
-    for (const item of placeholders) {  // 遍历占位符
-      const value = Number(item.slice(1))  // 占位符值
-      if (value > last) last = value  // 更新最后位置
+    const placeholders = templateCommand.match(placeholderRegex) ?? []
+    let last = 0
+    for (const item of placeholders) {
+      const value = Number(item.slice(1))
+      if (value > last) last = value
     }
 
-    // Let's final placeholder swallow any extra arguments so prompts read naturally
-    // 让最后一个占位符吞掉所有额外参数，以便提示词自然读取
-    const withArgs = templateCommand.replaceAll(placeholderRegex, (_, index) => {  // 替换占位符
-      const position = Number(index)  // 占位符位置
-      const argIndex = position - 1  // 参数索引
-      if (argIndex >= args.length) return ""  // 如果参数索引超出范围，返回空字符串
-      if (position === last) return args.slice(argIndex).join(" ")  // 如果是最后占位符，返回剩余参数
-      return args[argIndex]  // 返回对应参数
+    // Let the final placeholder swallow any extra arguments so prompts read naturally
+    const withArgs = templateCommand.replaceAll(placeholderRegex, (_, index) => {
+      const position = Number(index)
+      const argIndex = position - 1
+      if (argIndex >= args.length) return ""
+      if (position === last) return args.slice(argIndex).join(" ")
+      return args[argIndex]
     })
-    let template = withArgs.replaceAll("$ARGUMENTS", input.arguments)  // 替换参数占位符
+    let template = withArgs.replaceAll("$ARGUMENTS", input.arguments)
 
-    const shell = ConfigMarkdown.shell(template)  // 获取 Shell 命令
-    if (shell.length > 0) {  // 如果有 Shell 命令
-      const results = await Promise.all(  // 并行执行所有 Shell 命令
-        shell.map(async ([, cmd]) => {  // 映射 Shell 命令
-          try {  // 尝试执行
-            return await $`${{ raw: cmd }}`.quiet().nothrow().text()  // 执行命令
-          } catch (error) {  // 捕获错误
-            return `Error executing command: ${error instanceof Error ? error.message : String(error)}`  // 返回错误信息
+    const shell = ConfigMarkdown.shell(template)
+    if (shell.length > 0) {
+      const results = await Promise.all(
+        shell.map(async ([, cmd]) => {
+          try {
+            return await $`${{ raw: cmd }}`.quiet().nothrow().text()
+          } catch (error) {
+            return `Error executing command: ${error instanceof Error ? error.message : String(error)}`
           }
         }),
       )
-      let index = 0  // 结果索引
-      template = template.replace(bashRegex, () => results[index++])  // 替换 Bash 命令
+      let index = 0
+      template = template.replace(bashRegex, () => results[index++])
     }
-    template = template.trim()  // 修剪模板
+    template = template.trim()
 
-    const model = await (async () => {  // 获取模型
-      if (command.model) {  // 如果命令有模型
-        return Provider.parseModel(command.model)  // 解析模型
+    const model = await (async () => {
+      if (command.model) {
+        return Provider.parseModel(command.model)
       }
-      if (command.agent) {  // 如果命令有智能体
+      if (command.agent) {
         const cmdAgent = await Agent.get(command.agent)
+        if (cmdAgent?.model) {
+          return cmdAgent.model
+        }
+      }
+      if (input.model) return Provider.parseModel(input.model)
+      return await lastModel(input.sessionID)
+    })()
+
+    try {
+      await Provider.getModel(model.providerID, model.modelID)
+    } catch (e) {
+      if (Provider.ModelNotFoundError.isInstance(e)) {
+        const { providerID, modelID, suggestions } = e.data
+        const hint = suggestions?.length ? ` Did you mean: ${suggestions.join(", ")}?` : ""
+        Bus.publish(Session.Event.Error, {
+          sessionID: input.sessionID,
+          error: new NamedError.Unknown({ message: `Model not found: ${providerID}/${modelID}.${hint}` }).toObject(),
+        })
+      }
+      throw e
+    }
+    const agent = await Agent.get(agentName)
+    if (!agent) {
+      const available = await Agent.list().then((agents) => agents.filter((a) => !a.hidden).map((a) => a.name))
+      const hint = available.length ? ` Available agents: ${available.join(", ")}` : ""
+      const error = new NamedError.Unknown({ message: `Agent not found: "${agentName}".${hint}` })
+      Bus.publish(Session.Event.Error, {
+        sessionID: input.sessionID,
+        error: error.toObject(),
+      })
+      throw error
+    }
+
+    const parts =
+      (agent.mode === "subagent" && command.subtask !== false) || command.subtask === true
+        ? [
+            {
+              type: "subtask" as const,
+              agent: agent.name,
+              description: command.description ?? "",
+              command: input.command,
+              // TODO: how can we make task tool accept a more complex input?
+              prompt: await resolvePromptParts(template).then((x) => x.find((y) => y.type === "text")?.text ?? ""),
+            },
+          ]
+        : await resolvePromptParts(template)
+
+    const result = (await prompt({
+      sessionID: input.sessionID,
+      messageID: input.messageID,
+      model,
+      agent: agentName,
+      parts,
+      variant: input.variant,
+    })) as MessageV2.WithParts
+
+    Bus.publish(Command.Event.Executed, {
+      name: input.command,
+      sessionID: input.sessionID,
+      arguments: input.arguments,
+      messageID: result.info.id,
+    })
+
+    return result
+  }
+
+  async function ensureTitle(input: {
+    session: Session.Info
+    message: MessageV2.WithParts
+    history: MessageV2.WithParts[]
+    providerID: string
+    modelID: string
+  }) {
+    if (input.session.parentID) return
+    if (!Session.isDefaultTitle(input.session.title)) return
+    const isFirst =
+      input.history.filter((m) => m.info.role === "user" && !m.parts.every((p) => "synthetic" in p && p.synthetic))
+        .length === 1
+    if (!isFirst) return
+    const agent = await Agent.get("title")
+    if (!agent) return
+    const result = await LLM.stream({
+      agent,
+      user: input.message.info as MessageV2.User,
+      system: [],
+      small: true,
+      tools: {},
+      model: await iife(async () => {
+        if (agent.model) return await Provider.getModel(agent.model.providerID, agent.model.modelID)
+        return (
+          (await Provider.getSmallModel(input.providerID)) ?? (await Provider.getModel(input.providerID, input.modelID))
+        )
+      }),
+      abort: new AbortController().signal,
+      sessionID: input.session.id,
+      retries: 2,
+      messages: [
+        {
+          role: "user",
+          content: "Generate a title for this conversation:\n",
+        },
+        ...MessageV2.toModelMessage([
+          {
+            info: {
+              id: Identifier.ascending("message"),
+              role: "user",
+              sessionID: input.session.id,
+              time: {
+                created: Date.now(),
+              },
+              agent: input.message.info.role === "user" ? input.message.info.agent : await Agent.defaultAgent(),
+              model: {
+                providerID: input.providerID,
+                modelID: input.modelID,
+              },
+            },
+            parts: input.message.parts,
+          },
+        ]),
+      ],
+    })
+    const text = await result.text.catch((err) => log.error("failed to generate title", { error: err }))
+    if (text)
+      return Session.update(input.session.id, (draft) => {
+        const cleaned = text
+          .replace(/<think>[\s\S]*?<\/think>\s*/g, "")
+          .split("\n")
+          .map((line) => line.trim())
+          .find((line) => line.length > 0)
+        if (!cleaned) return
+
+        const title = cleaned.length > 100 ? cleaned.substring(0, 97) + "..." : cleaned
+        draft.title = title
+      })
+  }
+}
