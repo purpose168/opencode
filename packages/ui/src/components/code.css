@@ -1,4 +1,12 @@
+/*
+ * 代码组件样式
+ * 定义代码组件的基础样式
+ */
+
+/* 代码组件容器样式 */
 [data-component="code"] {
+  /* 内容可见性优化，提高渲染性能 */
   content-visibility: auto;
+  /* 隐藏溢出内容 */
   overflow: hidden;
 }

@@ -1,3 +1,7 @@
+/**
+ * 消息部件组件
+ * 用于渲染不同类型的消息部件，包括文本、工具、推理等
+ */
 import {
   Component,
   createEffect,
@@ -40,6 +44,9 @@ import { getDirectory as _getDirectory, getFilename } from "@opencode-ai/util/pa
 import { checksum } from "@opencode-ai/util/encode"
 import { createAutoScroll } from "../hooks"
 
+/**
+ * 诊断信息接口
+ */
 interface Diagnostic {
   range: {
     start: { line: number; character: number }
@@ -49,6 +56,12 @@ interface Diagnostic {
   severity?: number
 }
 
+/**
+ * 获取诊断信息
+ * @param diagnosticsByFile 文件诊断信息映射
+ * @param filePath 文件路径
+ * @returns 诊断信息数组
+ */
 function getDiagnostics(
   diagnosticsByFile: Record<string, Diagnostic[]> | undefined,
   filePath: string | undefined,
@@ -58,6 +71,9 @@ function getDiagnostics(
   return diagnostics.filter((d) => d.severity === 1).slice(0, 3)
 }
 
+/**
+ * 诊断信息显示组件
+ */
 function DiagnosticsDisplay(props: { diagnostics: Diagnostic[] }): JSX.Element {
   return (
     <Show when={props.diagnostics.length > 0}>
@@ -78,30 +94,59 @@ function DiagnosticsDisplay(props: { diagnostics: Diagnostic[] }): JSX.Element {
   )
 }
 
+/**
+ * 消息属性接口
+ */
 export interface MessageProps {
+  /** 消息对象 */
   message: MessageType
+  /** 消息部件数组 */
   parts: PartType[]
 }
 
+/**
+ * 消息部件属性接口
+ */
 export interface MessagePartProps {
+  /** 部件对象 */
   part: PartType
+  /** 消息对象 */
   message: MessageType
+  /** 是否隐藏详情 */
   hideDetails?: boolean
+  /** 是否默认展开 */
   defaultOpen?: boolean
 }
 
+/**
+ * 部件组件类型
+ */
 export type PartComponent = Component<MessagePartProps>
 
+/**
+ * 部件映射表
+ */
 export const PART_MAPPING: Record<string, PartComponent | undefined> = {}
 
+/**
+ * 文本渲染节流时间（毫秒）
+ */
 const TEXT_RENDER_THROTTLE_MS = 100
 
+/**
+ * 比较两个数组是否相同
+ */
 function same<T>(a: readonly T[], b: readonly T[]) {
   if (a === b) return true
   if (a.length !== b.length) return false
   return a.every((x, i) => x === b[i])
 }
 
+/**
+ * 创建节流值
+ * @param getValue 获取值的函数
+ * @returns 节流处理后的值
+ */
 function createThrottledValue(getValue: () => string) {
   const [value, setValue] = createSignal(getValue())
   let timeout: ReturnType<typeof setTimeout> | undefined
@@ -135,17 +180,34 @@ function createThrottledValue(getValue: () => string) {
   return value
 }
 
+/**
+ * 相对化项目路径
+ * @param text 文本内容
+ * @param directory 目录路径
+ * @returns 相对化后的文本
+ */
 function relativizeProjectPaths(text: string, directory?: string) {
   if (!text) return ""
   if (!directory) return text
   return text.split(directory).join("")
 }
 
+/**
+ * 获取目录路径
+ * @param path 文件路径
+ * @returns 目录路径
+ */
 function getDirectory(path: string | undefined) {
   const data = useData()
   return relativizeProjectPaths(_getDirectory(path), data.directory)
 }
 
+/**
+ * 获取会话工具部件
+ * @param store 数据存储
+ * @param sessionId 会话ID
+ * @returns 工具部件数组
+ */
 export function getSessionToolParts(store: ReturnType<typeof useData>["store"], sessionId: string): ToolPart[] {
   const messages = store.message[sessionId]?.filter((m) => m.role === "assistant")
   if (!messages) return []
@@ -164,12 +226,24 @@ export function getSessionToolParts(store: ReturnType<typeof useData>["store"], 
 
 import type { IconProps } from "./icon"
 
+/**
+ * 工具信息类型
+ */
 export type ToolInfo = {
+  /** 工具图标 */
   icon: IconProps["name"]
+  /** 工具标题 */
   title: string
+  /** 工具副标题 */
   subtitle?: string
 }
 
+/**
+ * 获取工具信息
+ * @param tool 工具名称
+ * @param input 工具输入
+ * @returns 工具信息
+ */
 export function getToolInfo(tool: string, input: any = {}): ToolInfo {
   switch (tool) {
     case "read":
@@ -244,10 +318,19 @@ export function getToolInfo(tool: string, input: any = {}): ToolInfo {
   }
 }
 
+/**
+ * 注册部件组件
+ * @param type 部件类型
+ * @param component 部件组件
+ */
 export function registerPartComponent(type: string, component: PartComponent) {
   PART_MAPPING[type] = component
 }
 
+/**
+ * 消息组件
+ * 根据消息角色渲染不同的消息显示组件
+ */
 export function Message(props: MessageProps) {
   return (
     <Switch>
@@ -263,6 +346,10 @@ export function Message(props: MessageProps) {
   )
 }
 
+/**
+ * 助手消息显示组件
+ * 显示助手消息的部件
+ */
 export function AssistantMessageDisplay(props: { message: AssistantMessage; parts: PartType[] }) {
   const emptyParts: PartType[] = []
   const filteredParts = createMemo(
@@ -276,6 +363,10 @@ export function AssistantMessageDisplay(props: { message: AssistantMessage; part
   return <For each={filteredParts()}>{(part) => <Part part={part} message={props.message} />}</For>
 }
 
+/**
+ * 用户消息显示组件
+ * 显示用户消息的文本和附件
+ */
 export function UserMessageDisplay(props: { message: UserMessage; parts: PartType[] }) {
   const dialog = useDialog()
 
@@ -347,8 +438,15 @@ export function UserMessageDisplay(props: { message: UserMessage; parts: PartTyp
   )
 }
 
+/**
+ * 高亮段落类型
+ */
 type HighlightSegment = { text: string; type?: "file" | "agent" }
 
+/**
+ * 高亮文本组件
+ * 高亮显示文本中的文件引用和代理引用
+ */
 function HighlightedText(props: { text: string; references: FilePart[]; agents: AgentPart[] }) {
   const segments = createMemo(() => {
     const text = props.text
@@ -399,6 +497,10 @@ function HighlightedText(props: { text: string; references: FilePart[]; agents: 
   )
 }
 
+/**
+ * 部件组件
+ * 根据部件类型渲染对应的部件组件
+ */
 export function Part(props: MessagePartProps) {
   const component = createMemo(() => PART_MAPPING[props.part.type])
   return (

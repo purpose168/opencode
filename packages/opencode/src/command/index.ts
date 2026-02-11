@@ -8,6 +8,7 @@ import PROMPT_REVIEW from "./template/review.txt"
 import { MCP } from "../mcp"
 
 export namespace Command {
+  // 命令事件
   export const Event = {
     Executed: BusEvent.define(
       "command.executed",
@@ -20,6 +21,7 @@ export namespace Command {
     ),
   }
 
+  // 命令信息模式
   export const Info = z
     .object({
       name: z.string(),
@@ -40,6 +42,7 @@ export namespace Command {
   // for some reason zod is inferring `string` for z.promise(z.string()).or(z.string()) so we have to manually override it
   export type Info = Omit<z.infer<typeof Info>, "template"> & { template: Promise<string> | string }
 
+  // 提取命令提示
   export function hints(template: string): string[] {
     const result: string[] = []
     const numbered = template.match(/\$\d+/g)
@@ -50,20 +53,22 @@ export namespace Command {
     return result
   }
 
+  // 默认命令
   export const Default = {
     INIT: "init",
     REVIEW: "review",
   } as const
 
+  // 命令状态
   const state = Instance.state(async () => {
-    const cfg = await Config.get()
+    const cfg = await Config.get() // 获取配置
 
     const result: Record<string, Info> = {
       [Default.INIT]: {
         name: Default.INIT,
         description: "create/update AGENTS.md",
         get template() {
-          return PROMPT_INITIALIZE.replace("${path}", Instance.worktree)
+          return PROMPT_INITIALIZE.replace("${path}", Instance.worktree) // 替换路径占位符
         },
         hints: hints(PROMPT_INITIALIZE),
       },
@@ -78,6 +83,7 @@ export namespace Command {
       },
     }
 
+    // 遍历用户自定义命令
     for (const [name, command] of Object.entries(cfg.command ?? {})) {
       result[name] = {
         name,
@@ -91,6 +97,7 @@ export namespace Command {
         hints: hints(command.template),
       }
     }
+    // 遍历MCP提示
     for (const [name, prompt] of Object.entries(await MCP.prompts())) {
       result[name] = {
         name,
@@ -118,13 +125,15 @@ export namespace Command {
       }
     }
 
-    return result
+    return result // 返回命令列表
   })
 
+  // 获取指定命令
   export async function get(name: string) {
     return state().then((x) => x[name])
   }
 
+  // 列出所有命令
   export async function list() {
     return state().then((x) => Object.values(x))
   }

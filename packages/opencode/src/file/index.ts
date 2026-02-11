@@ -1,21 +1,22 @@
-import { BusEvent } from "@/bus/bus-event"
-import z from "zod"
-import { $ } from "bun"
-import type { BunFile } from "bun"
-import { formatPatch, structuredPatch } from "diff"
-import path from "path"
-import fs from "fs"
-import ignore from "ignore"
-import { Log } from "../util/log"
-import { Filesystem } from "../util/filesystem"
-import { Instance } from "../project/instance"
-import { Ripgrep } from "./ripgrep"
-import fuzzysort from "fuzzysort"
-import { Global } from "../global"
+import { BusEvent } from "@/bus/bus-event" // 导入总线事件
+import type { BunFile } from "bun" // 导入Bun文件类型
+import { $ } from "bun" // 导入Bun的shell命令执行器
+import { formatPatch, structuredPatch } from "diff" // 导入差异格式化和结构化补丁工具
+import fs from "fs" // 导入文件系统模块
+import fuzzysort from "fuzzysort" // 导入模糊搜索库
+import ignore from "ignore" // 导入ignore库用于.gitignore处理
+import path from "path" // 导入路径处理模块
+import z from "zod" // 导入zod库用于数据验证
+import { Global } from "../global" // 导入全局配置
+import { Instance } from "../project/instance" // 导入实例管理模块
+import { Filesystem } from "../util/filesystem" // 导入文件系统工具
+import { Log } from "../util/log" // 导入日志工具
+import { Ripgrep } from "./ripgrep" // 导入ripgrep搜索工具
 
 export namespace File {
-  const log = Log.create({ service: "file" })
+  const log = Log.create({ service: "file" }) // 创建文件服务日志记录器
 
+  // 文件信息schema
   export const Info = z
     .object({
       path: z.string(),
@@ -29,6 +30,7 @@ export namespace File {
 
   export type Info = z.infer<typeof Info>
 
+  // 文件节点schema
   export const Node = z
     .object({
       name: z.string(),
@@ -42,6 +44,7 @@ export namespace File {
     })
   export type Node = z.infer<typeof Node>
 
+  // 文件内容schema
   export const Content = z
     .object({
       type: z.literal("text"),
@@ -73,6 +76,7 @@ export namespace File {
     })
   export type Content = z.infer<typeof Content>
 
+  // 判断文件是否需要编码为base64
   async function shouldEncode(file: BunFile): Promise<boolean> {
     const type = file.type?.toLowerCase()
     log.info("shouldEncode", { type })
@@ -110,6 +114,7 @@ export namespace File {
     return false
   }
 
+  // 文件事件定义
   export const Event = {
     Edited: BusEvent.define(
       "file.edited",
@@ -119,6 +124,7 @@ export namespace File {
     ),
   }
 
+  // 文件状态管理
   const state = Instance.state(async () => {
     type Entry = { files: string[]; dirs: string[] }
     let cache: Entry = { files: [], dirs: [] }
@@ -127,11 +133,12 @@ export namespace File {
     const isGlobalHome = Instance.directory === Global.Path.home && Instance.project.id === "global"
 
     const fn = async (result: Entry) => {
-      // Disable scanning if in root of file system
+      // 如果在文件系统根目录,禁用扫描
       if (Instance.directory === path.parse(Instance.directory).root) return
       fetching = true
 
       if (isGlobalHome) {
+        // 全局主目录的特殊处理
         const dirs = new Set<string>()
         const ignore = new Set<string>()
 
@@ -166,6 +173,7 @@ export namespace File {
         return
       }
 
+      // 使用ripgrep扫描文件
       const set = new Set<string>()
       for await (const file of Ripgrep.files({ cwd: Instance.directory })) {
         result.files.push(file)
@@ -198,10 +206,12 @@ export namespace File {
     }
   })
 
+  // 初始化文件状态
   export function init() {
     state()
   }
 
+  // 获取文件状态(修改、添加、删除)
   export async function status() {
     const project = Instance.project
     if (project.vcs !== "git") return []
@@ -247,7 +257,7 @@ export namespace File {
       }
     }
 
-    // Get deleted files
+    // 获取已删除的文件
     const deletedOutput = await $`git diff --name-only --diff-filter=D HEAD`
       .cwd(Instance.directory)
       .quiet()
@@ -260,7 +270,7 @@ export namespace File {
         changedFiles.push({
           path: filepath,
           added: 0,
-          removed: 0, // Could get original line count but would require another git command
+          removed: 0, // 可以获取原始行数,但需要另一个git命令
           status: "deleted",
         })
       }
@@ -272,15 +282,16 @@ export namespace File {
     }))
   }
 
+  // 读取文件内容
   export async function read(file: string): Promise<Content> {
     using _ = log.time("read", { file })
     const project = Instance.project
     const full = path.join(Instance.directory, file)
 
-    // TODO: Filesystem.contains is lexical only - symlinks inside the project can escape.
-    // TODO: On Windows, cross-drive paths bypass this check. Consider realpath canonicalization.
+    // TODO: Filesystem.contains只是词法检查 - 项目内的符号链接可以逃逸。
+    // TODO: 在Windows上,跨驱动器路径绕过此检查。考虑realpath规范化。
     if (!Filesystem.contains(Instance.directory, full)) {
-      throw new Error(`Access denied: path escapes project directory`)
+      throw new Error(`访问被拒绝:路径超出项目目录`)
     }
 
     const bunFile = Bun.file(full)
@@ -319,6 +330,7 @@ export namespace File {
     return { type: "text", content }
   }
 
+  // 列出目录内容
   export async function list(dir?: string) {
     const exclude = [".git", ".DS_Store"]
     const project = Instance.project
@@ -337,10 +349,10 @@ export namespace File {
     }
     const resolved = dir ? path.join(Instance.directory, dir) : Instance.directory
 
-    // TODO: Filesystem.contains is lexical only - symlinks inside the project can escape.
-    // TODO: On Windows, cross-drive paths bypass this check. Consider realpath canonicalization.
+    // TODO: Filesystem.contains只是词法检查 - 项目内的符号链接可以逃逸。
+    // TODO: 在Windows上,跨驱动器路径绕过此检查。考虑realpath规范化。
     if (!Filesystem.contains(Instance.directory, resolved)) {
-      throw new Error(`Access denied: path escapes project directory`)
+      throw new Error(`访问被拒绝:路径超出项目目录`)
     }
 
     const nodes: Node[] = []
@@ -369,6 +381,7 @@ export namespace File {
     })
   }
 
+  // 搜索文件和目录
   export async function search(input: { query: string; limit?: number; dirs?: boolean; type?: "file" | "directory" }) {
     const query = input.query.trim()
     const limit = input.limit ?? 100

@@ -1,3 +1,8 @@
+/*
+ * 图标按钮样式
+ * 定义了不同变体和尺寸的图标按钮样式
+ */
+
 [data-component="icon-button"] {
   display: inline-flex;
   align-items: center;
@@ -8,19 +13,12 @@
   aspect-ratio: 1;
   flex-shrink: 0;
 
+  /* 主要变体 */
   &[data-variant="primary"] {
     background-color: var(--icon-strong-base);
 
     [data-slot="icon-svg"] {
-      /* color: var(--icon-weak-base); */
       color: var(--icon-invert-base);
-
-      /* &:hover:not(:disabled) { */
-      /*   color: var(--icon-weak-hover); */
-      /* } */
-      /* &:active:not(:disabled) { */
-      /*   color: var(--icon-strong-active); */
-      /* } */
     }
 
     &:hover:not(:disabled) {
@@ -41,6 +39,7 @@
     }
   }
 
+  /* 次要变体 */
   &[data-variant="secondary"] {
     border: transparent;
     background-color: var(--button-secondary-base);
@@ -69,9 +68,9 @@
     }
   }
 
+  /* 幽灵变体 */
   &[data-variant="ghost"] {
     background-color: transparent;
-    /* color: var(--icon-base); */
 
     [data-slot="icon-svg"] {
       color: var(--icon-base);
@@ -79,28 +78,19 @@
 
     &:hover:not(:disabled) {
       background-color: var(--surface-raised-base-hover);
-
-      /* [data-slot="icon-svg"] { */
-      /*   color: var(--icon-hover); */
-      /* } */
     }
     &:focus:not(:disabled) {
       background-color: var(--surface-focus);
     }
     &:active:not(:disabled) {
       background-color: var(--surface-raised-base-active);
-      /* [data-slot="icon-svg"] { */
-      /*   color: var(--icon-active); */
-      /* } */
     }
     &:selected:not(:disabled) {
       background-color: var(--surface-raised-base-active);
-      /* [data-slot="icon-svg"] { */
-      /*   color: var(--icon-selected); */
-      /* } */
     }
   }
 
+  /* 正常尺寸 */
   &[data-size="normal"] {
     width: 24px;
     height: 24px;
@@ -110,9 +100,9 @@
     gap: calc(var(--spacing) * 0.5);
   }
 
+  /* 大尺寸 */
   &[data-size="large"] {
     height: 32px;
-    /* padding: 0 8px 0 6px; */
     gap: 8px;
 
     [data-slot="icon-svg"] {
@@ -129,12 +119,14 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 禁用状态 */
   &:disabled {
     background-color: var(--icon-strong-disabled);
     color: var(--icon-invert-base);
     cursor: not-allowed;
   }
 
+  /* 聚焦状态 */
   &:focus {
     outline: none;
   }

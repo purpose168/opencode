@@ -1,84 +1,134 @@
 #!/usr/bin/env node
 
+/**
+ * opencode 命令行工具入口脚本
+ * 用于根据当前平台和架构找到并运行对应的二进制文件
+ */
+
 const childProcess = require("child_process")
 const fs = require("fs")
 const path = require("path")
 const os = require("os")
 
+/**
+ * 运行指定的目标命令
+ * @param {string} target - 要运行的命令路径
+ */
 function run(target) {
+  // 生成子进程运行目标命令，传递所有参数
   const result = childProcess.spawnSync(target, process.argv.slice(2), {
-    stdio: "inherit",
+    stdio: "inherit", // 继承标准输入输出
   })
+  
+  // 处理错误情况
   if (result.error) {
     console.error(result.error.message)
     process.exit(1)
   }
+  
+  // 获取退出码并退出
   const code = typeof result.status === "number" ? result.status : 0
   process.exit(code)
 }
 
+// 检查是否设置了 OPENCODE_BIN_PATH 环境变量
 const envPath = process.env.OPENCODE_BIN_PATH
 if (envPath) {
+  // 如果设置了环境变量，则使用指定的路径
   run(envPath)
 }
 
+// 获取脚本的真实路径和目录
 const scriptPath = fs.realpathSync(__filename)
 const scriptDir = path.dirname(scriptPath)
 
+// 平台映射，将 Node.js 的平台名称映射到标准名称
 const platformMap = {
-  darwin: "darwin",
-  linux: "linux",
-  win32: "windows",
-}
-const archMap = {
-  x64: "x64",
-  arm64: "arm64",
-  arm: "arm",
+  darwin: "darwin", // macOS
+  linux: "linux",   // Linux
+  win32: "windows", // Windows
 }
 
+// 架构映射，将 Node.js 的架构名称映射到标准名称
+const archMap = {
+  x64: "x64",     // 64位 x86
+  arm64: "arm64", // 64位 ARM
+  arm: "arm",     // 32位 ARM
+}
+
+// 确定当前平台
 let platform = platformMap[os.platform()]
 if (!platform) {
-  platform = os.platform()
+  platform = os.platform() // 如果没有映射，则使用原始平台名称
 }
+
+// 确定当前架构
 let arch = archMap[os.arch()]
 if (!arch) {
-  arch = os.arch()
+  arch = os.arch() // 如果没有映射，则使用原始架构名称
 }
+
+// 构建二进制包的基础名称
 const base = "opencode-" + platform + "-" + arch
+
+// 根据平台确定二进制文件名
 const binary = platform === "windows" ? "opencode.exe" : "opencode"
 
+/**
+ * 查找二进制文件
+ * @param {string} startDir - 开始查找的目录
+ * @returns {string|undefined} - 找到的二进制文件路径，未找到则返回undefined
+ */
 function findBinary(startDir) {
   let current = startDir
+  
+  // 循环向上查找，直到根目录
   for (;;) {
     const modules = path.join(current, "node_modules")
+    
+    // 检查 node_modules 目录是否存在
     if (fs.existsSync(modules)) {
       const entries = fs.readdirSync(modules)
+      
+      // 遍历 node_modules 中的所有条目
       for (const entry of entries) {
+        // 检查条目是否以基础名称开头
         if (!entry.startsWith(base)) {
           continue
         }
+        
+        // 构建二进制文件的路径
         const candidate = path.join(modules, entry, "bin", binary)
+        
+        // 检查二进制文件是否存在
         if (fs.existsSync(candidate)) {
           return candidate
         }
       }
     }
+    
+    // 移动到父目录
     const parent = path.dirname(current)
     if (parent === current) {
+      // 已经到达根目录，未找到二进制文件
       return
     }
     current = parent
   }
 }
 
+// 查找二进制文件
 const resolved = findBinary(scriptDir)
+
+// 如果未找到二进制文件，显示错误信息并退出
 if (!resolved) {
   console.error(
-    'It seems that your package manager failed to install the right version of the opencode CLI for your platform. You can try manually installing the "' +
+    '似乎您的包管理器未能为您的平台安装正确版本的 opencode CLI。您可以尝试手动安装 "' +
       base +
-      '" package',
+      '" 包',
   )
   process.exit(1)
 }
 
+// 运行找到的二进制文件
 run(resolved)

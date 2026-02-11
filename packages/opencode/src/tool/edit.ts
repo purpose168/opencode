@@ -1,47 +1,52 @@
-// the approaches in this edit tool are sourced from
+// 本编辑工具中的方法来源自
 // https://github.com/cline/cline/blob/main/evals/diff-edits/diff-apply/diff-06-23-25.ts
 // https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/editCorrector.ts
 // https://github.com/cline/cline/blob/main/evals/diff-edits/diff-apply/diff-06-26-25.ts
 
-import z from "zod"
-import * as path from "path"
-import { Tool } from "./tool"
-import { LSP } from "../lsp"
-import { createTwoFilesPatch, diffLines } from "diff"
-import DESCRIPTION from "./edit.txt"
-import { File } from "../file"
-import { Bus } from "../bus"
-import { FileTime } from "../file/time"
-import { Filesystem } from "../util/filesystem"
-import { Instance } from "../project/instance"
 import { Snapshot } from "@/snapshot"
+import { createTwoFilesPatch, diffLines } from "diff"
+import * as path from "path"
+import z from "zod"
+import { Bus } from "../bus"
+import { File } from "../file"
+import { FileTime } from "../file/time"
+import { LSP } from "../lsp"
+import { Instance } from "../project/instance"
+import { Filesystem } from "../util/filesystem"
+import DESCRIPTION from "./edit.txt"
+import { Tool } from "./tool"
 
+// 每个文件的最大诊断信息数量
 const MAX_DIAGNOSTICS_PER_FILE = 20
 
+// 规范化行尾符，将Windows风格的行尾符（\r\n）转换为Unix风格（\n）
 function normalizeLineEndings(text: string): string {
   return text.replaceAll("\r\n", "\n")
 }
 
+// 定义编辑工具，用于修改文件内容
 export const EditTool = Tool.define("edit", {
   description: DESCRIPTION,
   parameters: z.object({
-    filePath: z.string().describe("The absolute path to the file to modify"),
-    oldString: z.string().describe("The text to replace"),
-    newString: z.string().describe("The text to replace it with (must be different from oldString)"),
-    replaceAll: z.boolean().optional().describe("Replace all occurrences of oldString (default false)"),
+    filePath: z.string().describe("要修改的文件的绝对路径"),
+    oldString: z.string().describe("要替换的文本"),
+    newString: z.string().describe("替换后的文本（必须与oldString不同）"),
+    replaceAll: z.boolean().optional().describe("替换所有出现的oldString（默认为false）"),
   }),
   async execute(params, ctx) {
     if (!params.filePath) {
-      throw new Error("filePath is required")
+      throw new Error("filePath是必需的")
     }
 
     if (params.oldString === params.newString) {
-      throw new Error("oldString and newString must be different")
+      throw new Error("oldString和newString必须不同")
     }
 
+    // 解析文件路径
     const filePath = path.isAbsolute(params.filePath) ? params.filePath : path.join(Instance.directory, params.filePath)
     if (!Filesystem.contains(Instance.directory, filePath)) {
       const parentDir = path.dirname(filePath)
+      // 请求外部目录访问权限
       await ctx.ask({
         permission: "external_directory",
         patterns: [parentDir, path.join(parentDir, "*")],
@@ -56,7 +61,9 @@ export const EditTool = Tool.define("edit", {
     let diff = ""
     let contentOld = ""
     let contentNew = ""
+    // 使用文件锁进行编辑操作
     await FileTime.withLock(filePath, async () => {
+      // 处理创建新文件的情况
       if (params.oldString === "") {
         contentNew = params.newString
         diff = trimDiff(createTwoFilesPatch(filePath, filePath, contentOld, contentNew))
@@ -77,12 +84,14 @@ export const EditTool = Tool.define("edit", {
         return
       }
 
+      // 读取现有文件
       const file = Bun.file(filePath)
       const stats = await file.stat().catch(() => {})
-      if (!stats) throw new Error(`File ${filePath} not found`)
-      if (stats.isDirectory()) throw new Error(`Path is a directory, not a file: ${filePath}`)
+      if (!stats) throw new Error(`文件 ${filePath} 未找到`)
+      if (stats.isDirectory()) throw new Error(`路径是目录而非文件：${filePath}`)
       await FileTime.assert(ctx.sessionID, filePath)
       contentOld = await file.text()
+      // 执行替换操作
       contentNew = replace(contentOld, params.oldString, params.newString, params.replaceAll)
 
       diff = trimDiff(
@@ -109,6 +118,7 @@ export const EditTool = Tool.define("edit", {
       FileTime.read(ctx.sessionID, filePath)
     })
 
+    // 计算文件差异统计
     const filediff: Snapshot.FileDiff = {
       file: filePath,
       before: contentOld,
@@ -135,11 +145,14 @@ export const EditTool = Tool.define("edit", {
     const normalizedFilePath = Filesystem.normalizePath(filePath)
     const issues = diagnostics[normalizedFilePath] ?? []
     const errors = issues.filter((item) => item.severity === 1)
+    // 检查文件是否有错误
     if (errors.length > 0) {
       const limited = errors.slice(0, MAX_DIAGNOSTICS_PER_FILE)
       const suffix =
-        errors.length > MAX_DIAGNOSTICS_PER_FILE ? `\n... and ${errors.length - MAX_DIAGNOSTICS_PER_FILE} more` : ""
-      output += `\nThis file has errors, please fix\n<file_diagnostics>\n${limited.map(LSP.Diagnostic.pretty).join("\n")}${suffix}\n</file_diagnostics>\n`
+        errors.length > MAX_DIAGNOSTICS_PER_FILE
+          ? `\n... 以及 ${errors.length - MAX_DIAGNOSTICS_PER_FILE} 个更多错误`
+          : ""
+      output += `\n此文件有错误，请修复\n<file_diagnostics>\n${limited.map(LSP.Diagnostic.pretty).join("\n")}${suffix}\n</file_diagnostics>\n`
     }
 
     return {
@@ -154,17 +167,19 @@ export const EditTool = Tool.define("edit", {
   },
 })
 
+// 替换器类型定义
 export type Replacer = (content: string, find: string) => Generator<string, void, unknown>
 
-// Similarity thresholds for block anchor fallback matching
+// 块锚点回退匹配的相似度阈值
 const SINGLE_CANDIDATE_SIMILARITY_THRESHOLD = 0.0
 const MULTIPLE_CANDIDATES_SIMILARITY_THRESHOLD = 0.3
 
 /**
- * Levenshtein distance algorithm implementation
+ * Levenshtein距离算法实现
+ * 用于计算两个字符串之间的编辑距离
  */
 function levenshtein(a: string, b: string): number {
-  // Handle empty strings
+  // 处理空字符串
   if (a === "" || b === "") {
     return Math.max(a.length, b.length)
   }
@@ -181,10 +196,12 @@ function levenshtein(a: string, b: string): number {
   return matrix[a.length][b.length]
 }
 
+// 简单替换器：直接匹配查找的字符串
 export const SimpleReplacer: Replacer = function* (_content, find) {
   yield find
 }
 
+// 行修剪替换器：忽略行首尾空格进行匹配
 export const LineTrimmedReplacer: Replacer = function* (content, find) {
   const originalLines = content.split("\n")
   const searchLines = find.split("\n")
@@ -216,7 +233,7 @@ export const LineTrimmedReplacer: Replacer = function* (content, find) {
       for (let k = 0; k < searchLines.length; k++) {
         matchEndIndex += originalLines[i + k].length
         if (k < searchLines.length - 1) {
-          matchEndIndex += 1 // Add newline character except for the last line
+          matchEndIndex += 1 // 除最后一行外添加换行符
         }
       }
 
@@ -225,6 +242,7 @@ export const LineTrimmedReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 块锚点替换器：使用首尾行作为锚点进行匹配
 export const BlockAnchorReplacer: Replacer = function* (content, find) {
   const originalLines = content.split("\n")
   const searchLines = find.split("\n")
@@ -241,34 +259,34 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
   const lastLineSearch = searchLines[searchLines.length - 1].trim()
   const searchBlockSize = searchLines.length
 
-  // Collect all candidate positions where both anchors match
+  // 收集两个锚点都匹配的所有候选位置
   const candidates: Array<{ startLine: number; endLine: number }> = []
   for (let i = 0; i < originalLines.length; i++) {
     if (originalLines[i].trim() !== firstLineSearch) {
       continue
     }
 
-    // Look for the matching last line after this first line
+    // 在此首行之后查找匹配的尾行
     for (let j = i + 2; j < originalLines.length; j++) {
       if (originalLines[j].trim() === lastLineSearch) {
         candidates.push({ startLine: i, endLine: j })
-        break // Only match the first occurrence of the last line
+        break // 只匹配尾行的第一次出现
       }
     }
   }
 
-  // Return immediately if no candidates
+  // 如果没有候选，立即返回
   if (candidates.length === 0) {
     return
   }
 
-  // Handle single candidate scenario (using relaxed threshold)
+  // 处理单个候选场景（使用宽松阈值）
   if (candidates.length === 1) {
     const { startLine, endLine } = candidates[0]
     const actualBlockSize = endLine - startLine + 1
 
     let similarity = 0
-    let linesToCheck = Math.min(searchBlockSize - 2, actualBlockSize - 2) // Middle lines only
+    let linesToCheck = Math.min(searchBlockSize - 2, actualBlockSize - 2) // 仅检查中间行
 
     if (linesToCheck > 0) {
       for (let j = 1; j < searchBlockSize - 1 && j < actualBlockSize - 1; j++) {
@@ -281,13 +299,13 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
         const distance = levenshtein(originalLine, searchLine)
         similarity += (1 - distance / maxLen) / linesToCheck
 
-        // Exit early when threshold is reached
+        // 达到阈值时提前退出
         if (similarity >= SINGLE_CANDIDATE_SIMILARITY_THRESHOLD) {
           break
         }
       }
     } else {
-      // No middle lines to compare, just accept based on anchors
+      // 没有中间行可比较，仅基于锚点接受
       similarity = 1.0
     }
 
@@ -300,7 +318,7 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
       for (let k = startLine; k <= endLine; k++) {
         matchEndIndex += originalLines[k].length
         if (k < endLine) {
-          matchEndIndex += 1 // Add newline character except for the last line
+          matchEndIndex += 1 // 除最后一行外添加换行符
         }
       }
       yield content.substring(matchStartIndex, matchEndIndex)
@@ -308,7 +326,7 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
     return
   }
 
-  // Calculate similarity for multiple candidates
+  // 计算多个候选的相似度
   let bestMatch: { startLine: number; endLine: number } | null = null
   let maxSimilarity = -1
 
@@ -317,7 +335,7 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
     const actualBlockSize = endLine - startLine + 1
 
     let similarity = 0
-    let linesToCheck = Math.min(searchBlockSize - 2, actualBlockSize - 2) // Middle lines only
+    let linesToCheck = Math.min(searchBlockSize - 2, actualBlockSize - 2) // 仅检查中间行
 
     if (linesToCheck > 0) {
       for (let j = 1; j < searchBlockSize - 1 && j < actualBlockSize - 1; j++) {
@@ -330,9 +348,9 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
         const distance = levenshtein(originalLine, searchLine)
         similarity += 1 - distance / maxLen
       }
-      similarity /= linesToCheck // Average similarity
+      similarity /= linesToCheck // 平均相似度
     } else {
-      // No middle lines to compare, just accept based on anchors
+      // 没有中间行可比较，仅基于锚点接受
       similarity = 1.0
     }
 
@@ -342,7 +360,7 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
     }
   }
 
-  // Threshold judgment
+  // 阈值判断
   if (maxSimilarity >= MULTIPLE_CANDIDATES_SIMILARITY_THRESHOLD && bestMatch) {
     const { startLine, endLine } = bestMatch
     let matchStartIndex = 0
@@ -360,21 +378,22 @@ export const BlockAnchorReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 空白规范化替换器：将连续空白字符规范化为单个空格进行匹配
 export const WhitespaceNormalizedReplacer: Replacer = function* (content, find) {
   const normalizeWhitespace = (text: string) => text.replace(/\s+/g, " ").trim()
   const normalizedFind = normalizeWhitespace(find)
 
-  // Handle single line matches
+  // 处理单行匹配
   const lines = content.split("\n")
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (normalizeWhitespace(line) === normalizedFind) {
       yield line
     } else {
-      // Only check for substring matches if the full line doesn't match
+      // 仅在整行不匹配时检查子串匹配
       const normalizedLine = normalizeWhitespace(line)
       if (normalizedLine.includes(normalizedFind)) {
-        // Find the actual substring in the original line that matches
+        // 在原始行中查找匹配的实际子串
         const words = find.trim().split(/\s+/)
         if (words.length > 0) {
           const pattern = words.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+")
@@ -385,14 +404,14 @@ export const WhitespaceNormalizedReplacer: Replacer = function* (content, find) 
               yield match[0]
             }
           } catch (e) {
-            // Invalid regex pattern, skip
+            // 无效的正则表达式模式，跳过
           }
         }
       }
     }
   }
 
-  // Handle multi-line matches
+  // 处理多行匹配
   const findLines = find.split("\n")
   if (findLines.length > 1) {
     for (let i = 0; i <= lines.length - findLines.length; i++) {
@@ -404,6 +423,7 @@ export const WhitespaceNormalizedReplacer: Replacer = function* (content, find) 
   }
 }
 
+// 缩进灵活替换器：忽略缩进差异进行匹配
 export const IndentationFlexibleReplacer: Replacer = function* (content, find) {
   const removeIndentation = (text: string) => {
     const lines = text.split("\n")
@@ -432,6 +452,7 @@ export const IndentationFlexibleReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 转义规范化替换器：处理转义字符的匹配
 export const EscapeNormalizedReplacer: Replacer = function* (content, find) {
   const unescapeString = (str: string): string => {
     return str.replace(/\\(n|t|r|'|"|`|\\|\n|\$)/g, (match, capturedChar) => {
@@ -462,12 +483,12 @@ export const EscapeNormalizedReplacer: Replacer = function* (content, find) {
 
   const unescapedFind = unescapeString(find)
 
-  // Try direct match with unescaped find string
+  // 尝试使用未转义的查找字符串进行直接匹配
   if (content.includes(unescapedFind)) {
     yield unescapedFind
   }
 
-  // Also try finding escaped versions in content that match unescaped find
+  // 也尝试在内容中查找与未转义查找字符串匹配的转义版本
   const lines = content.split("\n")
   const findLines = unescapedFind.split("\n")
 
@@ -481,9 +502,10 @@ export const EscapeNormalizedReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 多次出现替换器：查找所有精确匹配
 export const MultiOccurrenceReplacer: Replacer = function* (content, find) {
-  // This replacer yields all exact matches, allowing the replace function
-  // to handle multiple occurrences based on replaceAll parameter
+  // 此替换器生成所有精确匹配，允许替换函数
+  // 根据replaceAll参数处理多次出现
   let startIndex = 0
 
   while (true) {
@@ -495,20 +517,21 @@ export const MultiOccurrenceReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 修剪边界替换器：处理首尾空格的匹配
 export const TrimmedBoundaryReplacer: Replacer = function* (content, find) {
   const trimmedFind = find.trim()
 
   if (trimmedFind === find) {
-    // Already trimmed, no point in trying
+    // 已经修剪，无需尝试
     return
   }
 
-  // Try to find the trimmed version
+  // 尝试查找修剪后的版本
   if (content.includes(trimmedFind)) {
     yield trimmedFind
   }
 
-  // Also try finding blocks where trimmed content matches
+  // 也尝试查找修剪后的内容匹配的块
   const lines = content.split("\n")
   const findLines = find.split("\n")
 
@@ -521,37 +544,38 @@ export const TrimmedBoundaryReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 上下文感知替换器：使用首尾行作为上下文锚点进行匹配
 export const ContextAwareReplacer: Replacer = function* (content, find) {
   const findLines = find.split("\n")
   if (findLines.length < 3) {
-    // Need at least 3 lines to have meaningful context
+    // 至少需要3行才能有有意义的上下文
     return
   }
 
-  // Remove trailing empty line if present
+  // 如果存在尾随空行，则移除
   if (findLines[findLines.length - 1] === "") {
     findLines.pop()
   }
 
   const contentLines = content.split("\n")
 
-  // Extract first and last lines as context anchors
+  // 提取首尾行作为上下文锚点
   const firstLine = findLines[0].trim()
   const lastLine = findLines[findLines.length - 1].trim()
 
-  // Find blocks that start and end with the context anchors
+  // 查找以上下文锚点开头和结尾的块
   for (let i = 0; i < contentLines.length; i++) {
     if (contentLines[i].trim() !== firstLine) continue
 
-    // Look for the matching last line
+    // 查找匹配的尾行
     for (let j = i + 2; j < contentLines.length; j++) {
       if (contentLines[j].trim() === lastLine) {
-        // Found a potential context block
+        // 找到潜在的上下文块
         const blockLines = contentLines.slice(i, j + 1)
         const block = blockLines.join("\n")
 
-        // Check if the middle content has reasonable similarity
-        // (simple heuristic: at least 50% of non-empty lines should match when trimmed)
+        // 检查中间内容是否有合理的相似度
+        // （简单启发式：修剪后至少50%的非空行应该匹配）
         if (blockLines.length === findLines.length) {
           let matchingLines = 0
           let totalNonEmptyLines = 0
@@ -570,7 +594,7 @@ export const ContextAwareReplacer: Replacer = function* (content, find) {
 
           if (totalNonEmptyLines === 0 || matchingLines / totalNonEmptyLines >= 0.5) {
             yield block
-            break // Only match the first occurrence
+            break // 只匹配第一次出现
           }
         }
         break
@@ -579,6 +603,7 @@ export const ContextAwareReplacer: Replacer = function* (content, find) {
   }
 }
 
+// 修剪差异：移除diff中的公共缩进
 export function trimDiff(diff: string): string {
   const lines = diff.split("\n")
   const contentLines = lines.filter(
@@ -615,13 +640,15 @@ export function trimDiff(diff: string): string {
   return trimmedLines.join("\n")
 }
 
+// 替换函数：使用多种替换器策略查找并替换文本
 export function replace(content: string, oldString: string, newString: string, replaceAll = false): string {
   if (oldString === newString) {
-    throw new Error("oldString and newString must be different")
+    throw new Error("oldString和newString必须不同")
   }
 
   let notFound = true
 
+  // 尝试使用多种替换器策略
   for (const replacer of [
     SimpleReplacer,
     LineTrimmedReplacer,
@@ -647,9 +674,7 @@ export function replace(content: string, oldString: string, newString: string, r
   }
 
   if (notFound) {
-    throw new Error("oldString not found in content")
+    throw new Error("在内容中未找到oldString")
   }
-  throw new Error(
-    "Found multiple matches for oldString. Provide more surrounding lines in oldString to identify the correct match.",
-  )
+  throw new Error("找到oldString的多个匹配项。请在oldString中提供更多周围行以识别正确的匹配。")
 }

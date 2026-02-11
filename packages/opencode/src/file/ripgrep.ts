@@ -1,17 +1,19 @@
-// Ripgrep utility functions
-import path from "path"
-import { Global } from "../global"
-import fs from "fs/promises"
-import z from "zod"
-import { NamedError } from "@opencode-ai/util/error"
-import { lazy } from "../util/lazy"
-import { $ } from "bun"
+// Ripgrep工具函数
+import { NamedError } from "@opencode-ai/util/error" // 导入命名错误工具
+import { $ } from "bun" // 导入Bun的shell命令执行器
+import fs from "fs/promises" // 导入文件系统Promise API
+import path from "path" // 导入路径处理模块
+import z from "zod" // 导入zod库用于数据验证
+import { Global } from "../global" // 导入全局配置
+import { lazy } from "../util/lazy" // 导入懒加载工具
 
-import { ZipReader, BlobReader, BlobWriter } from "@zip.js/zip.js"
-import { Log } from "@/util/log"
+import { Log } from "@/util/log" // 导入日志工具
+import { BlobReader, BlobWriter, ZipReader } from "@zip.js/zip.js" // 导入ZIP文件处理工具
 
 export namespace Ripgrep {
-  const log = Log.create({ service: "ripgrep" })
+  const log = Log.create({ service: "ripgrep" }) // 创建ripgrep服务日志记录器
+
+  // 统计信息schema
   const Stats = z.object({
     elapsed: z.object({
       secs: z.number(),
@@ -26,6 +28,7 @@ export namespace Ripgrep {
     matches: z.number(),
   })
 
+  // 开始事件schema
   const Begin = z.object({
     type: z.literal("begin"),
     data: z.object({
@@ -35,6 +38,7 @@ export namespace Ripgrep {
     }),
   })
 
+  // 匹配结果schema
   export const Match = z.object({
     type: z.literal("match"),
     data: z.object({
@@ -58,6 +62,7 @@ export namespace Ripgrep {
     }),
   })
 
+  // 结束事件schema
   const End = z.object({
     type: z.literal("end"),
     data: z.object({
@@ -69,6 +74,7 @@ export namespace Ripgrep {
     }),
   })
 
+  // 摘要事件schema
   const Summary = z.object({
     type: z.literal("summary"),
     data: z.object({
@@ -81,6 +87,7 @@ export namespace Ripgrep {
     }),
   })
 
+  // 结果类型(联合类型)
   const Result = z.union([Begin, Match, End, Summary])
 
   export type Result = z.infer<typeof Result>
@@ -88,6 +95,8 @@ export namespace Ripgrep {
   export type Begin = z.infer<typeof Begin>
   export type End = z.infer<typeof End>
   export type Summary = z.infer<typeof Summary>
+
+  // 平台配置映射
   const PLATFORM = {
     "arm64-darwin": { platform: "aarch64-apple-darwin", extension: "tar.gz" },
     "arm64-linux": {
@@ -99,6 +108,7 @@ export namespace Ripgrep {
     "x64-win32": { platform: "x86_64-pc-windows-msvc", extension: "zip" },
   } as const
 
+  // 解压失败错误
   export const ExtractionFailedError = NamedError.create(
     "RipgrepExtractionFailedError",
     z.object({
@@ -107,6 +117,7 @@ export namespace Ripgrep {
     }),
   )
 
+  // 不支持的平台错误
   export const UnsupportedPlatformError = NamedError.create(
     "RipgrepUnsupportedPlatformError",
     z.object({
@@ -114,6 +125,7 @@ export namespace Ripgrep {
     }),
   )
 
+  // 下载失败错误
   export const DownloadFailedError = NamedError.create(
     "RipgrepDownloadFailedError",
     z.object({
@@ -122,12 +134,16 @@ export namespace Ripgrep {
     }),
   )
 
+  // Ripgrep状态管理(懒加载)
   const state = lazy(async () => {
+    // 检查系统PATH中是否已安装rg
     let filepath = Bun.which("rg")
     if (filepath) return { filepath }
+    // 使用全局bin目录中的rg
     filepath = path.join(Global.Path.bin, "rg" + (process.platform === "win32" ? ".exe" : ""))
 
     const file = Bun.file(filepath)
+    // 如果文件不存在,下载并安装ripgrep
     if (!(await file.exists())) {
       const platformKey = `${process.arch}-${process.platform}` as keyof typeof PLATFORM
       const config = PLATFORM[platformKey]
@@ -137,12 +153,14 @@ export namespace Ripgrep {
       const filename = `ripgrep-${version}-${config.platform}.${config.extension}`
       const url = `https://github.com/BurntSushi/ripgrep/releases/download/${version}/${filename}`
 
+      // 下载ripgrep
       const response = await fetch(url)
       if (!response.ok) throw new DownloadFailedError({ url, status: response.status })
 
       const buffer = await response.arrayBuffer()
       const archivePath = path.join(Global.Path.bin, filename)
       await Bun.write(archivePath, buffer)
+      // 解压tar.gz文件
       if (config.extension === "tar.gz") {
         const args = ["tar", "-xzf", archivePath, "--strip-components=1"]
 
@@ -161,6 +179,7 @@ export namespace Ripgrep {
             stderr: await Bun.readableStreamToText(proc.stderr),
           })
       }
+      // 解压zip文件
       if (config.extension === "zip") {
         if (config.extension === "zip") {
           const zipFileReader = new ZipReader(new BlobReader(new Blob([await Bun.file(archivePath).arrayBuffer()])))
@@ -176,7 +195,7 @@ export namespace Ripgrep {
           if (!rgEntry) {
             throw new ExtractionFailedError({
               filepath: archivePath,
-              stderr: "rg.exe not found in zip archive",
+              stderr: "zip压缩包中未找到rg.exe",
             })
           }
 
@@ -184,14 +203,16 @@ export namespace Ripgrep {
           if (!rgBlob) {
             throw new ExtractionFailedError({
               filepath: archivePath,
-              stderr: "Failed to extract rg.exe from zip archive",
+              stderr: "从zip压缩包中提取rg.exe失败",
             })
           }
           await Bun.write(filepath, await rgBlob.arrayBuffer())
           await zipFileReader.close()
         }
       }
+      // 删除下载的压缩包
       await fs.unlink(archivePath)
+      // 设置可执行权限(Windows除外)
       if (!platformKey.endsWith("-win32")) await fs.chmod(filepath, 0o755)
     }
 
@@ -200,11 +221,13 @@ export namespace Ripgrep {
     }
   })
 
+  // 获取ripgrep可执行文件路径
   export async function filepath() {
     const { filepath } = await state()
     return filepath
   }
 
+  // 生成文件列表
   export async function* files(input: {
     cwd: string
     glob?: string[]
@@ -222,10 +245,10 @@ export namespace Ripgrep {
       }
     }
 
-    // Bun.spawn should throw this, but it incorrectly reports that the executable does not exist.
-    // See https://github.com/oven-sh/bun/issues/24012
+    // Bun.spawn应该抛出这个错误,但它错误地报告可执行文件不存在。
+    // 参见 https://github.com/oven-sh/bun/issues/24012
     if (!(await fs.stat(input.cwd).catch(() => undefined))?.isDirectory()) {
-      throw Object.assign(new Error(`No such file or directory: '${input.cwd}'`), {
+      throw Object.assign(new Error(`没有这样的文件或目录: '${input.cwd}'`), {
         code: "ENOENT",
         errno: -2,
         path: input.cwd,
@@ -249,7 +272,7 @@ export namespace Ripgrep {
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        // Handle both Unix (\n) and Windows (\r\n) line endings
+        // 处理Unix(\n)和Windows(\r\n)换行符
         const lines = buffer.split(/\r?\n/)
         buffer = lines.pop() || ""
 
@@ -265,6 +288,7 @@ export namespace Ripgrep {
     }
   }
 
+  // 生成目录树
   export async function tree(input: { cwd: string; limit?: number }) {
     log.info("tree", input)
     const files = await Array.fromAsync(Ripgrep.files({ cwd: input.cwd }))
@@ -273,6 +297,7 @@ export namespace Ripgrep {
       children: Node[]
     }
 
+    // 获取或创建路径节点
     function getPath(node: Node, parts: string[], create: boolean) {
       if (parts.length === 0) return node
       let current = node
@@ -291,6 +316,7 @@ export namespace Ripgrep {
       return current
     }
 
+    // 构建根节点
     const root: Node = {
       path: [],
       children: [],
@@ -301,6 +327,7 @@ export namespace Ripgrep {
       getPath(root, parts, true)
     }
 
+    // 排序节点(目录在前,文件在后)
     function sort(node: Node) {
       node.children.sort((a, b) => {
         if (!a.children.length && b.children.length) return 1
@@ -313,6 +340,7 @@ export namespace Ripgrep {
     }
     sort(root)
 
+    // 广度优先遍历生成树
     let current = [root]
     const result: Node = {
       path: [],
@@ -336,6 +364,7 @@ export namespace Ripgrep {
           if (processed >= limit) break
         }
       }
+      // 处理截断的节点
       if (processed >= limit) {
         for (const node of [...current, ...next]) {
           const compare = getPath(result, node.path, false)
@@ -343,7 +372,7 @@ export namespace Ripgrep {
           if (compare?.children.length !== node.children.length) {
             const diff = node.children.length - compare.children.length
             compare.children.push({
-              path: compare.path.concat(`[${diff} truncated]`),
+              path: compare.path.concat(`[${diff} 已截断]`),
               children: [],
             })
           }
@@ -355,6 +384,7 @@ export namespace Ripgrep {
 
     const lines: string[] = []
 
+    // 渲染节点为文本
     function render(node: Node, depth: number) {
       const indent = "\t".repeat(depth)
       lines.push(indent + node.path.at(-1) + (node.children.length ? "/" : ""))
@@ -367,6 +397,7 @@ export namespace Ripgrep {
     return lines.join("\n")
   }
 
+  // 搜索文件内容
   export async function search(input: { cwd: string; pattern: string; glob?: string[]; limit?: number }) {
     const args = [`${await filepath()}`, "--json", "--hidden", "--glob='!.git/*'"]
 
@@ -389,9 +420,9 @@ export namespace Ripgrep {
       return []
     }
 
-    // Handle both Unix (\n) and Windows (\r\n) line endings
+    // 处理Unix(\n)和Windows(\r\n)换行符
     const lines = result.text().trim().split(/\r?\n/).filter(Boolean)
-    // Parse JSON lines from ripgrep output
+    // 从ripgrep输出解析JSON行
 
     return lines
       .map((line) => JSON.parse(line))

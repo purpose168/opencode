@@ -1,3 +1,8 @@
+/**
+ * 按钮组件样式
+ * 定义了按钮的基本样式、不同变体和尺寸
+ */
+
 [data-component="button"] {
   display: inline-flex;
   align-items: center;
@@ -11,6 +16,7 @@
   outline: none;
   white-space: nowrap;
 
+  /* 主要变体样式 */
   &[data-variant="primary"] {
     background-color: var(--icon-strong-base);
     border-color: var(--border-weak-base);
@@ -38,6 +44,7 @@
     }
   }
 
+  /* 幽灵变体样式 */
   &[data-variant="ghost"] {
     border-color: transparent;
     background-color: transparent;
@@ -65,6 +72,7 @@
     }
   }
 
+  /* 次要变体样式 */
   &[data-variant="secondary"] {
     border: transparent;
     background-color: var(--button-secondary-base);
@@ -101,6 +109,7 @@
     }
   }
 
+  /* 小尺寸样式 */
   &[data-size="small"] {
     height: 22px;
     padding: 0 8px;
@@ -121,6 +130,7 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 正常尺寸样式 */
   &[data-size="normal"] {
     height: 24px;
     padding: 0 6px;
@@ -141,6 +151,7 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 大尺寸样式 */
   &[data-size="large"] {
     height: 32px;
     padding: 6px 12px;

@@ -15,13 +15,14 @@ import { $ } from "bun"
 import { Flag } from "@/flag/flag"
 import { readdir } from "fs/promises"
 
-const SUBSCRIBE_TIMEOUT_MS = 10_000
+const SUBSCRIBE_TIMEOUT_MS = 10_000 // 订阅超时时间(毫秒)
 
-declare const OPENCODE_LIBC: string | undefined
+declare const OPENCODE_LIBC: string | undefined // 声明libc类型常量
 
 export namespace FileWatcher {
-  const log = Log.create({ service: "file.watcher" })
+  const log = Log.create({ service: "file.watcher" }) // 创建文件监视器服务日志记录器
 
+  // 文件监视器事件定义
   export const Event = {
     Updated: BusEvent.define(
       "file.watcher.updated",
@@ -32,6 +33,7 @@ export namespace FileWatcher {
     ),
   }
 
+  // 文件监视器(懒加载)
   const watcher = lazy(() => {
     const binding = require(
       `@parcel/watcher-${process.platform}-${process.arch}${process.platform === "linux" ? `-${OPENCODE_LIBC || "glibc"}` : ""}`,
@@ -39,21 +41,26 @@ export namespace FileWatcher {
     return createWrapper(binding) as typeof import("@parcel/watcher")
   })
 
+  // 文件监视器状态管理
   const state = Instance.state(
     async () => {
+      // 如果不是git项目,不启动监视器
       if (Instance.project.vcs !== "git") return {}
-      log.info("init")
+      log.info("初始化")
       const cfg = await Config.get()
+      // 根据平台选择后端
       const backend = (() => {
         if (process.platform === "win32") return "windows"
         if (process.platform === "darwin") return "fs-events"
         if (process.platform === "linux") return "inotify"
       })()
       if (!backend) {
-        log.error("watcher backend not supported", { platform: process.platform })
+        log.error("监视器后端不支持", { platform: process.platform })
         return {}
       }
-      log.info("watcher backend", { platform: process.platform, backend })
+      log.info("监视器后端", { platform: process.platform, backend })
+
+      // 订阅回调函数
       const subscribe: ParcelWatcher.SubscribeCallback = (err, evts) => {
         if (err) return
         for (const evt of evts) {
@@ -66,19 +73,21 @@ export namespace FileWatcher {
       const subs: ParcelWatcher.AsyncSubscription[] = []
       const cfgIgnores = cfg.watcher?.ignore ?? []
 
+      // 订阅项目目录
       if (Flag.OPENCODE_EXPERIMENTAL_FILEWATCHER) {
         const pending = watcher().subscribe(Instance.directory, subscribe, {
           ignore: [...FileIgnore.PATTERNS, ...cfgIgnores],
           backend,
         })
         const sub = await withTimeout(pending, SUBSCRIBE_TIMEOUT_MS).catch((err) => {
-          log.error("failed to subscribe to Instance.directory", { error: err })
+          log.error("订阅Instance.directory失败", { error: err })
           pending.then((s) => s.unsubscribe()).catch(() => {})
           return undefined
         })
         if (sub) subs.push(sub)
       }
 
+      // 订阅git目录
       const vcsDir = await $`git rev-parse --git-dir`
         .quiet()
         .nothrow()
@@ -93,7 +102,7 @@ export namespace FileWatcher {
           backend,
         })
         const sub = await withTimeout(pending, SUBSCRIBE_TIMEOUT_MS).catch((err) => {
-          log.error("failed to subscribe to vcsDir", { error: err })
+          log.error("订阅vcsDir失败", { error: err })
           pending.then((s) => s.unsubscribe()).catch(() => {})
           return undefined
         })
@@ -102,12 +111,14 @@ export namespace FileWatcher {
 
       return { subs }
     },
+    // 清理函数
     async (state) => {
       if (!state.subs) return
       await Promise.all(state.subs.map((sub) => sub?.unsubscribe()))
     },
   )
 
+  // 初始化文件监视器
   export function init() {
     if (Flag.OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER) {
       return

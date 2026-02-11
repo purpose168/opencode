@@ -3,6 +3,7 @@ import { createResource, createSignal } from "solid-js"
 import { createOverflow } from "./common"
 import { codeToHtml } from "shiki"
 
+// Bash 内容组件属性接口
 interface Props {
   command: string
   output: string
@@ -10,7 +11,9 @@ interface Props {
   expand?: boolean
 }
 
+// Bash 内容组件
 export function ContentBash(props: Props) {
+  // 生成命令的 HTML 高亮代码
   const [commandHtml] = createResource(
     () => props.command,
     async (command) => {
@@ -24,6 +27,7 @@ export function ContentBash(props: Props) {
     },
   )
 
+  // 生成输出的 HTML 高亮代码
   const [outputHtml] = createResource(
     () => props.output,
     async (output) => {
@@ -59,7 +63,7 @@ export function ContentBash(props: Props) {
           data-slot="expand-button"
           onClick={() => setExpanded((e) => !e)}
         >
-          {expanded() ? "Show less" : "Show more"}
+          {expanded() ? "收起" : "展开更多"}
         </button>
       )}
     </div>

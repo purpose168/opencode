@@ -1,10 +1,14 @@
 import { Collapsible } from "@kobalte/core/collapsible"
 import { ParentProps } from "solid-js"
 
+/**
+ * 常见问题（FAQ）组件
+ */
 export function Faq(props: ParentProps & { question: string }) {
   return (
     <Collapsible data-slot="faq-item">
       <Collapsible.Trigger data-slot="faq-question">
+        {/* 展开图标 */}
         <svg
           data-slot="faq-icon-plus"
           width="24"
@@ -15,6 +19,7 @@ export function Faq(props: ParentProps & { question: string }) {
         >
           <path d="M12.5 11.5H19V12.5H12.5V19H11.5V12.5H5V11.5H11.5V5H12.5V11.5Z" fill="currentColor" />
         </svg>
+        {/* 收起图标 */}
         <svg
           data-slot="faq-icon-minus"
           width="24"
@@ -25,8 +30,10 @@ export function Faq(props: ParentProps & { question: string }) {
         >
           <path d="M5 11.5H19V12.5H5Z" fill="currentColor" />
         </svg>
+        {/* 问题文本 */}
         <div data-slot="faq-question-text">{props.question}</div>
       </Collapsible.Trigger>
+      {/* 答案内容 */}
       <Collapsible.Content data-slot="faq-answer">{props.children}</Collapsible.Content>
     </Collapsible>
   )

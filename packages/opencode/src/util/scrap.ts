@@ -2,7 +2,7 @@ export const foo: string = "42"
 export const bar: number = 123
 
 export function dummyFunction(): void {
-  console.log("This is a dummy function")
+  console.log("这是一个虚拟函数")
 }
 
 export function randomHelper(): boolean {

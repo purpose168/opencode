@@ -7,6 +7,7 @@ import { createResource, createSignal } from "solid-js"
 import { transformerNotationDiff } from "@shikijs/transformers"
 import style from "./content-markdown.module.css"
 
+// 配置 marked 使用 Shiki 进行代码高亮
 const markedWithShiki = marked.use(
   markedShiki({
     highlight(code, lang) {
@@ -22,11 +23,13 @@ const markedWithShiki = marked.use(
   }),
 )
 
+// Markdown 内容组件属性接口
 interface Props {
   text: string
   expand?: boolean
   highlight?: boolean
 }
+// Markdown 内容组件
 export function ContentMarkdown(props: Props) {
   const [html] = createResource(
     () => strip(props.text),
@@ -52,7 +55,7 @@ export function ContentMarkdown(props: Props) {
           data-slot="expand-button"
           onClick={() => setExpanded((e) => !e)}
         >
-          {expanded() ? "Show less" : "Show more"}
+          {expanded() ? "收起" : "展开更多"}
         </button>
       )}
       <CopyButton text={props.text} />
@@ -60,6 +63,7 @@ export function ContentMarkdown(props: Props) {
   )
 }
 
+// 去除 HTML 标签包装
 function strip(text: string): string {
   const wrappedRe = /^\s*<([A-Za-z]\w*)>\s*([\s\S]*?)\s*<\/\1>\s*$/
   const match = text.match(wrappedRe)

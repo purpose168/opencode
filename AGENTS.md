@@ -1,4 +1,4 @@
-- To test opencode in the `packages/opencode` directory you can run `bun dev`
-- To regenerate the javascript SDK, run ./packages/sdk/js/script/build.ts
-- ALWAYS USE PARALLEL TOOLS WHEN APPLICABLE.
-- the default branch in this repo is `dev`
+- 要在 `packages/opencode` 目录中测试 opencode，您可以运行 `bun dev`
+- 要重新生成 JavaScript SDK，请运行 ./packages/sdk/js/script/build.ts
+- 在适用的情况下始终使用并行工具。
+- 此仓库中的默认分支是 `dev`

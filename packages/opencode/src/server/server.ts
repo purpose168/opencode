@@ -1,94 +1,102 @@
-import { BusEvent } from "@/bus/bus-event"
-import { Bus } from "@/bus"
-import { GlobalBus } from "@/bus/global"
-import { Log } from "../util/log"
-import { describeRoute, generateSpecs, validator, resolver, openAPIRouteHandler } from "hono-openapi"
-import { Hono } from "hono"
-import { cors } from "hono/cors"
-import { stream, streamSSE } from "hono/streaming"
-import { proxy } from "hono/proxy"
-import { Session } from "../session"
-import z from "zod"
-import { Provider } from "../provider/provider"
-import { filter, mapValues, sortBy, pipe } from "remeda"
-import { NamedError } from "@opencode-ai/util/error"
-import { ModelsDev } from "../provider/models"
-import { Ripgrep } from "../file/ripgrep"
-import { Config } from "../config/config"
-import { File } from "../file"
-import { LSP } from "../lsp"
-import { Format } from "../format"
-import { MessageV2 } from "../session/message-v2"
-import { TuiRoute } from "./tui"
-import { Instance } from "../project/instance"
-import { Vcs } from "../project/vcs"
-import { Agent } from "../agent/agent"
-import { Auth } from "../auth"
-import { Command } from "../command"
-import { ProviderAuth } from "../provider/auth"
-import { Global } from "../global"
-import { ProjectRoute } from "./project"
-import { ToolRegistry } from "../tool/registry"
-import { zodToJsonSchema } from "zod-to-json-schema"
-import { SessionPrompt } from "../session/prompt"
-import { SessionCompaction } from "../session/compaction"
-import { SessionRevert } from "../session/revert"
-import { lazy } from "../util/lazy"
-import { Todo } from "../session/todo"
-import { InstanceBootstrap } from "../project/bootstrap"
-import { MCP } from "../mcp"
-import { Storage } from "../storage/storage"
-import type { ContentfulStatusCode } from "hono/utils/http-status"
-import { TuiEvent } from "@/cli/cmd/tui/event"
-import { Snapshot } from "@/snapshot"
-import { SessionSummary } from "@/session/summary"
-import { SessionStatus } from "@/session/status"
-import { upgradeWebSocket, websocket } from "hono/bun"
-import { errors } from "./error"
-import { Pty } from "@/pty"
-import { PermissionNext } from "@/permission/next"
-import { Installation } from "@/installation"
-import { MDNS } from "./mdns"
+import { Bus } from "@/bus"; // 导入总线模块
+import { BusEvent } from "@/bus/bus-event"; // 导入总线事件模块
+import { GlobalBus } from "@/bus/global"; // 导入全局总线模块
+import { TuiEvent } from "@/cli/cmd/tui/event"; // 导入TUI事件
+import { Installation } from "@/installation"; // 导入安装模块
+import { PermissionNext } from "@/permission/next"; // 导入权限模块
+import { Pty } from "@/pty"; // 导入PTY(Pseudo Terminal，伪终端)模块
+import { SessionStatus } from "@/session/status"; // 导入会话状态模块
+import { SessionSummary } from "@/session/summary"; // 导入会话摘要模块
+import { Snapshot } from "@/snapshot"; // 导入快照模块
+import { NamedError } from "@opencode-ai/util/error"; // 导入命名错误类
+import { Hono } from "hono"; // 导入Hono框架，用于构建Web API
+import { describeRoute, generateSpecs, openAPIRouteHandler, resolver, validator } from "hono-openapi"; // 导入OpenAPI相关工具
+import { upgradeWebSocket, websocket } from "hono/bun"; // 导入WebSocket升级工具
+import { cors } from "hono/cors"; // 导入CORS中间件
+import { proxy } from "hono/proxy"; // 导入代理工具
+import { stream, streamSSE } from "hono/streaming"; // 导入流式响应工具
+import type { ContentfulStatusCode } from "hono/utils/http-status"; // 导入HTTP状态码类型
+import { filter, mapValues, pipe, sortBy } from "remeda"; // 导入函数式编程工具
+import z from "zod"; // 导入Zod库，用于数据验证和模式定义
+import { zodToJsonSchema } from "zod-to-json-schema"; // 导入Zod到JSON Schema转换工具
+import { Agent } from "../agent/agent"; // 导入代理模块
+import { Auth } from "../auth"; // 导入认证模块
+import { Command } from "../command"; // 导入命令模块
+import { Config } from "../config/config"; // 导入配置模块
+import { File } from "../file"; // 导入文件模块
+import { Ripgrep } from "../file/ripgrep"; // 导入Ripgrep文件搜索工具
+import { Format } from "../format"; // 导入格式化模块
+import { Global } from "../global"; // 导入全局模块
+import { LSP } from "../lsp"; // 导入LSP(Language Server Protocol)模块
+import { MCP } from "../mcp"; // 导入MCP(Model Context Protocol)模块
+import { InstanceBootstrap } from "../project/bootstrap"; // 导入实例引导模块
+import { Instance } from "../project/instance"; // 导入项目实例模块
+import { Vcs } from "../project/vcs"; // 导入版本控制系统模块
+import { ProviderAuth } from "../provider/auth"; // 导入提供者认证模块
+import { ModelsDev } from "../provider/models"; // 导入模型开发模块
+import { Provider } from "../provider/provider"; // 导入提供者模块
+import { Session } from "../session"; // 导入会话模块
+import { SessionCompaction } from "../session/compaction"; // 导入会话压缩模块
+import { MessageV2 } from "../session/message-v2"; // 导入消息V2模块
+import { SessionPrompt } from "../session/prompt"; // 导入会话提示模块
+import { SessionRevert } from "../session/revert"; // 导入会话回滚模块
+import { Todo } from "../session/todo"; // 导入待办事项模块
+import { Storage } from "../storage/storage"; // 导入存储模块
+import { ToolRegistry } from "../tool/registry"; // 导入工具注册表
+import { lazy } from "../util/lazy"; // 导入懒加载工具
+import { Log } from "../util/log"; // 导入日志工具模块
+import { errors } from "./error"; // 导入错误处理模块
+import { MDNS } from "./mdns"; // 导入mDNS服务模块
+import { ProjectRoute } from "./project"; // 导入项目路由
+import { TuiRoute } from "./tui"; // 导入TUI路由
 
-// @ts-ignore This global is needed to prevent ai-sdk from logging warnings to stdout https://github.com/vercel/ai/blob/2dc67e0ef538307f21368db32d5a12345d98831b/packages/ai/src/logger/log-warnings.ts#L85
+// @ts-ignore 此全局变量用于防止ai-sdk向stdout输出警告日志 https://github.com/vercel/ai/blob/2dc67e0ef538307f21368db32d5a12345d98831b/packages/ai/src/logger/log-warnings.ts#L85
 globalThis.AI_SDK_LOG_WARNINGS = false
 
 export namespace Server {
-  const log = Log.create({ service: "server" })
+  // 服务器命名空间
+  const log = Log.create({ service: "server" }) // 创建服务器日志记录器
 
-  let _url: URL | undefined
-  let _corsWhitelist: string[] = []
+  let _url: URL | undefined // 服务器URL
+  let _corsWhitelist: string[] = [] // CORS白名单
 
   export function url(): URL {
-    return _url ?? new URL("http://localhost:4096")
+    // 获取服务器URL
+    return _url ?? new URL("http://localhost:4096") // 如果未设置，返回默认URL
   }
 
   export const Event = {
-    Connected: BusEvent.define("server.connected", z.object({})),
-    Disposed: BusEvent.define("global.disposed", z.object({})),
+    // 服务器事件定义
+    Connected: BusEvent.define("server.connected", z.object({})), // 服务器连接事件
+    Disposed: BusEvent.define("global.disposed", z.object({})), // 全局释放事件
   }
 
-  const app = new Hono()
+  const app = new Hono() // 创建Hono应用实例
   export const App = lazy(() =>
     app
       .onError((err, c) => {
+        // 全局错误处理中间件
         log.error("failed", {
           error: err,
         })
         if (err instanceof NamedError) {
+          // 如果是命名错误
           let status: ContentfulStatusCode
-          if (err instanceof Storage.NotFoundError) status = 404
-          else if (err instanceof Provider.ModelNotFoundError) status = 400
-          else status = 500
+          if (err instanceof Storage.NotFoundError)
+            status = 404 // 未找到错误返回404
+          else if (err instanceof Provider.ModelNotFoundError)
+            status = 400 // 模型未找到错误返回400
+          else status = 500 // 其他错误返回500
           return c.json(err.toObject(), { status })
         }
-        const message = err instanceof Error && err.stack ? err.stack : err.toString()
+        const message = err instanceof Error && err.stack ? err.stack : err.toString() // 获取错误信息
         return c.json(new NamedError.Unknown({ message }).toObject(), {
           status: 500,
         })
       })
       .use(async (c, next) => {
-        const skipLogging = c.req.path === "/log"
+        // 请求日志中间件
+        const skipLogging = c.req.path === "/log" // 跳过日志路径的日志记录
         if (!skipLogging) {
           log.info("request", {
             method: c.req.method,
@@ -96,28 +104,31 @@ export namespace Server {
           })
         }
         const timer = log.time("request", {
+          // 创建请求计时器
           method: c.req.method,
           path: c.req.path,
         })
         await next()
         if (!skipLogging) {
-          timer.stop()
+          timer.stop() // 停止计时器
         }
       })
       .use(
         cors({
+          // CORS配置中间件
           origin(input) {
             if (!input) return
 
-            if (input.startsWith("http://localhost:")) return input
-            if (input.startsWith("http://127.0.0.1:")) return input
-            if (input === "tauri://localhost" || input === "http://tauri.localhost") return input
+            if (input.startsWith("http://localhost:")) return input // 允许localhost
+            if (input.startsWith("http://127.0.0.1:")) return input // 允许127.0.0.1
+            if (input === "tauri://localhost" || input === "http://tauri.localhost") return input // 允许Tauri本地地址
 
-            // *.opencode.ai (https only, adjust if needed)
+            // *.opencode.ai (仅HTTPS，根据需要调整)
             if (/^https:\/\/([a-z0-9-]+\.)*opencode\.ai$/.test(input)) {
               return input
             }
             if (_corsWhitelist.includes(input)) {
+              // 检查白名单
               return input
             }
 
@@ -128,12 +139,12 @@ export namespace Server {
       .get(
         "/global/health",
         describeRoute({
-          summary: "Get health",
-          description: "Get health information about the OpenCode server.",
-          operationId: "global.health",
+          summary: "获取健康状态", // Get health
+          description: "获取OpenCode服务器的健康信息。", // Get health information about the OpenCode server.
+          operationId: "global.health", // 操作ID
           responses: {
             200: {
-              description: "Health information",
+              description: "健康信息", // Health information
               content: {
                 "application/json": {
                   schema: resolver(z.object({ healthy: z.literal(true), version: z.string() })),
@@ -149,12 +160,12 @@ export namespace Server {
       .get(
         "/global/event",
         describeRoute({
-          summary: "Get global events",
-          description: "Subscribe to global events from the OpenCode system using server-sent events.",
-          operationId: "global.event",
+          summary: "获取全局事件", // Get global events
+          description: "使用服务器发送事件(SSE)订阅OpenCode系统的全局事件。", // Subscribe to global events from the OpenCode system using server-sent events.
+          operationId: "global.event", // 操作ID
           responses: {
             200: {
-              description: "Event stream",
+              description: "事件流", // Event stream
               content: {
                 "text/event-stream": {
                   schema: resolver(
@@ -173,8 +184,9 @@ export namespace Server {
           },
         }),
         async (c) => {
-          log.info("global event connected")
+          log.info("global event connected") // 记录全局事件连接日志
           return streamSSE(c, async (stream) => {
+            // 使用SSE流式传输
             stream.writeSSE({
               data: JSON.stringify({
                 payload: {
@@ -188,9 +200,9 @@ export namespace Server {
                 data: JSON.stringify(event),
               })
             }
-            GlobalBus.on("event", handler)
+            GlobalBus.on("event", handler) // 监听全局总线事件
 
-            // Send heartbeat every 30s to prevent WKWebView timeout (60s default)
+            // 每30秒发送心跳以防止WKWebView超时（默认60秒）
             const heartbeat = setInterval(() => {
               stream.writeSSE({
                 data: JSON.stringify({
@@ -204,6 +216,7 @@ export namespace Server {
 
             await new Promise<void>((resolve) => {
               stream.onAbort(() => {
+                // 当流中断时清理资源
                 clearInterval(heartbeat)
                 GlobalBus.off("event", handler)
                 resolve()
@@ -216,12 +229,12 @@ export namespace Server {
       .post(
         "/global/dispose",
         describeRoute({
-          summary: "Dispose instance",
-          description: "Clean up and dispose all OpenCode instances, releasing all resources.",
-          operationId: "global.dispose",
+          summary: "释放实例", // Dispose instance
+          description: "清理并释放所有OpenCode实例，释放所有资源。", // Clean up and dispose all OpenCode instances, releasing all resources.
+          operationId: "global.dispose", // 操作ID
           responses: {
             200: {
-              description: "Global disposed",
+              description: "全局已释放", // Global disposed
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -231,8 +244,9 @@ export namespace Server {
           },
         }),
         async (c) => {
-          await Instance.disposeAll()
+          await Instance.disposeAll() // 释放所有实例
           GlobalBus.emit("event", {
+            // 发送全局释放事件
             directory: "global",
             payload: {
               type: Event.Disposed.type,
@@ -243,8 +257,10 @@ export namespace Server {
         },
       )
       .use(async (c, next) => {
-        const directory = c.req.query("directory") || c.req.header("x-opencode-directory") || process.cwd()
+        // 实例提供中间件
+        const directory = c.req.query("directory") || c.req.header("x-opencode-directory") || process.cwd() // 获取目录
         return Instance.provide({
+          // 提供实例上下文
           directory,
           init: InstanceBootstrap,
           async fn() {
@@ -255,6 +271,7 @@ export namespace Server {
       .get(
         "/doc",
         openAPIRouteHandler(app, {
+          // OpenAPI文档路由
           documentation: {
             info: {
               title: "opencode",
@@ -265,19 +282,19 @@ export namespace Server {
           },
         }),
       )
-      .use(validator("query", z.object({ directory: z.string().optional() })))
+      .use(validator("query", z.object({ directory: z.string().optional() }))) // 验证查询参数
 
-      .route("/project", ProjectRoute)
+      .route("/project", ProjectRoute) // 挂载项目路由
 
       .get(
         "/pty",
         describeRoute({
-          summary: "List PTY sessions",
-          description: "Get a list of all active pseudo-terminal (PTY) sessions managed by OpenCode.",
-          operationId: "pty.list",
+          summary: "列出PTY会话", // List PTY sessions
+          description: "获取OpenCode管理的所有活动伪终端(PTY)会话列表。", // Get a list of all active pseudo-terminal (PTY) sessions managed by OpenCode.
+          operationId: "pty.list", // 操作ID
           responses: {
             200: {
-              description: "List of sessions",
+              description: "会话列表", // List of sessions
               content: {
                 "application/json": {
                   schema: resolver(Pty.Info.array()),
@@ -293,12 +310,12 @@ export namespace Server {
       .post(
         "/pty",
         describeRoute({
-          summary: "Create PTY session",
-          description: "Create a new pseudo-terminal (PTY) session for running shell commands and processes.",
-          operationId: "pty.create",
+          summary: "创建PTY会话", // Create PTY session
+          description: "创建新的伪终端(PTY)会话，用于运行shell命令和进程。", // Create a new pseudo-terminal (PTY) session for running shell commands and processes.
+          operationId: "pty.create", // 操作ID
           responses: {
             200: {
-              description: "Created session",
+              description: "已创建的会话", // Created session
               content: {
                 "application/json": {
                   schema: resolver(Pty.Info),
@@ -308,7 +325,7 @@ export namespace Server {
             ...errors(400),
           },
         }),
-        validator("json", Pty.CreateInput),
+        validator("json", Pty.CreateInput), // 验证JSON请求体
         async (c) => {
           const info = await Pty.create(c.req.valid("json"))
           return c.json(info)
@@ -317,12 +334,12 @@ export namespace Server {
       .get(
         "/pty/:ptyID",
         describeRoute({
-          summary: "Get PTY session",
-          description: "Retrieve detailed information about a specific pseudo-terminal (PTY) session.",
-          operationId: "pty.get",
+          summary: "获取PTY会话", // Get PTY session
+          description: "检索特定伪终端(PTY)会话的详细信息。", // Retrieve detailed information about a specific pseudo-terminal (PTY) session.
+          operationId: "pty.get", // 操作ID
           responses: {
             200: {
-              description: "Session info",
+              description: "会话信息", // Session info
               content: {
                 "application/json": {
                   schema: resolver(Pty.Info),
@@ -332,11 +349,11 @@ export namespace Server {
             ...errors(404),
           },
         }),
-        validator("param", z.object({ ptyID: z.string() })),
+        validator("param", z.object({ ptyID: z.string() })), // 验证路径参数
         async (c) => {
           const info = Pty.get(c.req.valid("param").ptyID)
           if (!info) {
-            throw new Storage.NotFoundError({ message: "Session not found" })
+            throw new Storage.NotFoundError({ message: "未找到会话" })
           }
           return c.json(info)
         },
@@ -344,12 +361,12 @@ export namespace Server {
       .put(
         "/pty/:ptyID",
         describeRoute({
-          summary: "Update PTY session",
-          description: "Update properties of an existing pseudo-terminal (PTY) session.",
-          operationId: "pty.update",
+          summary: "更新PTY会话", // Update PTY session
+          description: "更新现有伪终端(PTY)会话的属性。", // Update properties of an existing pseudo-terminal (PTY) session.
+          operationId: "pty.update", // 操作ID
           responses: {
             200: {
-              description: "Updated session",
+              description: "已更新的会话", // Updated session
               content: {
                 "application/json": {
                   schema: resolver(Pty.Info),
@@ -359,8 +376,8 @@ export namespace Server {
             ...errors(400),
           },
         }),
-        validator("param", z.object({ ptyID: z.string() })),
-        validator("json", Pty.UpdateInput),
+        validator("param", z.object({ ptyID: z.string() })), // 验证路径参数
+        validator("json", Pty.UpdateInput), // 验证JSON请求体
         async (c) => {
           const info = await Pty.update(c.req.valid("param").ptyID, c.req.valid("json"))
           return c.json(info)
@@ -369,12 +386,12 @@ export namespace Server {
       .delete(
         "/pty/:ptyID",
         describeRoute({
-          summary: "Remove PTY session",
-          description: "Remove and terminate a specific pseudo-terminal (PTY) session.",
-          operationId: "pty.remove",
+          summary: "移除PTY会话", // Remove PTY session
+          description: "移除并终止特定的伪终端(PTY)会话。", // Remove and terminate a specific pseudo-terminal (PTY) session.
+          operationId: "pty.remove", // 操作ID
           responses: {
             200: {
-              description: "Session removed",
+              description: "会话已移除", // Session removed
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -384,7 +401,7 @@ export namespace Server {
             ...errors(404),
           },
         }),
-        validator("param", z.object({ ptyID: z.string() })),
+        validator("param", z.object({ ptyID: z.string() })), // 验证路径参数
         async (c) => {
           await Pty.remove(c.req.valid("param").ptyID)
           return c.json(true)
@@ -393,13 +410,12 @@ export namespace Server {
       .get(
         "/pty/:ptyID/connect",
         describeRoute({
-          summary: "Connect to PTY session",
-          description:
-            "Establish a WebSocket connection to interact with a pseudo-terminal (PTY) session in real-time.",
-          operationId: "pty.connect",
+          summary: "连接到PTY会话", // Connect to PTY session
+          description: "建立WebSocket连接以实时与伪终端(PTY)会话交互。", // Establish a WebSocket connection to interact with a pseudo-terminal (PTY) session in real-time.
+          operationId: "pty.connect", // 操作ID
           responses: {
             200: {
-              description: "Connected session",
+              description: "已连接的会话", // Connected session
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -409,19 +425,23 @@ export namespace Server {
             ...errors(404),
           },
         }),
-        validator("param", z.object({ ptyID: z.string() })),
+        validator("param", z.object({ ptyID: z.string() })), // 验证路径参数
         upgradeWebSocket((c) => {
+          // 升级为WebSocket连接
           const id = c.req.param("ptyID")
           let handler: ReturnType<typeof Pty.connect>
-          if (!Pty.get(id)) throw new Error("Session not found")
+          if (!Pty.get(id)) throw new Error("未找到会话")
           return {
             onOpen(_event, ws) {
+              // WebSocket连接打开时的处理
               handler = Pty.connect(id, ws)
             },
             onMessage(event) {
+              // 接收到消息时的处理
               handler?.onMessage(String(event.data))
             },
             onClose() {
+              // 连接关闭时的处理
               handler?.onClose()
             },
           }
@@ -431,12 +451,12 @@ export namespace Server {
       .get(
         "/config",
         describeRoute({
-          summary: "Get configuration",
-          description: "Retrieve the current OpenCode configuration settings and preferences.",
-          operationId: "config.get",
+          summary: "获取配置", // Get configuration
+          description: "检索当前的OpenCode配置设置和首选项。", // Retrieve the current OpenCode configuration settings and preferences.
+          operationId: "config.get", // 操作ID
           responses: {
             200: {
-              description: "Get config info",
+              description: "配置信息", // Get config info
               content: {
                 "application/json": {
                   schema: resolver(Config.Info),
@@ -453,12 +473,12 @@ export namespace Server {
       .patch(
         "/config",
         describeRoute({
-          summary: "Update configuration",
-          description: "Update OpenCode configuration settings and preferences.",
-          operationId: "config.update",
+          summary: "更新配置", // Update configuration
+          description: "更新OpenCode配置设置和首选项。", // Update OpenCode configuration settings and preferences.
+          operationId: "config.update", // 操作ID
           responses: {
             200: {
-              description: "Successfully updated config",
+              description: "配置更新成功", // Successfully updated config
               content: {
                 "application/json": {
                   schema: resolver(Config.Info),
@@ -468,7 +488,7 @@ export namespace Server {
             ...errors(400),
           },
         }),
-        validator("json", Config.Info),
+        validator("json", Config.Info), // 验证JSON请求体
         async (c) => {
           const config = c.req.valid("json")
           await Config.update(config)
@@ -478,13 +498,12 @@ export namespace Server {
       .get(
         "/experimental/tool/ids",
         describeRoute({
-          summary: "List tool IDs",
-          description:
-            "Get a list of all available tool IDs, including both built-in tools and dynamically registered tools.",
-          operationId: "tool.ids",
+          summary: "列出工具ID", // List tool IDs
+          description: "获取所有可用工具ID的列表，包括内置工具和动态注册的工具。", // Get a list of all available tool IDs, including both built-in tools and dynamically registered tools.
+          operationId: "tool.ids", // 操作ID
           responses: {
             200: {
-              description: "Tool IDs",
+              description: "工具ID列表", // Tool IDs
               content: {
                 "application/json": {
                   schema: resolver(z.array(z.string()).meta({ ref: "ToolIDs" })),
@@ -501,13 +520,12 @@ export namespace Server {
       .get(
         "/experimental/tool",
         describeRoute({
-          summary: "List tools",
-          description:
-            "Get a list of available tools with their JSON schema parameters for a specific provider and model combination.",
-          operationId: "tool.list",
+          summary: "列出工具", // List tools
+          description: "获取可用工具列表及其JSON Schema参数，用于特定的提供者和模型组合。", // Get a list of available tools with their JSON schema parameters for a specific provider and model combination.
+          operationId: "tool.list", // 操作ID
           responses: {
             200: {
-              description: "Tools",
+              description: "工具列表", // Tools
               content: {
                 "application/json": {
                   schema: resolver(
@@ -535,7 +553,7 @@ export namespace Server {
             provider: z.string(),
             model: z.string(),
           }),
-        ),
+        ), // 验证查询参数
         async (c) => {
           const { provider } = c.req.valid("query")
           const tools = await ToolRegistry.tools(provider)
@@ -543,7 +561,7 @@ export namespace Server {
             tools.map((t) => ({
               id: t.id,
               description: t.description,
-              // Handle both Zod schemas and plain JSON schemas
+              // 处理Zod模式和纯JSON Schema
               parameters: (t.parameters as any)?._def ? zodToJsonSchema(t.parameters as any) : t.parameters,
             })),
           )
@@ -552,12 +570,12 @@ export namespace Server {
       .post(
         "/instance/dispose",
         describeRoute({
-          summary: "Dispose instance",
-          description: "Clean up and dispose the current OpenCode instance, releasing all resources.",
-          operationId: "instance.dispose",
+          summary: "释放实例", // Dispose instance
+          description: "清理并释放当前的OpenCode实例，释放所有资源。", // Clean up and dispose the current OpenCode instance, releasing all resources.
+          operationId: "instance.dispose", // 操作ID
           responses: {
             200: {
-              description: "Instance disposed",
+              description: "实例已释放", // Instance disposed
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -574,22 +592,22 @@ export namespace Server {
       .get(
         "/path",
         describeRoute({
-          summary: "Get paths",
-          description: "Retrieve the current working directory and related path information for the OpenCode instance.",
-          operationId: "path.get",
+          summary: "获取路径", // Get paths
+          description: "检索OpenCode实例的当前工作目录和相关路径信息。", // Retrieve the current working directory and related path information for the OpenCode instance.
+          operationId: "path.get", // 操作ID
           responses: {
             200: {
-              description: "Path",
+              description: "路径信息", // Path
               content: {
                 "application/json": {
                   schema: resolver(
                     z
                       .object({
-                        home: z.string(),
-                        state: z.string(),
-                        config: z.string(),
-                        worktree: z.string(),
-                        directory: z.string(),
+                        home: z.string(), // 主目录路径
+                        state: z.string(), // 状态目录路径
+                        config: z.string(), // 配置目录路径
+                        worktree: z.string(), // 工作树路径
+                        directory: z.string(), // 当前目录路径
                       })
                       .meta({
                         ref: "Path",
@@ -613,12 +631,12 @@ export namespace Server {
       .get(
         "/vcs",
         describeRoute({
-          summary: "Get VCS info",
-          description: "Retrieve version control system (VCS) information for the current project, such as git branch.",
-          operationId: "vcs.get",
+          summary: "获取VCS信息", // Get VCS info
+          description: "检索当前项目的版本控制系统(VCS)信息，如git分支。", // Retrieve version control system (VCS) information for the current project, such as git branch.
+          operationId: "vcs.get", // 操作ID
           responses: {
             200: {
-              description: "VCS info",
+              description: "VCS信息", // VCS info
               content: {
                 "application/json": {
                   schema: resolver(Vcs.Info),
@@ -637,12 +655,12 @@ export namespace Server {
       .get(
         "/session",
         describeRoute({
-          summary: "List sessions",
-          description: "Get a list of all OpenCode sessions, sorted by most recently updated.",
-          operationId: "session.list",
+          summary: "列出会话", // List sessions
+          description: "获取所有OpenCode会话的列表，按最近更新时间排序。", // Get a list of all OpenCode sessions, sorted by most recently updated.
+          operationId: "session.list", // 操作ID
           responses: {
             200: {
-              description: "List of sessions",
+              description: "会话列表", // List of sessions
               content: {
                 "application/json": {
                   schema: resolver(Session.Info.array()),
@@ -655,8 +673,8 @@ export namespace Server {
           const sessions = await Array.fromAsync(Session.list())
           pipe(
             await Array.fromAsync(Session.list()),
-            filter((s) => !s.time.archived),
-            sortBy((s) => s.time.updated),
+            filter((s) => !s.time.archived), // 过滤掉已归档的会话
+            sortBy((s) => s.time.updated), // 按更新时间排序
           )
           return c.json(sessions)
         },
@@ -664,12 +682,12 @@ export namespace Server {
       .get(
         "/session/status",
         describeRoute({
-          summary: "Get session status",
-          description: "Retrieve the current status of all sessions, including active, idle, and completed states.",
-          operationId: "session.status",
+          summary: "获取会话状态", // Get session status
+          description: "检索所有会话的当前状态，包括活动、空闲和完成状态。", // Retrieve the current status of all sessions, including active, idle, and completed states.
+          operationId: "session.status", // 操作ID
           responses: {
             200: {
-              description: "Get session status",
+              description: "会话状态", // Get session status
               content: {
                 "application/json": {
                   schema: resolver(z.record(z.string(), SessionStatus.Info)),
@@ -687,13 +705,13 @@ export namespace Server {
       .get(
         "/session/:sessionID",
         describeRoute({
-          summary: "Get session",
-          description: "Retrieve detailed information about a specific OpenCode session.",
-          tags: ["Session"],
-          operationId: "session.get",
+          summary: "获取会话", // Get session
+          description: "检索特定OpenCode会话的详细信息。", // Retrieve detailed information about a specific OpenCode session.
+          tags: ["Session"], // 标签
+          operationId: "session.get", // 操作ID
           responses: {
             200: {
-              description: "Get session",
+              description: "会话信息", // Get session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -708,7 +726,7 @@ export namespace Server {
           z.object({
             sessionID: Session.get.schema,
           }),
-        ),
+        ), // 验证路径参数
         async (c) => {
           const sessionID = c.req.valid("param").sessionID
           log.info("SEARCH", { url: c.req.url })
@@ -719,13 +737,13 @@ export namespace Server {
       .get(
         "/session/:sessionID/children",
         describeRoute({
-          summary: "Get session children",
-          tags: ["Session"],
-          description: "Retrieve all child sessions that were forked from the specified parent session.",
-          operationId: "session.children",
+          summary: "获取会话子项", // Get session children
+          tags: ["Session"], // 标签
+          description: "检索从指定父会话派生的所有子会话。", // Retrieve all child sessions that were forked from the specified parent session.
+          operationId: "session.children", // 操作ID
           responses: {
             200: {
-              description: "List of children",
+              description: "子项列表", // List of children
               content: {
                 "application/json": {
                   schema: resolver(Session.Info.array()),
@@ -740,7 +758,7 @@ export namespace Server {
           z.object({
             sessionID: Session.children.schema,
           }),
-        ),
+        ), // 验证路径参数
         async (c) => {
           const sessionID = c.req.valid("param").sessionID
           const session = await Session.children(sessionID)
@@ -750,12 +768,12 @@ export namespace Server {
       .get(
         "/session/:sessionID/todo",
         describeRoute({
-          summary: "Get session todos",
-          description: "Retrieve the todo list associated with a specific session, showing tasks and action items.",
-          operationId: "session.todo",
+          summary: "获取会话待办事项", // Get session todos
+          description: "检索与特定会话关联的待办事项列表，显示任务和行动项。", // Retrieve the todo list associated with a specific session, showing tasks and action items.
+          operationId: "session.todo", // 操作ID
           responses: {
             200: {
-              description: "Todo list",
+              description: "待办事项列表", // Todo list
               content: {
                 "application/json": {
                   schema: resolver(Todo.Info.array()),
@@ -768,9 +786,9 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
-        ),
+        ), // 验证路径参数
         async (c) => {
           const sessionID = c.req.valid("param").sessionID
           const todos = await Todo.get(sessionID)
@@ -780,13 +798,13 @@ export namespace Server {
       .post(
         "/session",
         describeRoute({
-          summary: "Create session",
-          description: "Create a new OpenCode session for interacting with AI assistants and managing conversations.",
-          operationId: "session.create",
+          summary: "创建会话", // Create session
+          description: "创建新的OpenCode会话，用于与AI助手交互和管理对话。", // Create a new OpenCode session for interacting with AI assistants and managing conversations.
+          operationId: "session.create", // 操作ID
           responses: {
             ...errors(400),
             200: {
-              description: "Successfully created session",
+              description: "会话创建成功", // Successfully created session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -795,7 +813,7 @@ export namespace Server {
             },
           },
         }),
-        validator("json", Session.create.schema.optional()),
+        validator("json", Session.create.schema.optional()), // 验证JSON请求体（可选）
         async (c) => {
           const body = c.req.valid("json") ?? {}
           const session = await Session.create(body)
@@ -805,12 +823,12 @@ export namespace Server {
       .delete(
         "/session/:sessionID",
         describeRoute({
-          summary: "Delete session",
-          description: "Delete a session and permanently remove all associated data, including messages and history.",
-          operationId: "session.delete",
+          summary: "删除会话", // Delete session
+          description: "删除会话并永久移除所有相关数据，包括消息和历史记录。", // Delete a session and permanently remove all associated data, including messages and history.
+          operationId: "session.delete", // 操作ID
           responses: {
             200: {
-              description: "Successfully deleted session",
+              description: "会话删除成功", // Successfully deleted session
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -825,7 +843,7 @@ export namespace Server {
           z.object({
             sessionID: Session.remove.schema,
           }),
-        ),
+        ), // 验证路径参数
         async (c) => {
           const sessionID = c.req.valid("param").sessionID
           await Session.remove(sessionID)
@@ -835,12 +853,12 @@ export namespace Server {
       .patch(
         "/session/:sessionID",
         describeRoute({
-          summary: "Update session",
-          description: "Update properties of an existing session, such as title or other metadata.",
-          operationId: "session.update",
+          summary: "更新会话", // Update session
+          description: "更新现有会话的属性，如标题或其他元数据。", // Update properties of an existing session, such as title or other metadata.
+          operationId: "session.update", // 操作ID
           responses: {
             200: {
-              description: "Successfully updated session",
+              description: "会话更新成功", // Successfully updated session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -884,10 +902,9 @@ export namespace Server {
       .post(
         "/session/:sessionID/init",
         describeRoute({
-          summary: "Initialize session",
-          description:
-            "Analyze the current application and create an AGENTS.md file with project-specific agent configurations.",
-          operationId: "session.init",
+          summary: "初始化会话", // Initialize session
+          description: "分析当前应用程序并创建包含项目特定代理配置的AGENTS.md文件。", // Analyze the current application and create an AGENTS.md file with project-specific agent configurations.
+          operationId: "session.init", // 操作ID
           responses: {
             200: {
               description: "200",
@@ -903,7 +920,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator("json", Session.initialize.schema.omit({ sessionID: true })),
@@ -917,9 +934,9 @@ export namespace Server {
       .post(
         "/session/:sessionID/fork",
         describeRoute({
-          summary: "Fork session",
-          description: "Create a new session by forking an existing session at a specific message point.",
-          operationId: "session.fork",
+          summary: "派生会话", // Fork session
+          description: "在特定消息点通过派生现有会话来创建新会话。", // Create a new session by forking an existing session at a specific message point.
+          operationId: "session.fork", // 操作ID
           responses: {
             200: {
               description: "200",
@@ -948,12 +965,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/abort",
         describeRoute({
-          summary: "Abort session",
-          description: "Abort an active session and stop any ongoing AI processing or command execution.",
-          operationId: "session.abort",
+          summary: "中止会话", // Abort session
+          description: "中止活动会话并停止任何正在进行的AI处理或命令执行。", // Abort an active session and stop any ongoing AI processing or command execution.
+          operationId: "session.abort", // 操作ID
           responses: {
             200: {
-              description: "Aborted session",
+              description: "会话已中止", // Aborted session
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -977,12 +994,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/share",
         describeRoute({
-          summary: "Share session",
-          description: "Create a shareable link for a session, allowing others to view the conversation.",
-          operationId: "session.share",
+          summary: "分享会话", // Share session
+          description: "为会话创建可分享的链接，允许其他人查看对话。", // Create a shareable link for a session, allowing others to view the conversation.
+          operationId: "session.share", // 操作ID
           responses: {
             200: {
-              description: "Successfully shared session",
+              description: "会话分享成功", // Successfully shared session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -1008,12 +1025,12 @@ export namespace Server {
       .get(
         "/session/:sessionID/diff",
         describeRoute({
-          summary: "Get message diff",
-          description: "Get the file changes (diff) that resulted from a specific user message in the session.",
-          operationId: "session.diff",
+          summary: "获取消息差异", // Get message diff
+          description: "获取会话中特定用户消息导致的文件变更(diff)。", // Get the file changes (diff) that resulted from a specific user message in the session.
+          operationId: "session.diff", // 操作ID
           responses: {
             200: {
-              description: "Successfully retrieved diff",
+              description: "差异获取成功", // Successfully retrieved diff
               content: {
                 "application/json": {
                   schema: resolver(Snapshot.FileDiff.array()),
@@ -1047,12 +1064,12 @@ export namespace Server {
       .delete(
         "/session/:sessionID/share",
         describeRoute({
-          summary: "Unshare session",
-          description: "Remove the shareable link for a session, making it private again.",
-          operationId: "session.unshare",
+          summary: "取消分享会话", // Unshare session
+          description: "移除会话的可分享链接，使其重新变为私有。", // Remove shareable link for a session, making it private again.
+          operationId: "session.unshare", // 操作ID
           responses: {
             200: {
-              description: "Successfully unshared session",
+              description: "会话取消分享成功", // Successfully unshared session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -1067,7 +1084,7 @@ export namespace Server {
           z.object({
             sessionID: Session.unshare.schema,
           }),
-        ),
+        ), // 验证路径参数
         async (c) => {
           const sessionID = c.req.valid("param").sessionID
           await Session.unshare(sessionID)
@@ -1078,12 +1095,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/summarize",
         describeRoute({
-          summary: "Summarize session",
-          description: "Generate a concise summary of the session using AI compaction to preserve key information.",
-          operationId: "session.summarize",
+          summary: "总结会话", // Summarize session
+          description: "使用AI压缩生成会话的简洁摘要，以保留关键信息。", // Generate a concise summary of the session using AI compaction to preserve key information.
+          operationId: "session.summarize", // 操作ID
           responses: {
             200: {
-              description: "Summarized session",
+              description: "会话已总结", // Summarized session
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -1096,7 +1113,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator(
@@ -1137,12 +1154,12 @@ export namespace Server {
       .get(
         "/session/:sessionID/message",
         describeRoute({
-          summary: "Get session messages",
-          description: "Retrieve all messages in a session, including user prompts and AI responses.",
-          operationId: "session.messages",
+          summary: "获取会话消息", // Get session messages
+          description: "检索会话中的所有消息，包括用户提示和AI响应。", // Retrieve all messages in a session, including user prompts and AI responses.
+          operationId: "session.messages", // 操作ID
           responses: {
             200: {
-              description: "List of messages",
+              description: "消息列表", // List of messages
               content: {
                 "application/json": {
                   schema: resolver(MessageV2.WithParts.array()),
@@ -1155,7 +1172,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator(
@@ -1176,12 +1193,12 @@ export namespace Server {
       .get(
         "/session/:sessionID/diff",
         describeRoute({
-          summary: "Get session diff",
-          description: "Get all file changes (diffs) made during this session.",
-          operationId: "session.diff",
+          summary: "获取会话差异", // Get session diff
+          description: "获取在此会话期间进行的所有文件变更(diff)。", // Get all file changes (diffs) made during this session.
+          operationId: "session.diff", // 操作ID
           responses: {
             200: {
-              description: "List of diffs",
+              description: "差异列表", // List of diffs
               content: {
                 "application/json": {
                   schema: resolver(Snapshot.FileDiff.array()),
@@ -1194,7 +1211,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         async (c) => {
@@ -1205,12 +1222,12 @@ export namespace Server {
       .get(
         "/session/:sessionID/message/:messageID",
         describeRoute({
-          summary: "Get message",
-          description: "Retrieve a specific message from a session by its message ID.",
-          operationId: "session.message",
+          summary: "获取消息", // Get message
+          description: "通过消息ID从会话中检索特定消息。", // Retrieve a specific message from a session by its message ID.
+          operationId: "session.message", // 操作ID
           responses: {
             200: {
-              description: "Message",
+              description: "消息", // Message
               content: {
                 "application/json": {
                   schema: resolver(
@@ -1228,8 +1245,8 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
-            messageID: z.string().meta({ description: "Message ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
+            messageID: z.string().meta({ description: "消息ID" }), // Message ID
           }),
         ),
         async (c) => {
@@ -1244,11 +1261,11 @@ export namespace Server {
       .delete(
         "/session/:sessionID/message/:messageID/part/:partID",
         describeRoute({
-          description: "Delete a part from a message",
-          operationId: "part.delete",
+          description: "从消息中删除一个部分",  // Delete a part from a message
+          operationId: "part.delete",  // 操作ID
           responses: {
             200: {
-              description: "Successfully deleted part",
+              description: "部分删除成功",  // Successfully deleted part
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -1261,9 +1278,9 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
-            messageID: z.string().meta({ description: "Message ID" }),
-            partID: z.string().meta({ description: "Part ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
+            messageID: z.string().meta({ description: "消息ID" }), // Message ID
+            partID: z.string().meta({ description: "部分ID" }), // Part ID
           }),
         ),
         async (c) => {
@@ -1279,11 +1296,11 @@ export namespace Server {
       .patch(
         "/session/:sessionID/message/:messageID/part/:partID",
         describeRoute({
-          description: "Update a part in a message",
-          operationId: "part.update",
+          description: "更新消息中的一个部分",  // Update a part in a message
+          operationId: "part.update",  // 操作ID
           responses: {
             200: {
-              description: "Successfully updated part",
+              description: "部分更新成功",  // Successfully updated part
               content: {
                 "application/json": {
                   schema: resolver(MessageV2.Part),
@@ -1296,9 +1313,9 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
-            messageID: z.string().meta({ description: "Message ID" }),
-            partID: z.string().meta({ description: "Part ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
+            messageID: z.string().meta({ description: "消息ID" }), // Message ID
+            partID: z.string().meta({ description: "部分ID" }), // Part ID
           }),
         ),
         validator("json", MessageV2.Part),
@@ -1317,12 +1334,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/message",
         describeRoute({
-          summary: "Send message",
-          description: "Create and send a new message to a session, streaming the AI response.",
-          operationId: "session.prompt",
+          summary: "发送消息", // Send message
+          description: "创建并向会话发送新消息，流式传输AI响应。", // Create and send a new message to a session, streaming to AI response.
+          operationId: "session.prompt", // 操作ID
           responses: {
             200: {
-              description: "Created message",
+              description: "已创建消息", // Created message
               content: {
                 "application/json": {
                   schema: resolver(
@@ -1340,7 +1357,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator("json", SessionPrompt.PromptInput.omit({ sessionID: true })),
@@ -1358,13 +1375,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/prompt_async",
         describeRoute({
-          summary: "Send async message",
-          description:
-            "Create and send a new message to a session asynchronously, starting the session if needed and returning immediately.",
-          operationId: "session.prompt_async",
+          summary: "发送异步消息", // Send async message
+          description: "异步创建并向会话发送新消息，如需要则启动会话并立即返回。", // Create and send a new message to a session asynchronously, starting the session if needed and returning immediately.
+          operationId: "session.prompt_async", // 操作ID
           responses: {
             204: {
-              description: "Prompt accepted",
+              description: "提示已接受", // Prompt accepted
             },
             ...errors(400, 404),
           },
@@ -1372,7 +1388,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator("json", SessionPrompt.PromptInput.omit({ sessionID: true })),
@@ -1389,12 +1405,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/command",
         describeRoute({
-          summary: "Send command",
-          description: "Send a new command to a session for execution by the AI assistant.",
-          operationId: "session.command",
+          summary: "发送命令", // Send command
+          description: "向会话发送新命令，由AI助手执行。", // Send a new command to a session for execution by the AI assistant.
+          operationId: "session.command", // 操作ID
           responses: {
             200: {
-              description: "Created message",
+              description: "已创建消息", // Created message
               content: {
                 "application/json": {
                   schema: resolver(
@@ -1412,7 +1428,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator("json", SessionPrompt.CommandInput.omit({ sessionID: true })),
@@ -1426,12 +1442,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/shell",
         describeRoute({
-          summary: "Run shell command",
-          description: "Execute a shell command within the session context and return the AI's response.",
-          operationId: "session.shell",
+          summary: "运行shell命令", // Run shell command
+          description: "在会话上下文中执行shell命令并返回AI的响应。", // Execute a shell command within the session context and return the AI's response.
+          operationId: "session.shell", // 操作ID
           responses: {
             200: {
-              description: "Created message",
+              description: "已创建消息", // Created message
               content: {
                 "application/json": {
                   schema: resolver(MessageV2.Assistant),
@@ -1444,7 +1460,7 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            sessionID: z.string().meta({ description: "Session ID" }),
+            sessionID: z.string().meta({ description: "会话ID" }), // Session ID
           }),
         ),
         validator("json", SessionPrompt.ShellInput.omit({ sessionID: true })),
@@ -1458,12 +1474,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/revert",
         describeRoute({
-          summary: "Revert message",
-          description: "Revert a specific message in a session, undoing its effects and restoring the previous state.",
-          operationId: "session.revert",
+          summary: "回滚消息", // Revert message
+          description: "回滚会话中的特定消息，撤销其影响并恢复到之前的状态。", // Revert a specific message in a session, undoing its effects and restoring the previous state.
+          operationId: "session.revert", // 操作ID
           responses: {
             200: {
-              description: "Updated session",
+              description: "会话已更新", // Updated session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -1493,12 +1509,12 @@ export namespace Server {
       .post(
         "/session/:sessionID/unrevert",
         describeRoute({
-          summary: "Restore reverted messages",
-          description: "Restore all previously reverted messages in a session.",
-          operationId: "session.unrevert",
+          summary: "恢复已回滚的消息", // Restore reverted messages
+          description: "恢复会话中所有之前已回滚的消息。", // Restore all previously reverted messages in a session.
+          operationId: "session.unrevert", // 操作ID
           responses: {
             200: {
-              description: "Updated session",
+              description: "会话已更新", // Updated session
               content: {
                 "application/json": {
                   schema: resolver(Session.Info),
@@ -1523,13 +1539,13 @@ export namespace Server {
       .post(
         "/session/:sessionID/permissions/:permissionID",
         describeRoute({
-          summary: "Respond to permission",
+          summary: "响应权限", // Respond to permission
           deprecated: true,
-          description: "Approve or deny a permission request from the AI assistant.",
-          operationId: "permission.respond",
+          description: "批准或拒绝来自AI助手的权限请求。", // Approve or deny a permission request from the AI assistant.
+          operationId: "permission.respond", // 操作ID
           responses: {
             200: {
-              description: "Permission processed successfully",
+              description: "权限处理成功", // Permission processed successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -1559,12 +1575,12 @@ export namespace Server {
       .post(
         "/permission/:requestID/reply",
         describeRoute({
-          summary: "Respond to permission request",
-          description: "Approve or deny a permission request from the AI assistant.",
-          operationId: "permission.reply",
+          summary: "响应权限请求", // Respond to permission request
+          description: "批准或拒绝来自AI助手的权限请求。", // Approve or deny a permission request from the AI assistant.
+          operationId: "permission.reply", // 操作ID
           responses: {
             200: {
-              description: "Permission processed successfully",
+              description: "权限处理成功", // Permission processed successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -1594,12 +1610,12 @@ export namespace Server {
       .get(
         "/permission",
         describeRoute({
-          summary: "List pending permissions",
-          description: "Get all pending permission requests across all sessions.",
-          operationId: "permission.list",
+          summary: "列出待处理权限", // List pending permissions
+          description: "获取所有会话中所有待处理的权限请求。", // Get all pending permission requests across all sessions.
+          operationId: "permission.list", // 操作ID
           responses: {
             200: {
-              description: "List of pending permissions",
+              description: "待处理权限列表", // List of pending permissions
               content: {
                 "application/json": {
                   schema: resolver(PermissionNext.Request.array()),
@@ -1616,12 +1632,12 @@ export namespace Server {
       .get(
         "/command",
         describeRoute({
-          summary: "List commands",
-          description: "Get a list of all available commands in the OpenCode system.",
-          operationId: "command.list",
+          summary: "列出命令", // List commands
+          description: "获取OpenCode系统中所有可用命令的列表。", // Get a list of all available commands in the OpenCode system.
+          operationId: "command.list", // 操作ID
           responses: {
             200: {
-              description: "List of commands",
+              description: "命令列表", // List of commands
               content: {
                 "application/json": {
                   schema: resolver(Command.Info.array()),
@@ -1638,12 +1654,12 @@ export namespace Server {
       .get(
         "/config/providers",
         describeRoute({
-          summary: "List config providers",
-          description: "Get a list of all configured AI providers and their default models.",
-          operationId: "config.providers",
+          summary: "列出配置提供者", // List config providers
+          description: "获取所有已配置的AI提供者及其默认模型的列表。", // Get a list of all configured AI providers and their default models.
+          operationId: "config.providers", // 操作ID
           responses: {
             200: {
-              description: "List of providers",
+              description: "提供者列表", // List of providers
               content: {
                 "application/json": {
                   schema: resolver(
@@ -1669,12 +1685,12 @@ export namespace Server {
       .get(
         "/provider",
         describeRoute({
-          summary: "List providers",
-          description: "Get a list of all available AI providers, including both available and connected ones.",
-          operationId: "provider.list",
+          summary: "列出提供者", // List providers
+          description: "获取所有可用AI提供者的列表，包括可用和已连接的提供者。", // Get a list of all available AI providers, including both available and connected ones.
+          operationId: "provider.list", // 操作ID
           responses: {
             200: {
-              description: "List of providers",
+              description: "提供者列表", // List of providers
               content: {
                 "application/json": {
                   schema: resolver(
@@ -1717,12 +1733,12 @@ export namespace Server {
       .get(
         "/provider/auth",
         describeRoute({
-          summary: "Get provider auth methods",
-          description: "Retrieve available authentication methods for all AI providers.",
-          operationId: "provider.auth",
+          summary: "获取提供者认证方法", // Get provider auth methods
+          description: "检索所有AI提供者的可用认证方法。", // Retrieve available authentication methods for all AI providers.
+          operationId: "provider.auth", // 操作ID
           responses: {
             200: {
-              description: "Provider auth methods",
+              description: "提供者认证方法", // Provider auth methods
               content: {
                 "application/json": {
                   schema: resolver(z.record(z.string(), z.array(ProviderAuth.Method))),
@@ -1738,12 +1754,12 @@ export namespace Server {
       .post(
         "/provider/:providerID/oauth/authorize",
         describeRoute({
-          summary: "OAuth authorize",
-          description: "Initiate OAuth authorization for a specific AI provider to get an authorization URL.",
-          operationId: "provider.oauth.authorize",
+          summary: "OAuth授权",  // OAuth authorize
+          description: "为特定AI提供商启动OAuth授权以获取授权URL。",  // Initiate OAuth authorization for a specific AI provider to get an authorization URL.
+          operationId: "provider.oauth.authorize",  // 操作ID
           responses: {
             200: {
-              description: "Authorization URL and method",
+              description: "授权URL和方法",  // Authorization URL and method
               content: {
                 "application/json": {
                   schema: resolver(ProviderAuth.Authorization.optional()),
@@ -1756,13 +1772,13 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            providerID: z.string().meta({ description: "Provider ID" }),
+            providerID: z.string().meta({ description: "提供商ID" }), // Provider ID
           }),
         ),
         validator(
           "json",
           z.object({
-            method: z.number().meta({ description: "Auth method index" }),
+            method: z.number().meta({ description: "认证方法索引" }), // Auth method index
           }),
         ),
         async (c) => {
@@ -1778,12 +1794,12 @@ export namespace Server {
       .post(
         "/provider/:providerID/oauth/callback",
         describeRoute({
-          summary: "OAuth callback",
-          description: "Handle the OAuth callback from a provider after user authorization.",
-          operationId: "provider.oauth.callback",
+          summary: "OAuth回调", // OAuth callback
+          description: "在用户授权后处理来自提供者的OAuth回调。", // Handle the OAuth callback from a provider after user authorization.
+          operationId: "provider.oauth.callback", // 操作ID
           responses: {
             200: {
-              description: "OAuth callback processed successfully",
+              description: "OAuth回调处理成功", // OAuth callback processed successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -1796,14 +1812,14 @@ export namespace Server {
         validator(
           "param",
           z.object({
-            providerID: z.string().meta({ description: "Provider ID" }),
+            providerID: z.string().meta({ description: "提供商ID" }), // Provider ID
           }),
         ),
         validator(
           "json",
           z.object({
-            method: z.number().meta({ description: "Auth method index" }),
-            code: z.string().optional().meta({ description: "OAuth authorization code" }),
+            method: z.number().meta({ description: "认证方法索引" }), // Auth method index
+            code: z.string().optional().meta({ description: "OAuth授权码" }), // OAuth authorization code
           }),
         ),
         async (c) => {
@@ -1820,12 +1836,12 @@ export namespace Server {
       .get(
         "/find",
         describeRoute({
-          summary: "Find text",
-          description: "Search for text patterns across files in the project using ripgrep.",
-          operationId: "find.text",
+          summary: "查找文本", // Find text
+          description: "使用ripgrep在项目中的文件中搜索文本模式。", // Search for text patterns across files in the project using ripgrep.
+          operationId: "find.text", // 操作ID
           responses: {
             200: {
-              description: "Matches",
+              description: "匹配结果", // Matches
               content: {
                 "application/json": {
                   schema: resolver(Ripgrep.Match.shape.data.array()),
@@ -1853,12 +1869,12 @@ export namespace Server {
       .get(
         "/find/file",
         describeRoute({
-          summary: "Find files",
-          description: "Search for files or directories by name or pattern in the project directory.",
-          operationId: "find.files",
+          summary: "查找文件", // Find files
+          description: "在项目目录中按名称或模式搜索文件或目录。", // Search for files or directories by name or pattern in the project directory.
+          operationId: "find.files", // 操作ID
           responses: {
             200: {
-              description: "File paths",
+              description: "文件路径", // File paths
               content: {
                 "application/json": {
                   schema: resolver(z.string().array()),
@@ -1893,12 +1909,12 @@ export namespace Server {
       .get(
         "/find/symbol",
         describeRoute({
-          summary: "Find symbols",
-          description: "Search for workspace symbols like functions, classes, and variables using LSP.",
-          operationId: "find.symbols",
+          summary: "查找符号", // Find symbols
+          description: "使用LSP搜索工作区符号，如函数、类和变量。", // Search for workspace symbols like functions, classes, and variables using LSP.
+          operationId: "find.symbols", // 操作ID
           responses: {
             200: {
-              description: "Symbols",
+              description: "符号", // Symbols
               content: {
                 "application/json": {
                   schema: resolver(LSP.Symbol.array()),
@@ -1925,12 +1941,12 @@ export namespace Server {
       .get(
         "/file",
         describeRoute({
-          summary: "List files",
-          description: "List files and directories in a specified path.",
-          operationId: "file.list",
+          summary: "列出文件", // List files
+          description: "列出指定路径中的文件和目录。", // List files and directories in a specified path.
+          operationId: "file.list", // 操作ID
           responses: {
             200: {
-              description: "Files and directories",
+              description: "文件和目录", // Files and directories
               content: {
                 "application/json": {
                   schema: resolver(File.Node.array()),
@@ -1954,12 +1970,12 @@ export namespace Server {
       .get(
         "/file/content",
         describeRoute({
-          summary: "Read file",
-          description: "Read the content of a specified file.",
-          operationId: "file.read",
+          summary: "读取文件", // Read file
+          description: "读取指定文件的内容。", // Read the content of a specified file.
+          operationId: "file.read", // 操作ID
           responses: {
             200: {
-              description: "File content",
+              description: "文件内容", // File content
               content: {
                 "application/json": {
                   schema: resolver(File.Content),
@@ -1983,12 +1999,12 @@ export namespace Server {
       .get(
         "/file/status",
         describeRoute({
-          summary: "Get file status",
-          description: "Get the git status of all files in the project.",
-          operationId: "file.status",
+          summary: "获取文件状态", // Get file status
+          description: "获取项目中所有文件的git状态。", // Get the git status of all files in the project.
+          operationId: "file.status", // 操作ID
           responses: {
             200: {
-              description: "File status",
+              description: "文件状态", // File status
               content: {
                 "application/json": {
                   schema: resolver(File.Info.array()),
@@ -2005,12 +2021,12 @@ export namespace Server {
       .post(
         "/log",
         describeRoute({
-          summary: "Write log",
-          description: "Write a log entry to the server logs with specified level and metadata.",
-          operationId: "app.log",
+          summary: "写入日志", // Write log
+          description: "使用指定级别和元数据向服务器日志写入日志条目。", // Write a log entry to the server logs with specified level and metadata.
+          operationId: "app.log", // 操作ID
           responses: {
             200: {
-              description: "Log entry written successfully",
+              description: "日志条目写入成功", // Log entry written successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2023,13 +2039,13 @@ export namespace Server {
         validator(
           "json",
           z.object({
-            service: z.string().meta({ description: "Service name for the log entry" }),
-            level: z.enum(["debug", "info", "error", "warn"]).meta({ description: "Log level" }),
-            message: z.string().meta({ description: "Log message" }),
+            service: z.string().meta({ description: "日志条目的服务名称" }), // Service name for the log entry
+            level: z.enum(["debug", "info", "error", "warn"]).meta({ description: "日志级别" }), // Log level
+            message: z.string().meta({ description: "日志消息" }), // Log message
             extra: z
               .record(z.string(), z.any())
               .optional()
-              .meta({ description: "Additional metadata for the log entry" }),
+              .meta({ description: "日志条目的额外元数据" }), // Additional metadata for the log entry
           }),
         ),
         async (c) => {
@@ -2057,12 +2073,12 @@ export namespace Server {
       .get(
         "/agent",
         describeRoute({
-          summary: "List agents",
-          description: "Get a list of all available AI agents in the OpenCode system.",
-          operationId: "app.agents",
+          summary: "列出代理", // List agents
+          description: "获取OpenCode系统中所有可用AI代理的列表。", // Get a list of all available AI agents in the OpenCode system.
+          operationId: "app.agents", // 操作ID
           responses: {
             200: {
-              description: "List of agents",
+              description: "代理列表", // List of agents
               content: {
                 "application/json": {
                   schema: resolver(Agent.Info.array()),
@@ -2079,12 +2095,12 @@ export namespace Server {
       .get(
         "/mcp",
         describeRoute({
-          summary: "Get MCP status",
-          description: "Get the status of all Model Context Protocol (MCP) servers.",
-          operationId: "mcp.status",
+          summary: "获取MCP状态", // Get MCP status
+          description: "获取所有模型上下文协议(MCP)服务器的状态。", // Get the status of all Model Context Protocol (MCP) servers.
+          operationId: "mcp.status", // 操作ID
           responses: {
             200: {
-              description: "MCP server status",
+              description: "MCP服务器状态", // MCP server status
               content: {
                 "application/json": {
                   schema: resolver(z.record(z.string(), MCP.Status)),
@@ -2100,12 +2116,12 @@ export namespace Server {
       .post(
         "/mcp",
         describeRoute({
-          summary: "Add MCP server",
-          description: "Dynamically add a new Model Context Protocol (MCP) server to the system.",
-          operationId: "mcp.add",
+          summary: "添加MCP服务器", // Add MCP server
+          description: "动态地向系统添加一个新的模型上下文协议(MCP)服务器。", // Dynamically add a new Model Context Protocol (MCP) server to the system.
+          operationId: "mcp.add", // 操作ID
           responses: {
             200: {
-              description: "MCP server added successfully",
+              description: "MCP服务器添加成功", // MCP server added successfully
               content: {
                 "application/json": {
                   schema: resolver(z.record(z.string(), MCP.Status)),
@@ -2131,17 +2147,17 @@ export namespace Server {
       .post(
         "/mcp/:name/auth",
         describeRoute({
-          summary: "Start MCP OAuth",
-          description: "Start OAuth authentication flow for a Model Context Protocol (MCP) server.",
-          operationId: "mcp.auth.start",
+          summary: "启动MCP OAuth", // Start MCP OAuth
+          description: "为模型上下文协议(MCP)服务器启动OAuth认证流程。", // Start OAuth authentication flow for a Model Context Protocol (MCP) server.
+          operationId: "mcp.auth.start", // 操作ID
           responses: {
             200: {
-              description: "OAuth flow started",
+              description: "OAuth流程已启动", // OAuth flow started
               content: {
                 "application/json": {
                   schema: resolver(
                     z.object({
-                      authorizationUrl: z.string().describe("URL to open in browser for authorization"),
+                      authorizationUrl: z.string().describe("在浏览器中打开以进行授权的URL"), // URL to open in browser for authorization
                     }),
                   ),
                 },
@@ -2163,13 +2179,12 @@ export namespace Server {
       .post(
         "/mcp/:name/auth/callback",
         describeRoute({
-          summary: "Complete MCP OAuth",
-          description:
-            "Complete OAuth authentication for a Model Context Protocol (MCP) server using the authorization code.",
-          operationId: "mcp.auth.callback",
+          summary: "完成MCP OAuth", // Complete MCP OAuth
+          description: "使用授权码完成模型上下文协议(MCP)服务器的OAuth认证。", // Complete OAuth authentication for a Model Context Protocol (MCP) server using the authorization code.
+          operationId: "mcp.auth.callback", // 操作ID
           responses: {
             200: {
-              description: "OAuth authentication completed",
+              description: "OAuth认证已完成", // OAuth authentication completed
               content: {
                 "application/json": {
                   schema: resolver(MCP.Status),
@@ -2182,7 +2197,7 @@ export namespace Server {
         validator(
           "json",
           z.object({
-            code: z.string().describe("Authorization code from OAuth callback"),
+            code: z.string().describe("来自OAuth回调的授权码"), // Authorization code from OAuth callback
           }),
         ),
         async (c) => {
@@ -2195,12 +2210,12 @@ export namespace Server {
       .post(
         "/mcp/:name/auth/authenticate",
         describeRoute({
-          summary: "Authenticate MCP OAuth",
-          description: "Start OAuth flow and wait for callback (opens browser)",
-          operationId: "mcp.auth.authenticate",
+          summary: "认证MCP OAuth", // Authenticate MCP OAuth
+          description: "启动OAuth流程并等待回调(打开浏览器)", // Start OAuth flow and wait for callback (opens browser)
+          operationId: "mcp.auth.authenticate", // 操作ID
           responses: {
             200: {
-              description: "OAuth authentication completed",
+              description: "OAuth认证已完成", // OAuth authentication completed
               content: {
                 "application/json": {
                   schema: resolver(MCP.Status),
@@ -2223,12 +2238,12 @@ export namespace Server {
       .delete(
         "/mcp/:name/auth",
         describeRoute({
-          summary: "Remove MCP OAuth",
-          description: "Remove OAuth credentials for an MCP server",
-          operationId: "mcp.auth.remove",
+          summary: "移除MCP OAuth", // Remove MCP OAuth
+          description: "移除MCP服务器的OAuth凭据", // Remove OAuth credentials for an MCP server
+          operationId: "mcp.auth.remove", // 操作ID
           responses: {
             200: {
-              description: "OAuth credentials removed",
+              description: "OAuth凭据已移除", // OAuth credentials removed
               content: {
                 "application/json": {
                   schema: resolver(z.object({ success: z.literal(true) })),
@@ -2247,11 +2262,11 @@ export namespace Server {
       .post(
         "/mcp/:name/connect",
         describeRoute({
-          description: "Connect an MCP server",
-          operationId: "mcp.connect",
+          description: "连接MCP服务器",  // Connect an MCP server
+          operationId: "mcp.connect",  // 操作ID
           responses: {
             200: {
-              description: "MCP server connected successfully",
+              description: "MCP服务器连接成功",  // MCP server connected successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2270,11 +2285,11 @@ export namespace Server {
       .post(
         "/mcp/:name/disconnect",
         describeRoute({
-          description: "Disconnect an MCP server",
-          operationId: "mcp.disconnect",
+          description: "断开MCP服务器连接",  // Disconnect an MCP server
+          operationId: "mcp.disconnect",  // 操作ID
           responses: {
             200: {
-              description: "MCP server disconnected successfully",
+              description: "MCP服务器断开连接成功",  // MCP server disconnected successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2293,12 +2308,12 @@ export namespace Server {
       .get(
         "/lsp",
         describeRoute({
-          summary: "Get LSP status",
-          description: "Get LSP server status",
-          operationId: "lsp.status",
+          summary: "获取LSP状态",  // Get LSP status
+          description: "获取LSP服务器状态",  // Get LSP server status
+          operationId: "lsp.status",  // 操作ID
           responses: {
             200: {
-              description: "LSP server status",
+              description: "LSP服务器状态",  // LSP server status
               content: {
                 "application/json": {
                   schema: resolver(LSP.Status.array()),
@@ -2314,12 +2329,12 @@ export namespace Server {
       .get(
         "/formatter",
         describeRoute({
-          summary: "Get formatter status",
-          description: "Get formatter status",
-          operationId: "formatter.status",
+          summary: "获取格式化器状态",  // Get formatter status
+          description: "获取格式化器状态",  // Get formatter status
+          operationId: "formatter.status",  // 操作ID
           responses: {
             200: {
-              description: "Formatter status",
+              description: "格式化器状态",  // Formatter status
               content: {
                 "application/json": {
                   schema: resolver(Format.Status.array()),
@@ -2335,12 +2350,12 @@ export namespace Server {
       .post(
         "/tui/append-prompt",
         describeRoute({
-          summary: "Append TUI prompt",
-          description: "Append prompt to the TUI",
-          operationId: "tui.appendPrompt",
+          summary: "追加TUI提示",  // Append TUI prompt
+          description: "向TUI追加提示",  // Append prompt to the TUI
+          operationId: "tui.appendPrompt",  // 操作ID
           responses: {
             200: {
-              description: "Prompt processed successfully",
+              description: "提示处理成功",  // Prompt processed successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2359,12 +2374,12 @@ export namespace Server {
       .post(
         "/tui/open-help",
         describeRoute({
-          summary: "Open help dialog",
-          description: "Open the help dialog in the TUI to display user assistance information.",
-          operationId: "tui.openHelp",
+          summary: "打开帮助对话框",  // Open help dialog
+          description: "在TUI中打开帮助对话框以显示用户帮助信息。",  // Open the help dialog in the TUI to display user assistance information.
+          operationId: "tui.openHelp",  // 操作ID
           responses: {
             200: {
-              description: "Help dialog opened successfully",
+              description: "帮助对话框打开成功",  // Help dialog opened successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2381,12 +2396,12 @@ export namespace Server {
       .post(
         "/tui/open-sessions",
         describeRoute({
-          summary: "Open sessions dialog",
-          description: "Open the session dialog",
-          operationId: "tui.openSessions",
+          summary: "打开会话对话框",  // Open sessions dialog
+          description: "打开会话对话框",  // Open the session dialog
+          operationId: "tui.openSessions",  // 操作ID
           responses: {
             200: {
-              description: "Session dialog opened successfully",
+              description: "会话对话框打开成功",  // Session dialog opened successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2405,12 +2420,12 @@ export namespace Server {
       .post(
         "/tui/open-themes",
         describeRoute({
-          summary: "Open themes dialog",
-          description: "Open the theme dialog",
-          operationId: "tui.openThemes",
+          summary: "打开主题对话框",  // Open themes dialog
+          description: "打开主题对话框",  // Open the theme dialog
+          operationId: "tui.openThemes",  // 操作ID
           responses: {
             200: {
-              description: "Theme dialog opened successfully",
+              description: "主题对话框打开成功",  // Theme dialog opened successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2429,12 +2444,12 @@ export namespace Server {
       .post(
         "/tui/open-models",
         describeRoute({
-          summary: "Open models dialog",
-          description: "Open the model dialog",
-          operationId: "tui.openModels",
+          summary: "打开模型对话框",  // Open models dialog
+          description: "打开模型对话框",  // Open the model dialog
+          operationId: "tui.openModels",  // 操作ID
           responses: {
             200: {
-              description: "Model dialog opened successfully",
+              description: "模型对话框打开成功",  // Model dialog opened successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2453,12 +2468,12 @@ export namespace Server {
       .post(
         "/tui/submit-prompt",
         describeRoute({
-          summary: "Submit TUI prompt",
-          description: "Submit the prompt",
-          operationId: "tui.submitPrompt",
+          summary: "提交TUI提示",  // Submit TUI prompt
+          description: "提交提示",  // Submit the prompt
+          operationId: "tui.submitPrompt",  // 操作ID
           responses: {
             200: {
-              description: "Prompt submitted successfully",
+              description: "提示提交成功",  // Prompt submitted successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2477,12 +2492,12 @@ export namespace Server {
       .post(
         "/tui/clear-prompt",
         describeRoute({
-          summary: "Clear TUI prompt",
-          description: "Clear the prompt",
-          operationId: "tui.clearPrompt",
+          summary: "清除TUI提示",  // Clear TUI prompt
+          description: "清除提示",  // Clear the prompt
+          operationId: "tui.clearPrompt",  // 操作ID
           responses: {
             200: {
-              description: "Prompt cleared successfully",
+              description: "提示清除成功",  // Prompt cleared successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2501,12 +2516,12 @@ export namespace Server {
       .post(
         "/tui/execute-command",
         describeRoute({
-          summary: "Execute TUI command",
-          description: "Execute a TUI command (e.g. agent_cycle)",
-          operationId: "tui.executeCommand",
+          summary: "执行TUI命令",  // Execute TUI command
+          description: "执行TUI命令(例如agent_cycle)",  // Execute a TUI command (e.g. agent_cycle)
+          operationId: "tui.executeCommand",  // 操作ID
           responses: {
             200: {
-              description: "Command executed successfully",
+              description: "命令执行成功",  // Command executed successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2541,12 +2556,12 @@ export namespace Server {
       .post(
         "/tui/show-toast",
         describeRoute({
-          summary: "Show TUI toast",
-          description: "Show a toast notification in the TUI",
-          operationId: "tui.showToast",
+          summary: "显示TUI提示",  // Show TUI toast
+          description: "在TUI中显示提示通知",  // Show a toast notification in the TUI
+          operationId: "tui.showToast",  // 操作ID
           responses: {
             200: {
-              description: "Toast notification shown successfully",
+              description: "提示通知显示成功",  // Toast notification shown successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2564,12 +2579,12 @@ export namespace Server {
       .post(
         "/tui/publish",
         describeRoute({
-          summary: "Publish TUI event",
-          description: "Publish a TUI event",
-          operationId: "tui.publish",
+          summary: "发布TUI事件",  // Publish TUI event
+          description: "发布TUI事件",  // Publish a TUI event
+          operationId: "tui.publish",  // 操作ID
           responses: {
             200: {
-              description: "Event published successfully",
+              description: "事件发布成功",  // Event published successfully
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2604,12 +2619,12 @@ export namespace Server {
       .put(
         "/auth/:providerID",
         describeRoute({
-          summary: "Set auth credentials",
-          description: "Set authentication credentials",
-          operationId: "auth.set",
+          summary: "设置认证凭据",  // Set auth credentials
+          description: "设置认证凭据",  // Set authentication credentials
+          operationId: "auth.set",  // 操作ID
           responses: {
             200: {
-              description: "Successfully set authentication credentials",
+              description: "成功设置认证凭据",  // Successfully set authentication credentials
               content: {
                 "application/json": {
                   schema: resolver(z.boolean()),
@@ -2636,12 +2651,12 @@ export namespace Server {
       .get(
         "/event",
         describeRoute({
-          summary: "Subscribe to events",
-          description: "Get events",
-          operationId: "event.subscribe",
+          summary: "订阅事件", // Subscribe to events
+          description: "获取事件", // Get events
+          operationId: "event.subscribe", // 操作ID
           responses: {
             200: {
-              description: "Event stream",
+              description: "事件流", // Event stream
               content: {
                 "text/event-stream": {
                   schema: resolver(BusEvent.payloads()),
@@ -2651,7 +2666,7 @@ export namespace Server {
           },
         }),
         async (c) => {
-          log.info("event connected")
+          log.info("事件已连接")  // 记录事件连接成功的日志
           return streamSSE(c, async (stream) => {
             stream.writeSSE({
               data: JSON.stringify({
@@ -2683,7 +2698,7 @@ export namespace Server {
                 clearInterval(heartbeat)
                 unsub()
                 resolve()
-                log.info("event disconnected")
+                log.info("事件断开连接")  // 记录事件断开连接的日志
               })
             })
           })
@@ -2732,6 +2747,7 @@ export namespace Server {
   )
 
   export async function openapi() {
+    // 生成OpenAPI文档
     const result = await generateSpecs(App(), {
       documentation: {
         info: {
@@ -2746,6 +2762,7 @@ export namespace Server {
   }
 
   export function listen(opts: { port: number; hostname: string; mdns?: boolean; cors?: string[] }) {
+    // 启动服务器监听
     _corsWhitelist = opts.cors ?? []
 
     const args = {
@@ -2755,6 +2772,7 @@ export namespace Server {
       websocket: websocket,
     } as const
     const tryServe = (port: number) => {
+      // 尝试在指定端口启动服务器
       try {
         return Bun.serve({ ...args, port })
       } catch {
@@ -2762,25 +2780,26 @@ export namespace Server {
       }
     }
     const server = opts.port === 0 ? (tryServe(4096) ?? tryServe(0)) : tryServe(opts.port)
-    if (!server) throw new Error(`Failed to start server on port ${opts.port}`)
+    if (!server) throw new Error(`无法在端口 ${opts.port} 上启动服务器`)  // 如果服务器启动失败，抛出错误
 
     _url = server.url
 
-    const shouldPublishMDNS =
+    const shouldPublishMDNS = // 判断是否应该发布mDNS服务
       opts.mdns &&
       server.port &&
       opts.hostname !== "127.0.0.1" &&
       opts.hostname !== "localhost" &&
       opts.hostname !== "::1"
     if (shouldPublishMDNS) {
-      MDNS.publish(server.port!, `opencode-${server.port!}`)
+      MDNS.publish(server.port!, `opencode-${server.port!}`) // 发布mDNS服务
     } else if (opts.mdns) {
-      log.warn("mDNS enabled but hostname is loopback; skipping mDNS publish")
+      log.warn("mDNS已启用但主机名是回环地址，跳过mDNS发布")  // mDNS已启用但主机名是回环地址，跳过mDNS发布
     }
 
     const originalStop = server.stop.bind(server)
     server.stop = async (closeActiveConnections?: boolean) => {
-      if (shouldPublishMDNS) MDNS.unpublish()
+      // 停止服务器
+      if (shouldPublishMDNS) MDNS.unpublish() // 取消mDNS发布
       return originalStop(closeActiveConnections)
     }
 

@@ -2,8 +2,8 @@ import type { Part, TextPart, FilePart } from "@opencode-ai/sdk/v2"
 import type { Prompt, FileAttachmentPart } from "@/context/prompt"
 
 /**
- * Extract prompt content from message parts for restoring into the prompt input.
- * This is used by undo to restore the original user prompt.
+ * 从消息部分中提取提示内容，用于恢复到提示输入中。
+ * 此函数被撤销操作使用，以恢复原始用户提示。
  */
 export function extractPromptFromParts(parts: Part[]): Prompt {
   const result: Prompt = []

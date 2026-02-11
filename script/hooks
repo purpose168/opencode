@@ -1,19 +1,25 @@
 #!/bin/sh
 
+# 检查是否存在 .git 目录，如果不存在则退出
 if [ ! -d ".git" ]; then
     exit 0
 fi
 
+# 创建 .git/hooks 目录（如果不存在）
 mkdir -p .git/hooks
 
+# 创建 pre-push 钩子脚本
 cat > .git/hooks/pre-push << 'EOF'
 #!/bin/sh
-# Ensure dependencies are installed before typecheck
+# 在类型检查前确保依赖已安装
 if command -v bun >/dev/null 2>&1; then
   bun install >/dev/null 2>&1 || true
 fi
 bun run typecheck
 EOF
 
+# 设置 pre-push 钩子脚本为可执行
 chmod +x .git/hooks/pre-push
-echo "✅ Pre-push hook installed"
+
+# 输出安装成功信息
+echo "✅ Pre-push 钩子已安装"

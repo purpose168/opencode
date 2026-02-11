@@ -1,3 +1,9 @@
+/*
+ * 卡片组件样式
+ * 定义卡片的基础样式和错误变体样式
+ */
+
+/* 卡片容器样式 */
 [data-component="card"] {
   width: 100%;
   display: flex;
@@ -9,12 +15,13 @@
   padding: 6px 12px;
   overflow: clip;
 
+  /* 错误变体样式 */
   &[data-variant="error"] {
     background-color: var(--surface-critical-weak);
     border: 1px solid var(--border-critical-base);
     color: rgba(218, 51, 25, 0.6);
 
-    /* text-12-regular */
+    /* 字体样式：12px 常规 */
     font-family: var(--font-family-sans);
     font-size: var(--font-size-small);
     font-style: normal;
@@ -22,6 +29,7 @@
     line-height: var(--line-height-large); /* 166.667% */
     letter-spacing: var(--letter-spacing-normal);
 
+    /* 错误变体中的图标样式 */
     &[data-component="icon"] {
       color: var(--icon-critical-active);
     }

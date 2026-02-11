@@ -1,28 +1,27 @@
 ---
-title: Migrating to 1.0
-description: What's new in OpenCode 1.0.
+title: 迁移到 1.0
+description: OpenCode 1.0 的新特性。
 ---
 
-OpenCode 1.0 is a complete rewrite of the TUI.
+OpenCode 1.0 是 TUI 的完全重写。
 
-We moved from the go+bubbletea based TUI which had performance and capability issues to an in-house framework (OpenTUI) written in zig+solidjs.
+我们从基于 go+bubbletea 的 TUI（存在性能和功能问题）迁移到了使用 zig+solidjs 编写的内部框架（OpenTUI）。
 
-The new TUI works like the old one since it connects to the same opencode server.
+新的 TUI 与旧版本的工作方式相同，因为它连接到同一个 opencode 服务器。
 
 ---
 
-## Upgrading
+## 升级
 
-You should not be autoupgraded to 1.0 if you are currently using a previous
-version. However some older versions of OpenCode always grab latest.
+如果您当前使用的是以前的版本，您不应该被自动升级到 1.0。但是，某些旧版本的 OpenCode 总是会获取最新版本。
 
-To upgrade manually, run
+要手动升级，请运行
 
 ```bash
 $ opencode upgrade 1.0.0
 ```
 
-To downgrade back to 0.x, run
+要降级回 0.x，请运行
 
 ```bash
 $ opencode upgrade 0.15.31
@@ -30,21 +29,21 @@ $ opencode upgrade 0.15.31
 
 ---
 
-## UX changes
+## 用户体验变更
 
-The session history is more compressed, only showing full details of the edit and bash tool.
+会话历史更加紧凑，仅显示编辑和 bash 工具的完整详细信息。
 
-We added a command bar which almost everything flows through. Press ctrl+p to bring it up in any context and see everything you can do.
+我们添加了一个命令栏，几乎所有操作都通过它进行。在任何上下文中按 ctrl+p 即可调出它，并查看您可以执行的所有操作。
 
-Added a session sidebar (can be toggled) with useful information.
+添加了包含有用信息的会话侧边栏（可以切换）。
 
-We removed some functionality that we weren't sure anyone actually used. If something important is missing please open an issue and we'll add it back quickly.
+我们移除了一些不确定是否有人实际使用的功能。如果缺少重要功能，请提交 issue，我们会快速添加回来。
 
 ---
 
-## Breaking changes
+## 破坏性变更
 
-### Keybinds renamed
+### 键绑定重命名
 
 - messages_revert -> messages_undo
 - switch_agent -> agent_cycle
@@ -52,7 +51,7 @@ We removed some functionality that we weren't sure anyone actually used. If some
 - switch_mode -> agent_cycle
 - switch_mode_reverse -> agent_cycle_reverse
 
-### Keybinds removed
+### 键绑定移除
 
 - messages_layout_toggle
 - messages_next

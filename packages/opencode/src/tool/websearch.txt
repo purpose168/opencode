@@ -1,11 +1,11 @@
-- Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs
-- Provides up-to-date information for current events and recent data
-- Supports configurable result counts and returns the content from the most relevant websites
-- Use this tool for accessing information beyond knowledge cutoff
-- Searches are performed automatically within a single API call
+- 使用Exa AI搜索网络 - 执行实时网络搜索，可以从特定URL抓取内容
+- 为当前事件和最新数据提供最新信息
+- 支持可配置的结果数量，并返回最相关网站的内容
+- 使用此工具访问知识截止日期之外的信息
+- 在单个API调用中自动执行搜索
 
-Usage notes:
-  - Supports live crawling modes: 'fallback' (backup if cached unavailable) or 'preferred' (prioritize live crawling)
-  - Search types: 'auto' (balanced), 'fast' (quick results), 'deep' (comprehensive search)
-  - Configurable context length for optimal LLM integration
-  - Domain filtering and advanced search options available
+使用说明：
+  - 支持实时抓取模式：'fallback'（如果缓存不可用则作为备份）或'preferred'（优先实时抓取）
+  - 搜索类型：'auto'（平衡）、'fast'（快速结果）、'deep'（全面搜索）
+  - 可配置的上下文长度，以实现最佳的LLM集成
+  - 支持域名过滤和高级搜索选项

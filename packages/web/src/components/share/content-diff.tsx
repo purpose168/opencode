@@ -3,17 +3,20 @@ import { createMemo } from "solid-js"
 import { ContentCode } from "./content-code"
 import styles from "./content-diff.module.css"
 
+// 差异行类型定义
 type DiffRow = {
   left: string
   right: string
   type: "added" | "removed" | "unchanged" | "modified"
 }
 
+// 差异内容组件属性接口
 interface Props {
   diff: string
   lang?: string
 }
 
+// 差异内容组件
 export function ContentDiff(props: Props) {
   const rows = createMemo(() => {
     const diffRows: DiffRow[] = []
@@ -32,45 +35,45 @@ export function ContentDiff(props: Props) {
             const prefix = line[0]
 
             if (prefix === "-") {
-              // Look ahead for consecutive additions to pair with removals
+              // 向前查找连续的添加行以与删除行配对
               const removals: string[] = [content]
               let j = i + 1
 
-              // Collect all consecutive removals
+              // 收集所有连续的删除行
               while (j < lines.length && lines[j][0] === "-") {
                 removals.push(lines[j].slice(1))
                 j++
               }
 
-              // Collect all consecutive additions that follow
+              // 收集所有连续的添加行
               const additions: string[] = []
               while (j < lines.length && lines[j][0] === "+") {
                 additions.push(lines[j].slice(1))
                 j++
               }
 
-              // Pair removals with additions
+              // 将删除行与添加行配对
               const maxLength = Math.max(removals.length, additions.length)
               for (let k = 0; k < maxLength; k++) {
                 const hasLeft = k < removals.length
                 const hasRight = k < additions.length
 
                 if (hasLeft && hasRight) {
-                  // Replacement - left is removed, right is added
+                  // 替换 - 左侧被删除，右侧被添加
                   diffRows.push({
                     left: removals[k],
                     right: additions[k],
                     type: "modified",
                   })
                 } else if (hasLeft) {
-                  // Pure removal
+                  // 纯删除
                   diffRows.push({
                     left: removals[k],
                     right: "",
                     type: "removed",
                   })
                 } else if (hasRight) {
-                  // Pure addition - only create if we actually have content
+                  // 纯添加 - 仅在有实际内容时创建
                   diffRows.push({
                     left: "",
                     right: additions[k],
@@ -81,7 +84,7 @@ export function ContentDiff(props: Props) {
 
               i = j
             } else if (prefix === "+") {
-              // Standalone addition (not paired with removal)
+              // 独立的添加行（不与删除行配对）
               diffRows.push({
                 left: "",
                 right: content,
@@ -102,7 +105,7 @@ export function ContentDiff(props: Props) {
         }
       }
     } catch (error) {
-      console.error("Failed to parse patch:", error)
+      console.error("解析补丁失败：", error)
       return []
     }
 
@@ -121,7 +124,7 @@ export function ContentDiff(props: Props) {
       const removedLines: string[] = []
       const addedLines: string[] = []
 
-      // Collect consecutive modified/removed/added rows
+      // 收集连续的修改/删除/添加行
       while (
         i < currentRows.length &&
         (currentRows[i].type === "modified" || currentRows[i].type === "removed" || currentRows[i].type === "added")
@@ -136,7 +139,7 @@ export function ContentDiff(props: Props) {
         i++
       }
 
-      // Add grouped blocks
+      // 添加分组的块
       if (removedLines.length > 0) {
         mobileBlocks.push({ type: "removed", lines: removedLines })
       }
@@ -144,7 +147,7 @@ export function ContentDiff(props: Props) {
         mobileBlocks.push({ type: "added", lines: addedLines })
       }
 
-      // Add unchanged rows as-is
+      // 按原样添加未更改的行
       if (i < currentRows.length && currentRows[i].type === "unchanged") {
         mobileBlocks.push({
           type: "unchanged",

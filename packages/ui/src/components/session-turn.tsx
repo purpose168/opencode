@@ -1,3 +1,7 @@
+/**
+ * 会话回合组件
+ * 用于显示单个用户消息及其对应的助手响应，支持不同的显示模式和状态
+ */
 import {
   AssistantMessage,
   Message as MessageType,
@@ -6,52 +10,57 @@ import {
   TextPart,
   ToolPart,
 } from "@opencode-ai/sdk/v2/client"
+import { Binary } from "@opencode-ai/util/binary"
+import { checksum } from "@opencode-ai/util/encode"
+import { getDirectory, getFilename } from "@opencode-ai/util/path"
+import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { DateTime, DurationUnit, Interval } from "luxon"
+import { createEffect, createMemo, For, Match, on, onCleanup, ParentProps, Show, Switch } from "solid-js"
+import { createStore } from "solid-js/store"
+import { Dynamic } from "solid-js/web"
 import { useData } from "../context"
 import { useDiffComponent } from "../context/diff"
-import { getDirectory, getFilename } from "@opencode-ai/util/path"
-import { checksum } from "@opencode-ai/util/encode"
-import { Binary } from "@opencode-ai/util/binary"
-import { createEffect, createMemo, For, Match, on, onCleanup, ParentProps, Show, Switch } from "solid-js"
-import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { DiffChanges } from "./diff-changes"
-import { Typewriter } from "./typewriter"
-import { Message, Part } from "./message-part"
-import { Markdown } from "./markdown"
+import { createAutoScroll } from "../hooks"
 import { Accordion } from "./accordion"
-import { StickyAccordionHeader } from "./sticky-accordion-header"
+import { Button } from "./button"
+import { Card } from "./card"
+import { DiffChanges } from "./diff-changes"
 import { FileIcon } from "./file-icon"
 import { Icon } from "./icon"
-import { Card } from "./card"
-import { Dynamic } from "solid-js/web"
-import { Button } from "./button"
+import { Markdown } from "./markdown"
+import { Message, Part } from "./message-part"
 import { Spinner } from "./spinner"
-import { createStore } from "solid-js/store"
-import { DateTime, DurationUnit, Interval } from "luxon"
-import { createAutoScroll } from "../hooks"
+import { StickyAccordionHeader } from "./sticky-accordion-header"
+import { Typewriter } from "./typewriter"
 
+/**
+ * 从部件计算状态文本
+ * @param part - 消息部件
+ * @returns 状态文本
+ */
 function computeStatusFromPart(part: PartType | undefined): string | undefined {
   if (!part) return undefined
 
   if (part.type === "tool") {
     switch (part.tool) {
       case "task":
-        return "Delegating work"
+        return "委托工作"
       case "todowrite":
       case "todoread":
-        return "Planning next steps"
+        return "规划下一步"
       case "read":
-        return "Gathering context"
+        return "收集上下文"
       case "list":
       case "grep":
       case "glob":
-        return "Searching the codebase"
+        return "搜索代码库"
       case "webfetch":
-        return "Searching the web"
+        return "搜索网络"
       case "edit":
       case "write":
-        return "Making edits"
+        return "进行编辑"
       case "bash":
-        return "Running commands"
+        return "运行命令"
       default:
         return undefined
     }
@@ -59,30 +68,46 @@ function computeStatusFromPart(part: PartType | undefined): string | undefined {
   if (part.type === "reasoning") {
     const text = part.text ?? ""
     const match = text.trimStart().match(/^\*\*(.+?)\*\*/)
-    if (match) return `Thinking · ${match[1].trim()}`
-    return "Thinking"
+    if (match) return `思考中 · ${match[1].trim()}`
+    return "思考中"
   }
   if (part.type === "text") {
-    return "Gathering thoughts"
+    return "整理思路"
   }
   return undefined
 }
 
+/**
+ * 比较两个数组是否相同
+ * @param a - 第一个数组
+ * @param b - 第二个数组
+ * @returns 是否相同
+ */
 function same<T>(a: readonly T[], b: readonly T[]) {
   if (a === b) return true
   if (a.length !== b.length) return false
   return a.every((x, i) => x === b[i])
 }
 
+/**
+ * 助手消息项组件
+ * 显示助手消息的部件
+ */
 function AssistantMessageItem(props: {
+  /** 助手消息 */
   message: AssistantMessage
+  /** 响应部件ID */
   responsePartId: string | undefined
+  /** 是否隐藏响应部件 */
   hideResponsePart: boolean
+  /** 是否隐藏推理部件 */
   hideReasoning: boolean
 }) {
   const data = useData()
   const emptyParts: PartType[] = []
+  /** 消息部件 */
   const msgParts = createMemo(() => data.store.part[props.message.id] ?? emptyParts)
+  /** 最后一个文本部件 */
   const lastTextPart = createMemo(() => {
     const parts = msgParts()
     for (let i = parts.length - 1; i >= 0; i--) {
@@ -92,6 +117,7 @@ function AssistantMessageItem(props: {
     return undefined
   })
 
+  /** 过滤后的部件 */
   const filteredParts = createMemo(() => {
     let parts = msgParts()
 
@@ -111,14 +137,25 @@ function AssistantMessageItem(props: {
   return <Message message={props.message} parts={filteredParts()} />
 }
 
+/**
+ * 会话回合组件
+ * 显示单个用户消息及其对应的助手响应
+ */
 export function SessionTurn(
   props: ParentProps<{
+    /** 会话ID */
     sessionID: string
+    /** 消息ID */
     messageID: string
+    /** 最后一个用户消息ID */
     lastUserMessageID?: string
+    /** 步骤是否展开 */
     stepsExpanded?: boolean
+    /** 步骤展开切换回调函数 */
     onStepsExpandedToggle?: () => void
+    /** 用户交互回调函数 */
     onUserInteracted?: () => void
+    /** 自定义类名 */
     classes?: {
       root?: string
       content?: string
@@ -136,8 +173,10 @@ export function SessionTurn(
   const emptyPermissionParts: { part: ToolPart; message: AssistantMessage }[] = []
   const idle = { type: "idle" as const }
 
+  /** 所有消息 */
   const allMessages = createMemo(() => data.store.message[props.sessionID] ?? emptyMessages)
 
+  /** 消息索引 */
   const messageIndex = createMemo(() => {
     const messages = allMessages()
     const result = Binary.search(messages, props.messageID, (m) => m.id)
@@ -149,6 +188,7 @@ export function SessionTurn(
     return result.index
   })
 
+  /** 消息 */
   const message = createMemo(() => {
     const index = messageIndex()
     if (index < 0) return undefined
@@ -159,6 +199,7 @@ export function SessionTurn(
     return msg
   })
 
+  /** 最后一个用户消息ID */
   const lastUserMessageID = createMemo(() => {
     if (props.lastUserMessageID) return props.lastUserMessageID
 
@@ -170,14 +211,17 @@ export function SessionTurn(
     return undefined
   })
 
+  /** 是否是最后一个用户消息 */
   const isLastUserMessage = createMemo(() => props.messageID === lastUserMessageID())
 
+  /** 消息部件 */
   const parts = createMemo(() => {
     const msg = message()
     if (!msg) return emptyParts
     return data.store.part[msg.id] ?? emptyParts
   })
 
+  /** 助手消息 */
   const assistantMessages = createMemo(
     () => {
       const msg = message()
@@ -200,10 +244,13 @@ export function SessionTurn(
     { equals: same },
   )
 
+  /** 最后一个助手消息 */
   const lastAssistantMessage = createMemo(() => assistantMessages().at(-1))
 
+  /** 错误信息 */
   const error = createMemo(() => assistantMessages().find((m) => m.error)?.error)
 
+  /** 最后一个文本部件 */
   const lastTextPart = createMemo(() => {
     const msgs = assistantMessages()
     for (let mi = msgs.length - 1; mi >= 0; mi--) {
@@ -216,6 +263,7 @@ export function SessionTurn(
     return undefined
   })
 
+  /** 是否有步骤 */
   const hasSteps = createMemo(() => {
     for (const m of assistantMessages()) {
       const msgParts = data.store.part[m.id]
@@ -227,10 +275,14 @@ export function SessionTurn(
     return false
   })
 
+  /** 权限请求 */
   const permissions = createMemo(() => data.store.permission?.[props.sessionID] ?? emptyPermissions)
+  /** 权限请求数量 */
   const permissionCount = createMemo(() => permissions().length)
+  /** 下一个权限请求 */
   const nextPermission = createMemo(() => permissions()[0])
 
+  /** 权限部件 */
   const permissionParts = createMemo(() => {
     if (props.stepsExpanded) return emptyPermissionParts
 
@@ -250,6 +302,7 @@ export function SessionTurn(
     return emptyPermissionParts
   })
 
+  /** Shell模式部件 */
   const shellModePart = createMemo(() => {
     const p = parts()
     if (!p.every((part) => part?.type === "text" && part?.synthetic)) return
@@ -264,8 +317,10 @@ export function SessionTurn(
     if (assistantPart?.type === "tool" && assistantPart.tool === "bash") return assistantPart
   })
 
+  /** 是否是Shell模式 */
   const isShellMode = createMemo(() => !!shellModePart())
 
+  /** 原始状态 */
   const rawStatus = createMemo(() => {
     const msgs = assistantMessages()
     let last: PartType | undefined
@@ -315,19 +370,30 @@ export function SessionTurn(
     return computeStatusFromPart(last)
   })
 
+  /** 状态 */
   const status = createMemo(() => data.store.session_status[props.sessionID] ?? idle)
+  /** 是否正在工作 */
   const working = createMemo(() => status().type !== "idle" && isLastUserMessage())
+  /** 重试信息 */
   const retry = createMemo(() => {
     const s = status()
     if (s.type !== "retry") return
     return s
   })
 
+  /** 响应文本 */
   const response = createMemo(() => lastTextPart()?.text)
+  /** 响应部件ID */
   const responsePartId = createMemo(() => lastTextPart()?.id)
+  /** 是否有差异 */
   const hasDiffs = createMemo(() => message()?.summary?.diffs?.length)
+  /** 是否隐藏响应部件 */
   const hideResponsePart = createMemo(() => !working() && !!responsePartId())
 
+  /**
+   * 计算持续时间
+   * @returns 持续时间文本
+   */
   function duration() {
     const msg = message()
     if (!msg) return ""
@@ -345,11 +411,13 @@ export function SessionTurn(
     })
   }
 
+  /** 自动滚动 */
   const autoScroll = createAutoScroll({
     working,
     onUserInteracted: props.onUserInteracted,
   })
 
+  /** 状态存储 */
   const [store, setStore] = createStore({
     stickyTitleRef: undefined as HTMLDivElement | undefined,
     stickyTriggerRef: undefined as HTMLDivElement | undefined,
@@ -359,6 +427,7 @@ export function SessionTurn(
     duration: duration(),
   })
 
+  /** 监听重试状态 */
   createEffect(() => {
     const r = retry()
     if (!r) {
@@ -374,6 +443,7 @@ export function SessionTurn(
     onCleanup(() => clearInterval(timer))
   })
 
+  /** 监听粘性标题大小变化 */
   createResizeObserver(
     () => store.stickyTitleRef,
     ({ height }) => {
@@ -382,6 +452,7 @@ export function SessionTurn(
     },
   )
 
+  /** 监听粘性触发器大小变化 */
   createResizeObserver(
     () => store.stickyTriggerRef,
     ({ height }) => {
@@ -390,6 +461,7 @@ export function SessionTurn(
     },
   )
 
+  /** 监听持续时间变化 */
   createEffect(() => {
     const timer = setInterval(() => {
       setStore("duration", duration())
@@ -397,6 +469,7 @@ export function SessionTurn(
     onCleanup(() => clearInterval(timer))
   })
 
+  /** 监听权限数量变化 */
   createEffect(
     on(permissionCount, (count, prev) => {
       if (!count) return
@@ -405,6 +478,7 @@ export function SessionTurn(
     }),
   )
 
+  /** 监听状态变化 */
   let lastStatusChange = Date.now()
   let statusTimeout: number | undefined
   createEffect(() => {
@@ -452,7 +526,7 @@ export function SessionTurn(
                     <Part part={shellModePart()!} message={msg()} defaultOpen />
                   </Match>
                   <Match when={true}>
-                    {/* Title (sticky) */}
+                    {/* 标题（粘性） */}
                     <div ref={(el) => setStore("stickyTitleRef", el)} data-slot="session-turn-sticky-title">
                       <div data-slot="session-turn-message-header">
                         <div data-slot="session-turn-message-title">
@@ -467,11 +541,11 @@ export function SessionTurn(
                         </div>
                       </div>
                     </div>
-                    {/* User Message */}
+                    {/* 用户消息 */}
                     <div data-slot="session-turn-message-content">
                       <Message message={msg()} parts={parts()} />
                     </div>
-                    {/* Trigger (sticky) */}
+                    {/* 触发器（粘性） */}
                     <Show when={working() || hasSteps()}>
                       <div ref={(el) => setStore("stickyTriggerRef", el)} data-slot="session-turn-response-trigger">
                         <Button
@@ -494,13 +568,13 @@ export function SessionTurn(
                                 })()}
                               </span>
                               <span data-slot="session-turn-retry-seconds">
-                                · retrying {store.retrySeconds > 0 ? `in ${store.retrySeconds}s ` : ""}
+                                · 正在重试 {store.retrySeconds > 0 ? `${store.retrySeconds}秒后 ` : ""}
                               </span>
-                              <span data-slot="session-turn-retry-attempt">(#{retry()?.attempt})</span>
+                              <span data-slot="session-turn-retry-attempt">(第{retry()?.attempt}次尝试)</span>
                             </Match>
-                            <Match when={working()}>{store.status ?? "Considering next steps"}</Match>
-                            <Match when={props.stepsExpanded}>Hide steps</Match>
-                            <Match when={!props.stepsExpanded}>Show steps</Match>
+                            <Match when={working()}>{store.status ?? "考虑下一步"}</Match>
+                            <Match when={props.stepsExpanded}>隐藏步骤</Match>
+                            <Match when={!props.stepsExpanded}>显示步骤</Match>
                           </Switch>
                           <span>·</span>
                           <span>{store.duration}</span>
@@ -510,7 +584,7 @@ export function SessionTurn(
                         </Button>
                       </div>
                     </Show>
-                    {/* Response */}
+                    {/* 响应 */}
                     <Show when={props.stepsExpanded && assistantMessages().length > 0}>
                       <div data-slot="session-turn-collapsible-content-inner">
                         <For each={assistantMessages()}>
@@ -537,7 +611,7 @@ export function SessionTurn(
                         </For>
                       </div>
                     </Show>
-                    {/* Response */}
+                    {/* 响应 */}
                     <Show when={!working() && (response() || hasDiffs())}>
                       <div data-slot="session-turn-summary-section">
                         <div data-slot="session-turn-summary-header">

@@ -1,3 +1,9 @@
+/*
+ * 折叠组件样式
+ * 定义折叠组件的基础样式、触发器样式、内容样式和动画效果
+ */
+
+/* 折叠组件容器样式 */
 [data-component="collapsible"] {
   width: 100%;
   display: flex;
@@ -8,6 +14,7 @@
   border-radius: var(--radius-md);
   overflow: clip;
 
+  /* 折叠触发器样式 */
   [data-slot="collapsible-trigger"] {
     width: 100%;
     display: flex;
@@ -19,7 +26,7 @@
     user-select: none;
     color: var(--text-base);
 
-    /* text-12-medium */
+    /* 字体样式：12px 中等 */
     font-family: var(--font-family-sans);
     font-size: var(--font-size-small);
     font-style: normal;
@@ -27,16 +34,16 @@
     line-height: var(--line-height-large); /* 166.667% */
     letter-spacing: var(--letter-spacing-normal);
 
-    /* &:hover { */
-    /*   background-color: var(--surface-base); */
-    /* } */
+    /* 聚焦效果 */
     &:focus-visible {
       outline: none;
     }
+    /* 禁用状态 */
     &[data-disabled] {
       cursor: not-allowed;
     }
 
+    /* 折叠箭头样式 */
     [data-slot="collapsible-arrow"] {
       flex-shrink: 0;
       width: 24px;
@@ -47,15 +54,17 @@
     }
   }
 
+  /* 折叠内容样式 */
   [data-slot="collapsible-content"] {
     overflow: hidden;
     /* animation: slideUp 250ms ease-out; */
 
-    /* &[data-expanded] { */
-    /*   animation: slideDown 250ms ease-out; */
-    /* } */
+    /* &[data-expanded] {
+      animation: slideDown 250ms ease-out;
+    } */
   }
 
+  /* 幽灵变体样式 */
   &[data-variant="ghost"] {
     background-color: transparent;
     border: none;
@@ -65,12 +74,14 @@
       border: none;
       padding: 0;
 
-      /* &:hover { */
-      /*   color: var(--text-strong); */
-      /* } */
+      /* &:hover {
+        color: var(--text-strong);
+      } */
+      /* 聚焦效果 */
       &:focus-visible {
         outline: none;
       }
+      /* 禁用状态 */
       &[data-disabled] {
         cursor: not-allowed;
       }
@@ -78,6 +89,7 @@
   }
 }
 
+/* 展开动画 */
 @keyframes slideDown {
   from {
     height: 0;
@@ -87,6 +99,7 @@
   }
 }
 
+/* 收起动画 */
 @keyframes slideUp {
   from {
     height: var(--kb-collapsible-content-height);

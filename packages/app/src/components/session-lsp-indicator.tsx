@@ -15,7 +15,7 @@ export function SessionLspIndicator() {
 
   const tooltipContent = createMemo(() => {
     const lsp = sync.data.lsp ?? []
-    if (lsp.length === 0) return "No LSP servers"
+    if (lsp.length === 0) return "无 LSP 服务器"
     return lsp.map((s) => s.name).join(", ")
   })
 

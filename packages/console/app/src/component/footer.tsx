@@ -3,13 +3,19 @@ import { createMemo } from "solid-js"
 import { github } from "~/lib/github"
 import { config } from "~/config"
 
+/**
+ * 页脚组件
+ */
 export function Footer() {
+  // 异步获取 GitHub 数据
   const githubData = createAsync(() => github())
+  
+  // 格式化星标数量
   const starCount = createMemo(() =>
     githubData()?.stars
       ? new Intl.NumberFormat("en-US", {
-          notation: "compact",
-          compactDisplay: "short",
+          notation: "compact",     // 紧凑表示法
+          compactDisplay: "short", // 简短显示
         }).format(githubData()!.stars!)
       : config.github.starsFormatted.compact,
   )
@@ -22,7 +28,7 @@ export function Footer() {
         </a>
       </div>
       <div data-slot="cell">
-        <a href="/docs">Docs</a>
+        <a href="/docs">文档</a>
       </div>
       <div data-slot="cell">
         <a href="/discord">Discord</a>

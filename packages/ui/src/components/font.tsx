@@ -25,12 +25,22 @@ import sourceCodeProBold from "../assets/fonts/source-code-pro-nerd-font-bold.wo
 import ubuntuMono from "../assets/fonts/ubuntu-mono-nerd-font.woff2"
 import ubuntuMonoBold from "../assets/fonts/ubuntu-mono-nerd-font-bold.woff2"
 
+/**
+ * 等宽字体类型定义
+ * @property family 字体家族名称
+ * @property regular 常规字重字体路径
+ * @property bold 粗体字重字体路径
+ */
 type MonoFont = {
   family: string
   regular: string
   bold: string
 }
 
+/**
+ * Nerd Font 等宽字体配置数组
+ * 包含各种支持 Nerd Font 图标的等宽字体
+ */
 export const MONO_NERD_FONTS = [
   {
     family: "JetBrains Mono Nerd Font",
@@ -84,6 +94,9 @@ export const MONO_NERD_FONTS = [
   },
 ] satisfies MonoFont[]
 
+/**
+ * 生成 Nerd Font 等宽字体的 CSS @font-face 规则
+ */
 const monoNerdCss = MONO_NERD_FONTS.map(
   (font) => `
         @font-face {
@@ -102,10 +115,15 @@ const monoNerdCss = MONO_NERD_FONTS.map(
         }`,
 ).join("")
 
+/**
+ * 字体组件
+ * 加载并定义应用中使用的所有字体
+ */
 export const Font = () => {
   return (
     <>
       <Style>{`
+        /* Inter 字体 - 用于正文文本 */
         @font-face {
           font-family: "Inter";
           src: url("${inter}") format("woff2-variations");
@@ -113,6 +131,7 @@ export const Font = () => {
           font-style: normal;
           font-weight: 100 900;
         }
+        /* Inter 字体的回退方案 */
         @font-face {
           font-family: "Inter Fallback";
           src: local("Arial");
@@ -121,6 +140,7 @@ export const Font = () => {
           descent-override: 25%;
           line-gap-override: 1%;
         }
+        /* IBM Plex Mono 字体 - 用于代码 */
         @font-face {
           font-family: "IBM Plex Mono";
           src: url("${ibmPlexMonoRegular}") format("woff2");
@@ -142,6 +162,7 @@ export const Font = () => {
           font-style: normal;
           font-weight: 700;
         }
+        /* IBM Plex Mono 字体的回退方案 */
         @font-face {
           font-family: "IBM Plex Mono Fallback";
           src: local("Courier New");
@@ -152,6 +173,7 @@ export const Font = () => {
         }
 ${monoNerdCss}
       `}</Style>
+      {/* 预加载关键字体，提升性能 */}
       <Link rel="preload" href={inter} as="font" type="font/woff2" crossorigin="anonymous" />
       <Link rel="preload" href={ibmPlexMonoRegular} as="font" type="font/woff2" crossorigin="anonymous" />
     </>

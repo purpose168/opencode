@@ -1,102 +1,103 @@
-import { BoxRenderable, TextareaRenderable, MouseEvent, PasteEvent, t, dim, fg, type KeyBinding } from "@opentui/core"
-import { createEffect, createMemo, type JSX, onMount, createSignal, onCleanup, Show, Switch, Match } from "solid-js"
-import "opentui-spinner/solid"
-import { useLocal } from "@tui/context/local"
-import { useTheme } from "@tui/context/theme"
-import { EmptyBorder } from "@tui/component/border"
-import { useSDK } from "@tui/context/sdk"
-import { useRoute } from "@tui/context/route"
-import { useSync } from "@tui/context/sync"
-import { Identifier } from "@/id/id"
-import { createStore, produce } from "solid-js/store"
-import { useKeybind } from "@tui/context/keybind"
-import { Keybind } from "@/util/keybind"
-import { usePromptHistory, type PromptInfo } from "./history"
-import { usePromptStash } from "./stash"
-import { DialogStash } from "../dialog-stash"
-import { type AutocompleteRef, Autocomplete } from "./autocomplete"
-import { useCommandDialog } from "../dialog-command"
-import { useRenderer } from "@opentui/solid"
-import { Editor } from "@tui/util/editor"
-import { useExit } from "../../context/exit"
-import { Clipboard } from "../../util/clipboard"
-import type { FilePart } from "@opencode-ai/sdk/v2"
-import { TuiEvent } from "../../event"
-import { iife } from "@/util/iife"
-import { Locale } from "@/util/locale"
-import { createColors, createFrames } from "../../ui/spinner.ts"
-import { useDialog } from "@tui/ui/dialog"
-import { DialogProvider as DialogProviderConnect } from "../dialog-provider"
-import { DialogAlert } from "../../ui/dialog-alert"
-import { useToast } from "../../ui/toast"
-import { useKV } from "../../context/kv"
+import { BoxRenderable, TextareaRenderable, MouseEvent, PasteEvent, t, dim, fg, type KeyBinding } from "@opentui/core" // TUI 核心组件和工具函数
+import { createEffect, createMemo, type JSX, onMount, createSignal, onCleanup, Show, Switch, Match } from "solid-js" // Solid.js 响应式 API
+import "opentui-spinner/solid" // 加载动画组件
+import { useLocal } from "@tui/context/local" // 本地配置上下文
+import { useTheme } from "@tui/context/theme" // 主题上下文
+import { EmptyBorder } from "@tui/component/border" // 空边框组件
+import { useSDK } from "@tui/context/sdk" // SDK 上下文，用于调用后端 API
+import { useRoute } from "@tui/context/route" // 路由上下文
+import { useSync } from "@tui/context/sync" // 同步上下文，用于获取实时数据
+import { Identifier } from "@/id/id" // 唯一标识符生成器
+import { createStore, produce } from "solid-js/store" // Solid.js 状态管理
+import { useKeybind } from "@tui/context/keybind" // 快捷键上下文
+import { Keybind } from "@/util/keybind" // 快捷键工具
+import { usePromptHistory, type PromptInfo } from "./history" // 提示词历史记录
+import { usePromptStash } from "./stash" // 提示词暂存功能
+import { DialogStash } from "../dialog-stash" // 暂存对话框
+import { type AutocompleteRef, Autocomplete } from "./autocomplete" // 自动补全组件
+import { useCommandDialog } from "../dialog-command" // 命令对话框上下文
+import { useRenderer } from "@opentui/solid" // 渲染器上下文
+import { Editor } from "@tui/util/editor" // 编辑器工具
+import { useExit } from "../../context/exit" // 退出上下文
+import { Clipboard } from "../../util/clipboard" // 剪贴板工具
+import type { FilePart } from "@opencode-ai/sdk/v2" // SDK 文件部分类型
+import { TuiEvent } from "../../event" // TUI 事件定义
+import { iife } from "@/util/iife" // 立即执行函数工具
+import { Locale } from "@/util/locale" // 本地化工具
+import { createColors, createFrames } from "../../ui/spinner.ts" // 加载动画配置
+import { useDialog } from "@tui/ui/dialog" // 对话框上下文
+import { DialogProvider as DialogProviderConnect } from "../dialog-provider" // 提供商连接对话框
+import { DialogAlert } from "../../ui/dialog-alert" // 警告对话框
+import { useToast } from "../../ui/toast" // 提示消息上下文
+import { useKV } from "../../context/kv" // 键值存储上下文
 
 export type PromptProps = {
-  sessionID?: string
-  visible?: boolean
-  disabled?: boolean
-  onSubmit?: () => void
-  ref?: (ref: PromptRef) => void
-  hint?: JSX.Element
-  showPlaceholder?: boolean
+  sessionID?: string // 会话 ID，可选
+  visible?: boolean // 是否可见，默认为 true
+  disabled?: boolean // 是否禁用，禁用后无法输入
+  onSubmit?: () => void // 提交回调函数
+  ref?: (ref: PromptRef) => void // 组件引用，用于父组件调用方法
+  hint?: JSX.Element // 提示信息元素
+  showPlaceholder?: boolean // 是否显示占位符
 }
 
 export type PromptRef = {
-  focused: boolean
-  current: PromptInfo
-  set(prompt: PromptInfo): void
-  reset(): void
-  blur(): void
-  focus(): void
-  submit(): void
+  focused: boolean // 是否聚焦
+  current: PromptInfo // 当前提示词信息
+  set(prompt: PromptInfo): void // 设置提示词
+  reset(): void // 重置提示词
+  blur(): void // 失去焦点
+  focus(): void // 获得焦点
+  submit(): void // 提交提示词
 }
 
-const PLACEHOLDERS = ["Fix a TODO in the codebase", "What is the tech stack of this project?", "Fix broken tests"]
+const PLACEHOLDERS = ["修复代码库中的 TODO", "这个项目使用的技术栈是什么？", "修复失败的测试"] // 占位符文本列表
 
 const TEXTAREA_ACTIONS = [
-  "submit",
-  "newline",
-  "move-left",
-  "move-right",
-  "move-up",
-  "move-down",
-  "select-left",
-  "select-right",
-  "select-up",
-  "select-down",
-  "line-home",
-  "line-end",
-  "select-line-home",
-  "select-line-end",
-  "visual-line-home",
-  "visual-line-end",
-  "select-visual-line-home",
-  "select-visual-line-end",
-  "buffer-home",
-  "buffer-end",
-  "select-buffer-home",
-  "select-buffer-end",
-  "delete-line",
-  "delete-to-line-end",
-  "delete-to-line-start",
-  "backspace",
-  "delete",
-  "undo",
-  "redo",
-  "word-forward",
-  "word-backward",
-  "select-word-forward",
-  "select-word-backward",
-  "delete-word-forward",
-  "delete-word-backward",
-] as const
+  "submit", // 提交
+  "newline", // 新行
+  "move-left", // 左移
+  "move-right", // 右移
+  "move-up", // 上移
+  "move-down", // 下移
+  "select-left", // 向左选择
+  "select-right", // 向右选择
+  "select-up", // 向上选择
+  "select-down", // 向下选择
+  "line-home", // 行首
+  "line-end", // 行尾
+  "select-line-home", // 选择到行首
+  "select-line-end", // 选择到行尾
+  "visual-line-home", // 可视行首
+  "visual-line-end", // 可视行尾
+  "select-visual-line-home", // 选择到可视行首
+  "select-visual-line-end", // 选择到可视行尾
+  "buffer-home", // 缓冲区开头
+  "buffer-end", // 缓冲区结尾
+  "select-buffer-home", // 选择到缓冲区开头
+  "select-buffer-end", // 选择到缓冲区结尾
+  "delete-line", // 删除行
+  "delete-to-line-end", // 删除到行尾
+  "delete-to-line-start", // 删除到行首
+  "backspace", // 退格
+  "delete", // 删除
+  "undo", // 撤销
+  "redo", // 重做
+  "word-forward", // 前进一个词
+  "word-backward", // 后退一个词
+  "select-word-forward", // 选择下一个词
+  "select-word-backward", // 选择上一个词
+  "delete-word-forward", // 删除下一个词
+  "delete-word-backward", // 删除上一个词
+] as const // 文本区域支持的操作列表
 
+// 将快捷键配置映射为文本区域可用的键绑定
 function mapTextareaKeybindings(
-  keybinds: Record<string, Keybind.Info[]>,
-  action: (typeof TEXTAREA_ACTIONS)[number],
+  keybinds: Record<string, Keybind.Info[]>, // 快捷键配置对象
+  action: (typeof TEXTAREA_ACTIONS)[number], // 操作名称
 ): KeyBinding[] {
-  const configKey = `input_${action.replace(/-/g, "_")}`
-  const bindings = keybinds[configKey]
+  const configKey = `input_${action.replace(/-/g, "_")}` // 配置键名
+  const bindings = keybinds[configKey] // 获取快捷键绑定
   if (!bindings) return []
   return bindings.map((binding) => ({
     name: binding.name,
@@ -109,51 +110,57 @@ function mapTextareaKeybindings(
 }
 
 export function Prompt(props: PromptProps) {
-  let input: TextareaRenderable
-  let anchor: BoxRenderable
-  let autocomplete: AutocompleteRef
+  let input: TextareaRenderable // 文本输入框组件引用
+  let anchor: BoxRenderable // 锚点组件引用，用于定位自动补全框
+  let autocomplete: AutocompleteRef // 自动补全组件引用
 
-  const keybind = useKeybind()
-  const local = useLocal()
-  const sdk = useSDK()
-  const route = useRoute()
-  const sync = useSync()
-  const dialog = useDialog()
-  const toast = useToast()
+  const keybind = useKeybind() // 获取快捷键上下文
+  const local = useLocal() // 获取本地配置上下文
+  const sdk = useSDK() // 获取 SDK 上下文
+  const route = useRoute() // 获取路由上下文
+  const sync = useSync() // 获取同步上下文
+  const dialog = useDialog() // 获取对话框上下文
+  const toast = useToast() // 获取提示消息上下文
+  // 获取会话状态，如果没有会话 ID 则返回空闲状态
   const status = createMemo(() => sync.data.session_status?.[props.sessionID ?? ""] ?? { type: "idle" })
-  const history = usePromptHistory()
-  const stash = usePromptStash()
-  const command = useCommandDialog()
-  const renderer = useRenderer()
-  const { theme, syntax } = useTheme()
-  const kv = useKV()
+  const history = usePromptHistory() // 获取提示词历史记录
+  const stash = usePromptStash() // 获取提示词暂存功能
+  const command = useCommandDialog() // 获取命令对话框上下文
+  const renderer = useRenderer() // 获取渲染器上下文
+  const { theme, syntax } = useTheme() // 获取主题和语法高亮配置
+  const kv = useKV() // 获取键值存储上下文
 
+  // 显示模型警告提示
   function promptModelWarning() {
     toast.show({
       variant: "warning",
-      message: "Connect a provider to send prompts",
+      message: "连接提供商以发送提示词",
       duration: 3000,
     })
+    // 如果没有提供商，显示连接对话框
     if (sync.data.provider.length === 0) {
       dialog.replace(() => <DialogProviderConnect />)
     }
   }
 
+  // 计算文本区域的快捷键绑定
   const textareaKeybindings = createMemo(() => {
     const keybinds = keybind.all
 
     return [
-      { name: "return", action: "submit" },
-      { name: "return", meta: true, action: "newline" },
-      ...TEXTAREA_ACTIONS.flatMap((action) => mapTextareaKeybindings(keybinds, action)),
+      { name: "return", action: "submit" }, // Enter 键提交
+      { name: "return", meta: true, action: "newline" }, // Cmd+Enter 换行
+      ...TEXTAREA_ACTIONS.flatMap((action) => mapTextareaKeybindings(keybinds, action)), // 映射所有操作
     ] satisfies KeyBinding[]
   })
 
-  const fileStyleId = syntax().getStyleId("extmark.file")!
-  const agentStyleId = syntax().getStyleId("extmark.agent")!
-  const pasteStyleId = syntax().getStyleId("extmark.paste")!
-  let promptPartTypeId: number
+  // 获取各种扩展标记的样式 ID
+  const fileStyleId = syntax().getStyleId("extmark.file")! // 文件部分样式
+  const agentStyleId = syntax().getStyleId("extmark.agent")! // 代理部分样式
+  const pasteStyleId = syntax().getStyleId("extmark.paste")! // 粘贴内容样式
+  let promptPartTypeId: number // 提示词部分的类型 ID
 
+  // 监听提示词追加事件，将文本插入到输入框
   sdk.event.on(TuiEvent.PromptAppend.type, (evt) => {
     input.insertText(evt.properties.text)
     setTimeout(() => {
@@ -163,11 +170,13 @@ export function Prompt(props: PromptProps) {
     }, 0)
   })
 
+  // 根据禁用状态设置光标颜色
   createEffect(() => {
     if (props.disabled) input.cursorColor = theme.backgroundElement
     if (!props.disabled) input.cursorColor = theme.text
   })
 
+  // 获取最后一条用户消息
   const lastUserMessage = createMemo(() => {
     if (!props.sessionID) return undefined
     const messages = sync.data.message[props.sessionID]
@@ -175,39 +184,42 @@ export function Prompt(props: PromptProps) {
     return messages.findLast((m) => m.role === "user")
   })
 
+  // 创建状态 store，管理提示词的各种状态
   const [store, setStore] = createStore<{
-    prompt: PromptInfo
-    mode: "normal" | "shell"
-    extmarkToPartIndex: Map<number, number>
-    interrupt: number
-    placeholder: number
+    prompt: PromptInfo // 提示词信息
+    mode: "normal" | "shell" // 输入模式
+    extmarkToPartIndex: Map<number, number> // 扩展标记到部分索引的映射
+    interrupt: number // 中断计数器
+    placeholder: number // 占位符索引
   }>({
-    placeholder: Math.floor(Math.random() * PLACEHOLDERS.length),
+    placeholder: Math.floor(Math.random() * PLACEHOLDERS.length), // 随机选择一个占位符
     prompt: {
-      input: "",
-      parts: [],
+      input: "", // 输入文本
+      parts: [], // 提示词部分（文件、代理、文本等）
     },
-    mode: "normal",
-    extmarkToPartIndex: new Map(),
-    interrupt: 0,
+    mode: "normal", // 默认为普通模式
+    extmarkToPartIndex: new Map(), // 初始化空映射
+    interrupt: 0, // 初始化中断计数器
   })
 
-  // Initialize agent/model/variant from last user message when session changes
-  let syncedSessionID: string | undefined
+  // 当会话改变时，从最后一条用户消息初始化代理/模型/变体
+  let syncedSessionID: string | undefined // 记录已同步的会话 ID
   createEffect(() => {
     const sessionID = props.sessionID
     const msg = lastUserMessage()
 
+    // 如果会话 ID 改变，同步配置
     if (sessionID !== syncedSessionID) {
       if (!sessionID || !msg) return
 
       syncedSessionID = sessionID
 
-      // Only set agent if it's a primary agent (not a subagent)
+      // 只有当代理是主要代理（不是子代理）时才设置
       const isPrimaryAgent = local.agent.list().some((x) => x.name === msg.agent)
       if (msg.agent && isPrimaryAgent) {
         local.agent.set(msg.agent)
       }
+      // 同步模型和变体
       if (msg.model) local.model.set(msg.model)
       if (msg.variant) local.model.variant.set(msg.variant)
     }
@@ -216,7 +228,7 @@ export function Prompt(props: PromptProps) {
   command.register(() => {
     return [
       {
-        title: "Clear prompt",
+        title: "清空提示词",
         value: "prompt.clear",
         category: "Prompt",
         disabled: true,
@@ -227,7 +239,7 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
-        title: "Submit prompt",
+        title: "提交提示词",
         value: "prompt.submit",
         disabled: true,
         keybind: "input_submit",
@@ -239,7 +251,7 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
-        title: "Paste",
+        title: "粘贴",
         value: "prompt.paste",
         disabled: true,
         keybind: "input_paste",
@@ -256,7 +268,7 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
-        title: "Interrupt session",
+        title: "中断会话",
         value: "session.interrupt",
         keybind: "session_interrupt",
         disabled: status().type === "idle",
@@ -287,7 +299,7 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
-        title: "Open editor",
+        title: "打开编辑器",
         category: "Session",
         keybind: "editor_open",
         value: "prompt.editor",
@@ -373,18 +385,21 @@ export function Prompt(props: PromptProps) {
     ]
   })
 
+  // 根据可见性设置焦点
   createEffect(() => {
-    if (props.visible !== false) input?.focus()
-    if (props.visible === false) input?.blur()
+    if (props.visible !== false) input?.focus() // 可见时获得焦点
+    if (props.visible === false) input?.blur() // 不可见时失去焦点
   })
 
+  // 组件挂载时注册提示词部分类型
   onMount(() => {
     promptPartTypeId = input.extmarks.registerType("prompt-part")
   })
 
+  // 从部分列表恢复扩展标记
   function restoreExtmarksFromParts(parts: PromptInfo["parts"]) {
-    input.extmarks.clear()
-    setStore("extmarkToPartIndex", new Map())
+    input.extmarks.clear() // 清除所有扩展标记
+    setStore("extmarkToPartIndex", new Map()) // 重置映射
 
     parts.forEach((part, partIndex) => {
       let start = 0
@@ -392,6 +407,7 @@ export function Prompt(props: PromptProps) {
       let virtualText = ""
       let styleId: number | undefined
 
+      // 根据部分类型提取位置和虚拟文本
       if (part.type === "file" && part.source?.text) {
         start = part.source.text.start
         end = part.source.text.end
@@ -409,6 +425,7 @@ export function Prompt(props: PromptProps) {
         styleId = pasteStyleId
       }
 
+      // 如果有虚拟文本，创建扩展标记
       if (virtualText) {
         const extmarkId = input.extmarks.create({
           start,
@@ -417,6 +434,7 @@ export function Prompt(props: PromptProps) {
           styleId,
           typeId: promptPartTypeId,
         })
+        // 更新扩展标记到部分索引的映射
         setStore("extmarkToPartIndex", (map: Map<number, number>) => {
           const newMap = new Map(map)
           newMap.set(extmarkId, partIndex)
@@ -426,6 +444,7 @@ export function Prompt(props: PromptProps) {
     })
   }
 
+  // 同步扩展标记与提示词部分
   function syncExtmarksWithPromptParts() {
     const allExtmarks = input.extmarks.getAllForTypeId(promptPartTypeId)
     setStore(
@@ -433,11 +452,13 @@ export function Prompt(props: PromptProps) {
         const newMap = new Map<number, number>()
         const newParts: typeof draft.prompt.parts = []
 
+        // 遍历所有扩展标记，更新对应部分的位置
         for (const extmark of allExtmarks) {
           const partIndex = draft.extmarkToPartIndex.get(extmark.id)
           if (partIndex !== undefined) {
             const part = draft.prompt.parts[partIndex]
             if (part) {
+              // 根据部分类型更新位置信息
               if (part.type === "agent" && part.source) {
                 part.source.start = extmark.start
                 part.source.end = extmark.end
@@ -462,7 +483,7 @@ export function Prompt(props: PromptProps) {
 
   command.register(() => [
     {
-      title: "Stash prompt",
+      title: "暂存提示词",
       value: "prompt.stash",
       category: "Prompt",
       disabled: !store.prompt.input,
@@ -480,7 +501,7 @@ export function Prompt(props: PromptProps) {
       },
     },
     {
-      title: "Stash pop",
+      title: "恢复暂存",
       value: "prompt.stash.pop",
       category: "Prompt",
       disabled: stash.list().length === 0,
@@ -496,7 +517,7 @@ export function Prompt(props: PromptProps) {
       },
     },
     {
-      title: "Stash list",
+      title: "暂存列表",
       value: "prompt.stash.list",
       category: "Prompt",
       disabled: stash.list().length === 0,
@@ -819,7 +840,7 @@ export function Prompt(props: PromptProps) {
             flexGrow={1}
           >
             <textarea
-              placeholder={props.sessionID ? undefined : `Ask anything... "${PLACEHOLDERS[store.placeholder]}"`}
+              placeholder={props.sessionID ? undefined : `输入任何内容... "${PLACEHOLDERS[store.placeholder]}"`}
               textColor={keybind.leader ? theme.textMuted : theme.text}
               focusedTextColor={keybind.leader ? theme.textMuted : theme.text}
               minHeight={1}

@@ -1,18 +1,18 @@
-# Contributing to OpenCode
+# 为 OpenCode 做贡献
 
-We want to make it easy for you to contribute to OpenCode. Here are the most common type of changes that get merged:
+我们希望让您能够轻松地为 OpenCode 做贡献。以下是最常见的被合并的更改类型：
 
-- Bug fixes
-- Additional LSPs / Formatters
-- Improvements to LLM performance
-- Support for new providers
-- Fixes for environment-specific quirks
-- Missing standard behavior
-- Documentation improvements
+- Bug 修复
+- 额外的 LSP / 格式化程序
+- LLM 性能改进
+- 支持新的提供商
+- 修复特定环境的问题
+- 缺失的标准行为
+- 文档改进
 
-However, any UI or core product feature must go through a design review with the core team before implementation.
+然而，任何 UI 或核心产品功能在实现前都必须经过核心团队的设计审查。
 
-If you are unsure if a PR would be accepted, feel free to ask a maintainer or look for issues with any of the following labels:
+如果您不确定 PR 是否会被接受，请随时咨询维护者或查找带有以下标签的问题：
 
 - [`help wanted`](https://github.com/sst/opencode/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahelp-wanted)
 - [`good first issue`](https://github.com/sst/opencode/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
@@ -20,113 +20,111 @@ If you are unsure if a PR would be accepted, feel free to ask a maintainer or lo
 - [`perf`](https://github.com/sst/opencode/issues?q=is%3Aopen%20is%3Aissue%20label%3A%22perf%22)
 
 > [!NOTE]
-> PRs that ignore these guardrails will likely be closed.
+> 忽略这些规则的 PR 可能会被关闭。
 
-Want to take on an issue? Leave a comment and a maintainer may assign it to you unless it is something we are already working on.
+想要处理一个问题？留下评论，维护者可能会将其分配给您，除非我们已经在处理它。
 
-## Developing OpenCode
+## 开发 OpenCode
 
-- Requirements: Bun 1.3+
-- Install dependencies and start the dev server from the repo root:
+- 要求：Bun 1.3+
+- 从仓库根目录安装依赖并启动开发服务器：
 
   ```bash
   bun install
   bun dev
   ```
 
-### Running against a different directory
+### 在不同目录中运行
 
-By default, `bun dev` runs OpenCode in the `packages/opencode` directory. To run it against a different directory or repository:
+默认情况下，`bun dev` 在 `packages/opencode` 目录中运行 OpenCode。要在不同的目录或仓库中运行它：
 
 ```bash
 bun dev <directory>
 ```
 
-To run OpenCode in the root of the opencode repo itself:
+要在 opencode 仓库本身的根目录中运行 OpenCode：
 
 ```bash
 bun dev .
 ```
 
-### Building a "localcode"
+### 构建 "localcode"
 
-To compile a standalone executable:
+要编译独立可执行文件：
 
 ```bash
 ./packages/opencode/script/build.ts --single
 ```
 
-Then run it with:
+然后运行它：
 
 ```bash
 ./packages/opencode/dist/opencode-<platform>/bin/opencode
 ```
 
-Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`).
+将 `<platform>` 替换为您的平台（例如，`darwin-arm64`，`linux-x64`）。
 
-- Core pieces:
-  - `packages/opencode`: OpenCode core business logic & server.
-  - `packages/opencode/src/cli/cmd/tui/`: The TUI code, written in SolidJS with [opentui](https://github.com/sst/opentui)
-  - `packages/plugin`: Source for `@opencode-ai/plugin`
+- 核心部分：
+  - `packages/opencode`：OpenCode 核心业务逻辑和服务器。
+  - `packages/opencode/src/cli/cmd/tui/`：TUI 代码，使用 [opentui](https://github.com/sst/opentui) 用 SolidJS 编写
+  - `packages/plugin`：`@opencode-ai/plugin` 的源代码
 
 > [!NOTE]
-> If you make changes to the API or SDK (e.g. `packages/opencode/src/server/server.ts`), run `./script/generate.ts` to regenerate the SDK and related files.
+> 如果您对 API 或 SDK 进行了更改（例如 `packages/opencode/src/server/server.ts`），请运行 `./script/generate.ts` 重新生成 SDK 和相关文件。
 
-Please try to follow the [style guide](./STYLE_GUIDE.md)
+请尝试遵循 [风格指南](./STYLE_GUIDE.md)
 
-### Setting up a Debugger
+### 设置调试器
 
-Bun debugging is currently rough around the edges. We hope this guide helps you get set up and avoid some pain points.
+Bun 调试目前还不够完善。我们希望本指南能帮助您设置并避免一些痛点。
 
-The most reliable way to debug OpenCode is to run it manually in a terminal via `bun run --inspect=<url> dev ...` and attach
-your debugger via that URL. Other methods can result in breakpoints being mapped incorrectly, at least in VSCode (YMMV).
+调试 OpenCode 最可靠的方法是通过 `bun run --inspect=<url> dev ...` 在终端中手动运行它，并通过该 URL 附加调试器。其他方法可能会导致断点映射不正确，至少在 VSCode 中是这样（因人而异）。
 
-Caveats:
+注意事项：
 
-- If you want to run the OpenCode TUI and have breakpoints triggered in the server code, you might need to run `bun dev spawn` instead of
-  the usual `bun dev`. This is because `bun dev` runs the server in a worker thread and breakpoints might not work there.
-- If `spawn` does not work for you, you can debug the server separately:
-  - Debug server: `bun run --inspect=ws://localhost:6499/ ./src/index.ts serve --port 4096`,
-    then attach TUI with `opencode attach http://localhost:4096`
-  - Debug TUI: `bun run --inspect=ws://localhost:6499/ --conditions=browser ./src/index.ts`
+- 如果您想运行 OpenCode TUI 并在服务器代码中触发断点，您可能需要运行 `bun dev spawn` 而不是通常的 `bun dev`。这是因为 `bun dev` 在工作线程中运行服务器，断点可能无法在那里工作。
+- 如果 `spawn` 对您不起作用，您可以单独调试服务器：
+  - 调试服务器：`bun run --inspect=ws://localhost:6499/ ./src/index.ts serve --port 4096`，
+    然后使用 `opencode attach http://localhost:4096` 附加 TUI
+  - 调试 TUI：`bun run --inspect=ws://localhost:6499/ --conditions=browser ./src/index.ts`
 
-Other tips and tricks:
+其他提示和技巧：
 
-- You might want to use `--inspect-wait` or `--inspect-brk` instead of `--inspect`, depending on your workflow
-- Specifying `--inspect=ws://localhost:6499/` on every invocation can be tiresome, you may want to `export BUN_OPTIONS=--inspect=ws://localhost:6499/` instead
+- 根据您的工作流程，您可能希望使用 `--inspect-wait` 或 `--inspect-brk` 而不是 `--inspect`
+- 每次调用时指定 `--inspect=ws://localhost:6499/` 可能会很麻烦，您可能希望改为 `export BUN_OPTIONS=--inspect=ws://localhost:6499/`
 
-#### VSCode Setup
+#### VSCode 设置
 
-If you use VSCode, you can use our example configurations [.vscode/settings.example.json](.vscode/settings.example.json) and [.vscode/launch.example.json](.vscode/launch.example.json).
+如果您使用 VSCode，您可以使用我们的示例配置 [.vscode/settings.example.json](.vscode/settings.example.json) 和 [.vscode/launch.example.json](.vscode/launch.example.json)。
 
-Some debug methods that can be problematic:
+一些可能有问题的调试方法：
 
-- Debug configurations with `"request": "launch"` can have breakpoints incorrectly mapped and thus unusable
-- The same problem arises when running OpenCode in the VSCode `JavaScript Debug Terminal`
+- 带有 `"request": "launch"` 的调试配置可能会导致断点映射不正确，从而无法使用
+- 在 VSCode `JavaScript Debug Terminal` 中运行 OpenCode 时也会出现同样的问题
 
-With that said, you may want to try these methods, as they might work for you.
+话虽如此，您可能还是想尝试这些方法，因为它们可能对您有效。
 
-## Pull Request Expectations
+## 拉取请求期望
 
-- Try to keep pull requests small and focused.
-- Link relevant issue(s) in the description
-- Explain the issue and why your change fixes it
-- Avoid having verbose LLM generated PR descriptions
-- Before adding new functions or functionality, ensure that such behavior doesn't already exist elsewhere in the codebase.
+- 尝试保持拉取请求小而集中。
+- 在描述中链接相关问题
+- 解释问题以及您的更改如何解决它
+- 避免冗长的 LLM 生成的 PR 描述
+- 在添加新函数或功能之前，确保这种行为在代码库的其他地方不存在。
 
-### Style Preferences
+### 风格偏好
 
-These are not strictly enforced, they are just general guidelines:
+这些不是严格执行的，只是一般指南：
 
-- **Functions:** Keep logic within a single function unless breaking it out adds clear reuse or composition benefits.
-- **Destructuring:** Do not do unnecessary destructuring of variables.
-- **Control flow:** Avoid `else` statements.
-- **Error handling:** Prefer `.catch(...)` instead of `try`/`catch` when possible.
-- **Types:** Reach for precise types and avoid `any`.
-- **Variables:** Stick to immutable patterns and avoid `let`.
-- **Naming:** Choose concise single-word identifiers when they remain descriptive.
-- **Runtime APIs:** Use Bun helpers such as `Bun.file()` when they fit the use case.
+- **函数：** 将逻辑保持在单个函数内，除非将其分解出来能带来明显的重用或组合好处。
+- **解构：** 不要对变量进行不必要的解构。
+- **控制流：** 避免 `else` 语句。
+- **错误处理：** 在可能的情况下，优先使用 `.catch(...)` 而不是 `try`/`catch`。
+- **类型：** 使用精确的类型并避免 `any`。
+- **变量：** 坚持不可变模式并避免 `let`。
+- **命名：** 当单个单词标识符仍然具有描述性时，选择它们。
+- **运行时 API：** 当 Bun 帮助程序（如 `Bun.file()`）适合用例时使用它们。
 
-## Feature Requests
+## 功能请求
 
-For net-new functionality, start with a design conversation. Open an issue describing the problem, your proposed approach (optional), and why it belongs in OpenCode. The core team will help decide whether it should move forward; please wait for that approval instead of opening a feature PR directly.
+对于全新的功能，请从设计对话开始。打开一个问题，描述问题、您提出的方法（可选）以及为什么它属于 OpenCode。核心团队将帮助决定是否应该继续推进；请等待该批准，而不是直接打开功能 PR。

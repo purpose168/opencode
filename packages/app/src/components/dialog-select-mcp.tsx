@@ -34,10 +34,10 @@ export const DialogSelectMcp: Component = () => {
   const totalCount = createMemo(() => items().length)
 
   return (
-    <Dialog title="MCPs" description={`${enabledCount()} of ${totalCount()} enabled`}>
+    <Dialog title="MCPs" description={`已启用 ${enabledCount()} / ${totalCount()}`}>
       <List
-        search={{ placeholder: "Search", autofocus: true }}
-        emptyMessage="No MCPs configured"
+        search={{ placeholder: "搜索", autofocus: true }}
+        emptyMessage="未配置 MCPs"
         key={(x) => x?.name ?? ""}
         items={items}
         filterKeys={["name", "status"]}
@@ -60,16 +60,16 @@ export const DialogSelectMcp: Component = () => {
                 <div class="flex items-center gap-2">
                   <span class="truncate">{i.name}</span>
                   <Show when={status() === "connected"}>
-                    <span class="text-11-regular text-text-weaker">connected</span>
+                    <span class="text-11-regular text-text-weaker">已连接</span>
                   </Show>
                   <Show when={status() === "failed"}>
-                    <span class="text-11-regular text-text-weaker">failed</span>
+                    <span class="text-11-regular text-text-weaker">失败</span>
                   </Show>
                   <Show when={status() === "needs_auth"}>
-                    <span class="text-11-regular text-text-weaker">needs auth</span>
+                    <span class="text-11-regular text-text-weaker">需要认证</span>
                   </Show>
                   <Show when={status() === "disabled"}>
-                    <span class="text-11-regular text-text-weaker">disabled</span>
+                    <span class="text-11-regular text-text-weaker">已禁用</span>
                   </Show>
                   <Show when={loading() === i.name}>
                     <span class="text-11-regular text-text-weak">...</span>

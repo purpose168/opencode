@@ -1,4 +1,7 @@
 export namespace BashArity {
+  // 根据命令前缀获取命令的参数数量
+  // 从最长的前缀开始匹配,找到第一个匹配的arity值
+  // 如果没有匹配,返回默认值1(表示整个输入作为一个命令)
   export function prefix(tokens: string[]) {
     for (let len = tokens.length; len > 0; len--) {
       const prefix = tokens.slice(0, len).join(" ")
@@ -9,19 +12,30 @@ export namespace BashArity {
     return tokens.slice(0, 1)
   }
 
-  /* Generated with following prompt:
-You are generating a dictionary of command-prefix arities for bash-style commands.
-This dictionary is used to identify the "human-understandable command" from an input shell command.### **RULES (follow strictly)**1. Each entry maps a **command prefix string → number**, representing how many **tokens** define the command.
-2. **Flags NEVER count as tokens**. Only subcommands count.
-3. **Longest matching prefix wins**.
-4. **Only include a longer prefix if its arity is different from what the shorter prefix already implies**.   * Example: If `git` is 2, then do **not** include `git checkout`, `git commit`, etc. unless they require *different* arity.
-5. The output must be a **single JSON object**. Each entry should have a comment with an example real world matching command. DO NOT MAKE ANY OTHER COMMENTS. Should be alphabetical
-6. Include the **most commonly used commands** across many stacks and languages. More is better.### **Semantics examples*** `touch foo.txt` → `touch` (arity 1, explicitly listed)
-* `git checkout main` → `git checkout` (because `git` has arity 2)
-* `npm install` → `npm install` (because `npm` has arity 2)
-* `npm run dev` → `npm run dev` (because `npm run` has arity 3)
-* `python script.py` → `python script.py` (default: whole input, not in dictionary)### **Now generate the dictionary.**
+  /* 使用以下提示词生成:
+你正在为bash风格的命令生成命令前缀参数数量(arity)字典。
+此字典用于从输入的shell命令中识别"人类可理解的命令"。
+### **规则(严格遵循)**
+1. 每个条目映射一个**命令前缀字符串 → 数字**,表示定义该命令需要多少个**token**。
+2. **标志(flag)从不计为token**。只有子命令(subcommand)计为token。
+3. **最长匹配的前缀优先**。
+4. **只有当较长前缀的arity与较短前缀所隐含的arity不同时,才包含该较长前缀**。
+   * 示例: 如果 `git` 是 2,则**不要**包含 `git checkout`、`git commit` 等,除非它们需要*不同的* arity。
+5. 输出必须是**单个JSON对象**。每个条目应该有一个注释,包含示例的真实世界匹配命令。不要添加任何其他注释。应该按字母顺序排列。
+6. 包含**跨多个技术栈和语言最常用的命令**。越多越好。
+### **语义示例**
+* `touch foo.txt` → `touch` (arity 1,明确列出)
+* `git checkout main` → `git checkout` (因为 `git` 的 arity 是 2)
+* `npm install` → `npm install` (因为 `npm` 的 arity 是 2)
+* `npm run dev` → `npm run dev` (因为 `npm run` 的 arity 是 3)
+* `python script.py` → `python script.py` (默认:整个输入,不在字典中)
+### **现在生成字典。**
 */
+  // Bash命令前缀参数数量字典
+  // 用于从输入的shell命令中识别"人类可理解的命令"
+  // 每个条目映射命令前缀字符串到数字,表示定义该命令需要多少个token
+  // 标志(flag)不计为token,只有子命令(subcommand)计为token
+  // 最长匹配的前缀优先
   const ARITY: Record<string, number> = {
     cat: 1, // cat file.txt
     cd: 1, // cd /path/to/dir
@@ -94,7 +108,7 @@ This dictionary is used to identify the "human-understandable command" from an i
     "ip addr": 3, // ip addr show
     "ip link": 3, // ip link set eth0 up
     "ip netns": 3, // ip netns exec foo bash
-    "ip route": 3, // ip route add default via 1.1.1.1
+    "ip route": 3, // ip route add default via 192.168.1.1
     kind: 2, // kind delete cluster
     "kind create": 3, // kind create cluster
     kubectl: 2, // kubectl get pods

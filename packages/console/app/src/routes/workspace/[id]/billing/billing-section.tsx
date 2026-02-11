@@ -7,6 +7,7 @@ import { IconCreditCard, IconStripe } from "~/component/icon"
 import styles from "./billing-section.module.css"
 import { createCheckoutUrl, formatBalance, queryBillingInfo } from "../../common"
 
+// 创建会话 URL 的动作
 const createSessionUrl = action(async (workspaceID: string, returnUrl: string) => {
   "use server"
   return json(
@@ -26,7 +27,7 @@ const createSessionUrl = action(async (workspaceID: string, returnUrl: string) =
 
 export function BillingSection() {
   const params = useParams()
-  // ORIGINAL CODE - COMMENTED OUT FOR TESTING
+  // 原始代码 - 为测试而注释
   const billingInfo = createAsync(() => queryBillingInfo(params.id!))
   const checkoutAction = useAction(createCheckoutUrl)
   const checkoutSubmission = useSubmission(createCheckoutUrl)
@@ -39,14 +40,17 @@ export function BillingSection() {
     sessionRedirecting: false,
   })
 
+  // 当账单信息变化时更新充值金额
   createEffect(() => {
     const info = billingInfo()
     if (info) {
       setStore("addBalanceAmount", info.reloadAmount.toString())
     }
   })
+  // 格式化余额显示
   const balance = createMemo(() => formatBalance(billingInfo()?.balance ?? 0))
 
+  // 点击结账按钮的处理函数
   async function onClickCheckout() {
     const amount = parseInt(store.addBalanceAmount)
     const baseUrl = window.location.href
@@ -58,6 +62,7 @@ export function BillingSection() {
     }
   }
 
+  // 点击会话按钮的处理函数
   async function onClickSession() {
     const baseUrl = window.location.href
     const sessionUrl = await sessionAction(params.id!, baseUrl)
@@ -67,6 +72,7 @@ export function BillingSection() {
     }
   }
 
+  // 显示添加余额表单
   function showAddBalanceForm() {
     while (true) {
       checkoutSubmission.clear()
@@ -77,14 +83,15 @@ export function BillingSection() {
     })
   }
 
+  // 隐藏添加余额表单
   function hideAddBalanceForm() {
     setStore("showAddBalanceForm", false)
     checkoutSubmission.clear()
   }
 
-  // DUMMY DATA FOR TESTING - UNCOMMENT ONE OF THE SCENARIOS BELOW
+  // 测试用的模拟数据 - 取消注释下面的场景之一
 
-  // Scenario 1: User has not added billing details and has no balance
+  // 场景 1: 用户未添加账单详情且无余额
   // const balanceInfo = () => ({
   //   balance: 0,
   //   paymentMethodType: null as string | null,
@@ -94,7 +101,7 @@ export function BillingSection() {
   //   timeReloadError: null as Date | null,
   // })
 
-  // Scenario 2: User has not added billing details but has a balance
+  // 场景 2: 用户未添加账单详情但有余额
   // const balanceInfo = () => ({
   //   balance: 1500000000, // $15.00
   //   paymentMethodType: null as string | null,
@@ -104,7 +111,7 @@ export function BillingSection() {
   //   timeReloadError: null as Date | null
   // })
 
-  // Scenario 3: User has added billing details (reload enabled)
+  // 场景 3: 用户已添加账单详情（启用自动充值）
   // const balanceInfo = () => ({
   //   balance: 750000000, // $7.50
   //   paymentMethodType: "card",
@@ -114,17 +121,17 @@ export function BillingSection() {
   //   timeReloadError: null as Date | null
   // })
 
-  // Scenario 4: User has billing details but reload failed
+  // 场景 4: 用户有账单详情但充值失败
   // const balanceInfo = () => ({
   //   balance: 250000000, // $2.50
   //   paymentMethodType: "card",
   //   paymentMethodLast4: "4242",
   //   reload: true,
-  //   reloadError: "Your card was declined." as string,
-  //   timeReloadError: new Date(Date.now() - 3600000) as Date // 1 hour ago
+  //   reloadError: "您的卡被拒绝。" as string,
+  //   timeReloadError: new Date(Date.now() - 3600000) as Date // 1小时前
   // })
 
-  // Scenario 5: User has Link payment method
+  // 场景 5: 用户有 Link 支付方式
   // const balanceInfo = () => ({
   //   balance: 500000000, // $5.00
   //   paymentMethodType: "link",
@@ -137,16 +144,16 @@ export function BillingSection() {
   return (
     <section class={styles.root}>
       <div data-slot="section-title">
-        <h2>Billing</h2>
+        <h2>账单管理</h2>
         <p>
-          Manage payments methods. <a href="mailto:contact@anoma.ly">Contact us</a> if you have any questions.
+          管理支付方式。如有任何问题，请 <a href="mailto:contact@anoma.ly">联系我们</a>。
         </p>
       </div>
       <div data-slot="section-content">
         <div data-slot="balance-display">
           <div data-slot="balance-amount">
             <span data-slot="balance-value">${balance()}</span>
-            <span data-slot="balance-label">Current Balance</span>
+            <span data-slot="balance-label">当前余额</span>
           </div>
           <Show when={billingInfo()?.customerID}>
             <div data-slot="balance-right-section">
@@ -155,7 +162,7 @@ export function BillingSection() {
                 fallback={
                   <div data-slot="add-balance-form-container">
                     <div data-slot="add-balance-form">
-                      <label>Add $</label>
+                      <label>添加 $</label>
                       <input
                         data-component="input"
                         type="number"
@@ -166,11 +173,11 @@ export function BillingSection() {
                           setStore("addBalanceAmount", e.currentTarget.value)
                           checkoutSubmission.clear()
                         }}
-                        placeholder="Enter amount"
+                        placeholder="输入金额"
                       />
                       <div data-slot="form-actions">
                         <button data-color="ghost" type="button" onClick={() => hideAddBalanceForm()}>
-                          Cancel
+                          取消
                         </button>
                         <button
                           data-color="primary"
@@ -178,7 +185,7 @@ export function BillingSection() {
                           disabled={!store.addBalanceAmount || checkoutSubmission.pending || store.checkoutRedirecting}
                           onClick={onClickCheckout}
                         >
-                          {checkoutSubmission.pending || store.checkoutRedirecting ? "Loading..." : "Add"}
+                          {checkoutSubmission.pending || store.checkoutRedirecting ? "加载中..." : "添加"}
                         </button>
                       </div>
                     </div>
@@ -189,7 +196,7 @@ export function BillingSection() {
                 }
               >
                 <button data-color="primary" onClick={() => showAddBalanceForm()}>
-                  Add Balance
+                  添加余额
                 </button>
               </Show>
               <div data-slot="credit-card">
@@ -209,7 +216,7 @@ export function BillingSection() {
                       </Show>
                     </Match>
                     <Match when={billingInfo()?.paymentMethodType === "link"}>
-                      <span data-slot="type">Linked to Stripe</span>
+                      <span data-slot="type">已链接到 Stripe</span>
                     </Match>
                   </Switch>
                 </div>
@@ -218,7 +225,7 @@ export function BillingSection() {
                   disabled={sessionSubmission.pending || store.sessionRedirecting}
                   onClick={onClickSession}
                 >
-                  {sessionSubmission.pending || store.sessionRedirecting ? "Loading..." : "Manage"}
+                  {sessionSubmission.pending || store.sessionRedirecting ? "加载中..." : "管理"}
                 </button>
               </div>
             </div>
@@ -231,7 +238,7 @@ export function BillingSection() {
             disabled={checkoutSubmission.pending || store.checkoutRedirecting}
             onClick={onClickCheckout}
           >
-            {checkoutSubmission.pending || store.checkoutRedirecting ? "Loading..." : "Enable Billing"}
+            {checkoutSubmission.pending || store.checkoutRedirecting ? "加载中..." : "启用账单"}
           </button>
         </Show>
       </div>

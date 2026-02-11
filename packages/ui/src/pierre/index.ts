@@ -1,6 +1,22 @@
+/**
+ * Pierre 代码差异比较组件
+ * 
+ * 该文件定义了代码差异比较组件的类型、默认选项和样式变量
+ * 用于显示代码的添加、删除和修改部分，支持多种显示样式
+ */
 import { DiffLineAnnotation, FileContents, FileDiffOptions } from "@pierre/diffs"
 import { ComponentProps } from "solid-js"
 
+/**
+ * 差异比较组件的属性类型
+ * 
+ * @template T - 注释数据的类型
+ * @property before - 比较前的文件内容
+ * @property after - 比较后的文件内容
+ * @property annotations - 可选的行注释数组
+ * @property class - 可选的 CSS 类名
+ * @property classList - 可选的 CSS 类列表
+ */
 export type DiffProps<T = {}> = FileDiffOptions<T> & {
   before: FileContents
   after: FileContents
@@ -9,6 +25,12 @@ export type DiffProps<T = {}> = FileDiffOptions<T> & {
   classList?: ComponentProps<"div">["classList"]
 }
 
+/**
+ * 不安全的 CSS 样式定义
+ * 
+ * 包含差异比较组件的所有样式变量和默认样式
+ * 使用 data-diffs 属性选择器来应用样式
+ */
 const unsafeCSS = `
 [data-diffs] {
   --diffs-bg: light-dark(var(--diffs-light-bg), var(--diffs-dark-bg));
@@ -62,21 +84,28 @@ const unsafeCSS = `
   }
 }`
 
+/**
+ * 创建差异比较组件的默认选项
+ * 
+ * @template T - 注释数据的类型
+ * @param style - 差异显示样式，可选值为 "unified" 或 "split"
+ * @returns 包含所有默认选项的对象
+ */
 export function createDefaultOptions<T>(style: FileDiffOptions<T>["diffStyle"]) {
   return {
-    theme: "OpenCode",
-    themeType: "system",
-    disableLineNumbers: false,
-    overflow: "wrap",
-    diffStyle: style ?? "unified",
-    diffIndicators: "bars",
-    disableBackground: false,
-    expansionLineCount: 20,
-    lineDiffType: style === "split" ? "word-alt" : "none",
-    maxLineDiffLength: 1000,
-    maxLineLengthForHighlighting: 1000,
-    disableFileHeader: true,
-    unsafeCSS,
+    theme: "OpenCode", // 主题名称
+    themeType: "system", // 主题类型：系统
+    disableLineNumbers: false, // 是否禁用行号
+    overflow: "wrap", // 溢出处理方式：换行
+    diffStyle: style ?? "unified", // 差异显示样式，默认为 unified
+    diffIndicators: "bars", // 差异指示器类型：条形
+    disableBackground: false, // 是否禁用背景色
+    expansionLineCount: 20, // 展开的行数
+    lineDiffType: style === "split" ? "word-alt" : "none", // 行差异类型
+    maxLineDiffLength: 1000, // 最大行差异长度
+    maxLineLengthForHighlighting: 1000, // 高亮显示的最大行长度
+    disableFileHeader: true, // 是否禁用文件头部
+    unsafeCSS, // 不安全的 CSS 样式
     // hunkSeparators(hunkData: HunkData) {
     //   const fragment = document.createDocumentFragment()
     //   const numCol = document.createElement("div")
@@ -95,13 +124,18 @@ export function createDefaultOptions<T>(style: FileDiffOptions<T>["diffStyle"]) 
   } as const
 }
 
+/**
+ * 差异比较组件的样式变量
+ * 
+ * 包含用于差异比较组件的所有 CSS 变量定义
+ */
 export const styleVariables = {
-  "--diffs-font-family": "var(--font-family-mono)",
-  "--diffs-font-size": "var(--font-size-small)",
-  "--diffs-line-height": "24px",
-  "--diffs-tab-size": 2,
-  "--diffs-font-features": "var(--font-family-mono--font-feature-settings)",
-  "--diffs-header-font-family": "var(--font-family-sans)",
-  "--diffs-gap-block": 0,
-  "--diffs-min-number-column-width": "4ch",
+  "--diffs-font-family": "var(--font-family-mono)", // 差异比较的字体家族
+  "--diffs-font-size": "var(--font-size-small)", // 差异比较的字体大小
+  "--diffs-line-height": "24px", // 差异比较的行高
+  "--diffs-tab-size": 2, // 差异比较的制表符大小
+  "--diffs-font-features": "var(--font-family-mono--font-feature-settings)", // 差异比较的字体特性
+  "--diffs-header-font-family": "var(--font-family-sans)", // 差异比较头部的字体家族
+  "--diffs-gap-block": 0, // 差异比较的块间距
+  "--diffs-min-number-column-width": "4ch", // 差异比较行号列的最小宽度
 }

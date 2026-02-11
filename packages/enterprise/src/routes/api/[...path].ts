@@ -6,11 +6,17 @@ import z from "zod"
 import { cors } from "hono/cors"
 import { Share } from "~/core/share"
 
+/**
+ * API路由应用实例
+ */
 const app = new Hono()
 
+/**
+ * 配置API路由
+ */
 app
-  .basePath("/api")
-  .use(cors())
+  .basePath("/api") // 设置API基础路径
+  .use(cors()) // 使用CORS中间件
   .get(
     "/doc",
     openAPIRouteHandler(app, {
@@ -18,7 +24,7 @@ app
         info: {
           title: "Opencode Enterprise API",
           version: "1.0.0",
-          description: "Opencode Enterprise API endpoints",
+          description: "Opencode Enterprise API端点",
         },
         openapi: "3.1.1",
       },
@@ -27,11 +33,11 @@ app
   .post(
     "/share",
     describeRoute({
-      description: "Create a share",
+      description: "创建分享",
       operationId: "share.create",
       responses: {
         200: {
-          description: "Success",
+          description: "成功",
           content: {
             "application/json": {
               schema: resolver(
@@ -64,11 +70,11 @@ app
   .post(
     "/share/:shareID/sync",
     describeRoute({
-      description: "Sync share data",
+      description: "同步分享数据",
       operationId: "share.sync",
       responses: {
         200: {
-          description: "Success",
+          description: "成功",
           content: {
             "application/json": {
               schema: resolver(z.object({})),
@@ -92,11 +98,11 @@ app
   .get(
     "/share/:shareID/data",
     describeRoute({
-      description: "Get share data",
+      description: "获取分享数据",
       operationId: "share.data",
       responses: {
         200: {
-          description: "Success",
+          description: "成功",
           content: {
             "application/json": {
               schema: resolver(z.array(Share.Data)),
@@ -114,11 +120,11 @@ app
   .delete(
     "/share/:shareID",
     describeRoute({
-      description: "Remove a share",
+      description: "删除分享",
       operationId: "share.remove",
       responses: {
         200: {
-          description: "Success",
+          description: "成功",
           content: {
             "application/json": {
               schema: resolver(z.object({})),
@@ -137,18 +143,38 @@ app
     },
   )
 
+/**
+ * 处理GET请求
+ * @param event API事件对象
+ * @returns 响应对象
+ */
 export function GET(event: APIEvent) {
   return app.fetch(event.request)
 }
 
+/**
+ * 处理POST请求
+ * @param event API事件对象
+ * @returns 响应对象
+ */
 export function POST(event: APIEvent) {
   return app.fetch(event.request)
 }
 
+/**
+ * 处理PUT请求
+ * @param event API事件对象
+ * @returns 响应对象
+ */
 export function PUT(event: APIEvent) {
   return app.fetch(event.request)
 }
 
+/**
+ * 处理DELETE请求
+ * @param event API事件对象
+ * @returns 响应对象
+ */
 export async function DELETE(event: APIEvent) {
   return app.fetch(event.request)
 }

@@ -1,5 +1,12 @@
 {
   "recommendations": [
     "oven.bun-vscode"
-  ]
+  ],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.tabWidth": 4, 
+  "prettier.printWidth": 120, 
+  "prettier.singleQuote": true, 
+  "prettier.alignComments": true, 
+  "prettier.commentLineOffset": 2 
 }

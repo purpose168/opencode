@@ -12,12 +12,25 @@ import { KeyTable } from "./schema/key.sql"
 import { WorkspaceTable } from "./schema/workspace.sql"
 import { AuthTable } from "./schema/auth.sql"
 
+/**
+ * 用户管理命名空间
+ * 提供用户列表查询、创建、更新和删除功能
+ */
 export namespace User {
+  /**
+   * 断言不是当前用户
+   * @param id 用户 ID
+   * @throws 如果是当前用户则抛出错误
+   */
   const assertNotSelf = (id: string) => {
     if (Actor.userID() !== id) return
-    throw new Error(`Expected not self actor, got self actor`)
+    throw new Error(`期望不是当前用户，实际是当前用户`)
   }
 
+  /**
+   * 获取用户列表
+   * @returns 用户列表，包含用户信息和认证邮箱
+   */
   export const list = fn(z.void(), () =>
     Database.use((tx) =>
       tx
@@ -31,6 +44,11 @@ export namespace User {
     ),
   )
 
+  /**
+   * 根据 ID 查询用户
+   * @param id 用户 ID
+   * @returns 用户信息，如果不存在则返回 undefined
+   */
   export const fromID = fn(z.string(), (id) =>
     Database.use((tx) =>
       tx
@@ -41,6 +59,11 @@ export namespace User {
     ),
   )
 
+  /**
+   * 获取用户认证邮箱
+   * @param id 用户 ID
+   * @returns 用户邮箱，如果不存在则返回 undefined
+   */
   export const getAuthEmail = fn(z.string(), (id) =>
     Database.use((tx) =>
       tx
@@ -54,6 +77,11 @@ export namespace User {
     ),
   )
 
+  /**
+   * 邀请用户
+   * @param input 输入参数，包含邮箱、角色和可选的月度限额
+   * @throws 如果不是管理员则抛出错误
+   */
   export const invite = fn(
     z.object({
       email: z.string(),
@@ -64,7 +92,7 @@ export namespace User {
       Actor.assertAdmin()
       const workspaceID = Actor.workspace()
 
-      // create user
+      // 创建用户
       const accountID = await Database.use((tx) =>
         tx
           .select({
@@ -100,7 +128,7 @@ export namespace User {
           }),
       )
 
-      // create api key
+      // 创建 API 密钥
       if (accountID) {
         await Database.use(async (tx) => {
           const user = await tx
@@ -121,7 +149,7 @@ export namespace User {
         })
       }
 
-      // send email, ignore errors
+      // 发送邮件，忽略错误
       try {
         const emailInfo = await Database.use((tx) =>
           tx
@@ -141,7 +169,7 @@ export namespace User {
         const { InviteEmail } = await import("@opencode-ai/console-mail/InviteEmail.jsx")
         await AWS.sendEmail({
           to: email,
-          subject: `You've been invited to join the ${emailInfo.workspaceName} workspace on OpenCode`,
+          subject: `您已被邀请加入 OpenCode 上的 ${emailInfo.workspaceName} 工作区`,
           body: render(
             // @ts-ignore
             InviteEmail({
@@ -158,6 +186,10 @@ export namespace User {
     },
   )
 
+  /**
+   * 加入已邀请的工作区
+   * 当用户登录时，处理所有发送到其邮箱的邀请
+   */
   export const joinInvitedWorkspaces = fn(z.void(), async () => {
     const account = Actor.assert("account")
     const invitations = await Database.use(async (tx) => {
@@ -192,6 +224,12 @@ export namespace User {
     )
   })
 
+  /**
+   * 更新用户信息
+   * @param input 输入参数，包含用户 ID、角色和月度限额
+   * @throws 如果不是管理员则抛出错误
+   * @throws 如果尝试将自己降级为成员则抛出错误
+   */
   export const update = fn(
     z.object({
       id: z.string(),
@@ -210,6 +248,12 @@ export namespace User {
     },
   )
 
+  /**
+   * 删除用户
+   * @param id 用户 ID
+   * @throws 如果不是管理员则抛出错误
+   * @throws 如果尝试删除自己则抛出错误
+   */
   export const remove = fn(z.string(), async (id) => {
     Actor.assertAdmin()
     assertNotSelf(id)

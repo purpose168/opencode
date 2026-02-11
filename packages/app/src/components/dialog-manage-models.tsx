@@ -8,10 +8,10 @@ import { popularProviders } from "@/hooks/use-providers"
 export const DialogManageModels: Component = () => {
   const local = useLocal()
   return (
-    <Dialog title="Manage models" description="Customize which models appear in the model selector.">
+    <Dialog title="管理模型" description="自定义在模型选择器中显示哪些模型。">
       <List
-        search={{ placeholder: "Search models", autofocus: true }}
-        emptyMessage="No model results"
+        search={{ placeholder: "搜索模型", autofocus: true }}
+        emptyMessage="无模型结果"
         key={(x) => `${x?.provider?.id}:${x?.id}`}
         items={local.model.list()}
         filterKeys={["provider.name", "name", "id"]}

@@ -7,21 +7,36 @@ import { Footer } from "~/component/footer"
 import { Legal } from "~/component/legal"
 import { Faq } from "~/component/faq"
 
+/**
+ * 企业解决方案页面组件
+ */
 export default function Enterprise() {
+  // 表单数据状态
   const [formData, setFormData] = createSignal({
-    name: "",
-    role: "",
-    email: "",
-    message: "",
+    name: "",  // 姓名
+    role: "",  // 职位
+    email: "",  // 邮箱
+    message: "",  // 消息内容
   })
+  // 提交状态
   const [isSubmitting, setIsSubmitting] = createSignal(false)
+  // 成功消息显示状态
   const [showSuccess, setShowSuccess] = createSignal(false)
 
+/**
+ * 处理输入变化
+ * @param field 字段名
+ * @returns 事件处理函数
+ */
   const handleInputChange = (field: string) => (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLTextAreaElement
     setFormData((prev) => ({ ...prev, [field]: target.value }))
   }
 
+/**
+ * 处理表单提交
+ * @param e 提交事件
+ */
   const handleSubmit = async (e: Event) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -46,7 +61,7 @@ export default function Enterprise() {
         setTimeout(() => setShowSuccess(false), 5000)
       }
     } catch (error) {
-      console.error("Failed to submit form:", error)
+      console.error("表单提交失败:", error)
     } finally {
       setIsSubmitting(false)
     }
@@ -54,9 +69,9 @@ export default function Enterprise() {
 
   return (
     <main data-page="enterprise">
-      <Title>OpenCode | Enterprise solutions for your organisation</Title>
+      <Title>OpenCode | 企业解决方案</Title>
       <Link rel="canonical" href={`${config.baseUrl}/enterprise`} />
-      <Meta name="description" content="Contact OpenCode for enterprise solutions" />
+      <Meta name="description" content="联系 OpenCode 获取企业解决方案" />
       <div data-component="container">
         <Header />
 
@@ -64,13 +79,11 @@ export default function Enterprise() {
           <section data-component="enterprise-content">
             <div data-component="enterprise-columns">
               <div data-component="enterprise-column-1">
-                <h1>Your code is yours</h1>
+                <h1>您的代码永远属于您</h1>
                 <p>
-                  OpenCode operates securely inside your organization with no data or context stored and no licensing
-                  restrictions or ownership claims. Start a trial with your team, then deploy it across your
-                  organization by integrating it with your SSO and internal AI gateway.
+                  OpenCode 在您的组织内部安全运行，不存储任何数据或上下文，也无任何许可限制或所有权声明。与您的团队开始试用，然后通过集成 SSO 和内部 AI 网关在整个组织中部署。
                 </p>
-                <p>Let us know and how we can help.</p>
+                <p>请告诉我们如何为您提供帮助。</p>
 
                 <Show when={false}>
                   <div data-component="testimonial">
@@ -82,8 +95,7 @@ export default function Enterprise() {
                         />
                       </svg>
                     </div>
-                    Thanks to OpenCode, we found a way to create software to track all our assets — even the imaginary
-                    ones.
+                    借助 OpenCode，我们找到了创建软件来跟踪所有资产的方法 — 甚至包括虚拟资产。
                     <div data-component="testimonial-logo">
                       <svg width="80" height="79" viewBox="0 0 80 79" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -150,59 +162,59 @@ export default function Enterprise() {
                 <div data-component="enterprise-form">
                   <form onSubmit={handleSubmit}>
                     <div data-component="form-group">
-                      <label for="name">Full name</label>
+                      <label for="name">姓名</label>
                       <input
                         id="name"
                         type="text"
                         required
                         value={formData().name}
                         onInput={handleInputChange("name")}
-                        placeholder="Jeff Bezos"
+                        placeholder="张三"
                       />
                     </div>
 
                     <div data-component="form-group">
-                      <label for="role">Role</label>
+                      <label for="role">职位</label>
                       <input
                         id="role"
                         type="text"
                         required
                         value={formData().role}
                         onInput={handleInputChange("role")}
-                        placeholder="Executive Chairman"
+                        placeholder="技术总监"
                       />
                     </div>
 
                     <div data-component="form-group">
-                      <label for="email">Company email</label>
+                      <label for="email">公司邮箱</label>
                       <input
                         id="email"
                         type="email"
                         required
                         value={formData().email}
                         onInput={handleInputChange("email")}
-                        placeholder="jeff@amazon.com"
+                        placeholder="zhangsan@company.com"
                       />
                     </div>
 
                     <div data-component="form-group">
-                      <label for="message">What problem are you trying to solve?</label>
+                      <label for="message">您希望解决什么问题？</label>
                       <textarea
                         id="message"
                         required
                         rows={5}
                         value={formData().message}
                         onInput={handleInputChange("message")}
-                        placeholder="We need help with..."
+                        placeholder="我们需要帮助..."
                       />
                     </div>
 
                     <button type="submit" disabled={isSubmitting()} data-component="submit-button">
-                      {isSubmitting() ? "Sending..." : "Send"}
+                      {isSubmitting() ? "发送中..." : "发送"}
                     </button>
                   </form>
 
-                  {showSuccess() && <div data-component="success-message">Message sent, we'll be in touch soon.</div>}
+                  {showSuccess() && <div data-component="success-message">消息已发送，我们会尽快与您联系。</div>}
                 </div>
               </div>
             </div>
@@ -210,34 +222,27 @@ export default function Enterprise() {
 
           <section data-component="faq">
             <div data-slot="section-title">
-              <h3>FAQ</h3>
+              <h3>常见问题</h3>
             </div>
             <ul>
               <li>
-                <Faq question="What is OpenCode Enterprise?">
-                  OpenCode Enterprise is for organizations that want to ensure that their code and data never leaves
-                  their infrastructure. It can do this by using a centralized config that integrates with your SSO and
-                  internal AI gateway.
+                <Faq question="什么是 OpenCode 企业版？">
+                  OpenCode 企业版专为希望确保代码和数据永远不离开其基础设施的组织设计。通过使用集中配置，它可以与您的 SSO 和内部 AI 网关集成，实现这一目标。
                 </Faq>
               </li>
               <li>
-                <Faq question="How do I get started with OpenCode Enterprise?">
-                  Simply start with an internal trial with your team. OpenCode by default does not store your code or
-                  context data, making it easy to get started. Then contact us to discuss pricing and implementation
-                  options.
+                <Faq question="如何开始使用 OpenCode 企业版？">
+                  只需与您的团队开始内部试用。OpenCode 默认不存储您的代码或上下文数据，因此可以轻松上手。然后联系我们讨论定价和实施选项。
                 </Faq>
               </li>
               <li>
-                <Faq question="How does enterprise pricing work?">
-                  We offer per-seat enterprise pricing. If you have your own LLM gateway, we do not charge for tokens
-                  used. For further details, contact us for a custom quote based on your organization's needs.
+                <Faq question="企业版的定价如何计算？">
+                  我们提供按席位计算的企业定价。如果您有自己的 LLM 网关，我们不会对使用的令牌收费。有关更多详情，请联系我们获取基于您组织需求的定制报价。
                 </Faq>
               </li>
               <li>
-                <Faq question="Is my data secure with OpenCode Enterprise?">
-                  Yes. OpenCode does not store your code or context data. All processing happens locally or through
-                  direct API calls to your AI provider. With central config and SSO integration, your data remains
-                  secure within your organization's infrastructure.
+                <Faq question="使用 OpenCode 企业版，我的数据安全吗？">
+                  是的。OpenCode 不存储您的代码或上下文数据。所有处理都在本地进行或通过直接 API 调用到您的 AI 提供商。通过中央配置和 SSO 集成，您的数据在组织基础设施内保持安全。
                 </Faq>
               </li>
             </ul>

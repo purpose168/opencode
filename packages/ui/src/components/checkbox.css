@@ -1,9 +1,16 @@
+/*
+ * 复选框组件样式
+ * 定义复选框的基础样式、状态变化和交互效果
+ */
+
+/* 复选框容器样式 */
 [data-component="checkbox"] {
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: default;
 
+  /* 隐藏原生输入框 */
   [data-slot="checkbox-checkbox-input"] {
     position: absolute;
     width: 1px;
@@ -16,6 +23,7 @@
     border-width: 0;
   }
 
+  /* 复选框控制区域样式 */
   [data-slot="checkbox-checkbox-control"] {
     display: flex;
     align-items: center;
@@ -30,6 +38,7 @@
     /* background-color: var(--surface-weak); */
   }
 
+  /* 复选框指示器样式 */
   [data-slot="checkbox-checkbox-indicator"] {
     display: flex;
     align-items: center;
@@ -40,14 +49,12 @@
     opacity: 0;
   }
 
-  /* [data-slot="checkbox-checkbox-content"] { */
-  /* } */
-
+  /* 复选框标签样式 */
   [data-slot="checkbox-checkbox-label"] {
     user-select: none;
     color: var(--text-base);
 
-    /* text-12-regular */
+    /* 字体样式：12px 常规 */
     font-family: var(--font-family-sans);
     font-size: var(--font-size-small);
     font-style: normal;
@@ -56,6 +63,7 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 复选框描述样式 */
   [data-slot="checkbox-checkbox-description"] {
     color: var(--text-base);
     font-family: var(--font-family-sans);
@@ -65,6 +73,7 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 复选框错误信息样式 */
   [data-slot="checkbox-checkbox-error"] {
     color: var(--text-error);
     font-family: var(--font-family-sans);
@@ -74,46 +83,55 @@
     letter-spacing: var(--letter-spacing-normal);
   }
 
+  /* 悬停效果 */
   &:hover:not([data-disabled], [data-readonly]) [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-hover);
     background-color: var(--surface-hover);
   }
 
+  /* 聚焦效果 */
   &:focus-within:not([data-readonly]) [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-focus);
     box-shadow: 0 0 0 2px var(--surface-focus);
   }
 
+  /* 选中和不确定状态样式 */
   &[data-checked] [data-slot="checkbox-checkbox-control"],
   &[data-indeterminate] [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-base);
     background-color: var(--surface-weak);
   }
 
+  /* 选中和不确定状态的悬停效果 */
   &[data-checked]:hover:not([data-disabled], [data-readonly]) [data-slot="checkbox-checkbox-control"],
   &[data-indeterminate]:hover:not([data-disabled]) [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-hover);
     background-color: var(--surface-hover);
   }
 
+  /* 选中和不确定状态时显示指示器 */
   &[data-checked] [data-slot="checkbox-checkbox-indicator"],
   &[data-indeterminate] [data-slot="checkbox-checkbox-indicator"] {
     opacity: 1;
   }
 
+  /* 禁用状态 */
   &[data-disabled] {
     cursor: not-allowed;
   }
 
+  /* 禁用状态下的控制区域样式 */
   &[data-disabled] [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-disabled);
     background-color: var(--surface-disabled);
   }
 
+  /* 无效状态 */
   &[data-invalid] [data-slot="checkbox-checkbox-control"] {
     border-color: var(--border-error);
   }
 
+  /* 只读状态 */
   &[data-readonly] {
     cursor: default;
     pointer-events: none;

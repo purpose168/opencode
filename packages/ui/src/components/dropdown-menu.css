@@ -1,3 +1,9 @@
+/*
+ * 下拉菜单组件样式
+ * 定义下拉菜单的内容、项目、触发器和动画效果
+ */
+
+/* 下拉菜单内容和子菜单内容样式 */
 [data-component="dropdown-menu-content"],
 [data-component="dropdown-menu-sub-content"] {
   min-width: 8rem;
@@ -10,17 +16,21 @@
   z-index: 50;
   transform-origin: var(--kb-menu-content-transform-origin);
 
+  /* 关闭动画 */
   &[data-closed] {
     animation: dropdown-menu-close 0.15s ease-out;
   }
 
+  /* 展开动画 */
   &[data-expanded] {
     animation: dropdown-menu-open 0.15s ease-out;
   }
 }
 
+/* 下拉菜单项和触发器样式 */
 [data-component="dropdown-menu-content"],
 [data-component="dropdown-menu-sub-content"] {
+  /* 菜单项、复选框项、单选按钮项和子菜单触发器样式 */
   [data-slot="dropdown-menu-item"],
   [data-slot="dropdown-menu-checkbox-item"],
   [data-slot="dropdown-menu-radio-item"],
@@ -35,6 +45,7 @@
     user-select: none;
     outline: none;
 
+    /* 字体样式：12px 中等 */
     font-family: var(--font-family-sans);
     font-size: var(--font-size-small);
     font-weight: var(--font-weight-medium);
@@ -42,22 +53,26 @@
     letter-spacing: var(--letter-spacing-normal);
     color: var(--text-strong);
 
+    /* 高亮状态 */
     &[data-highlighted] {
       background: var(--surface-raised-base-hover);
     }
 
+    /* 禁用状态 */
     &[data-disabled] {
       color: var(--text-weak);
       pointer-events: none;
     }
   }
 
+  /* 子菜单触发器展开状态 */
   [data-slot="dropdown-menu-sub-trigger"] {
     &[data-expanded] {
       background: var(--surface-raised-base-hover);
     }
   }
 
+  /* 菜单项指示器样式 */
   [data-slot="dropdown-menu-item-indicator"] {
     display: flex;
     align-items: center;
@@ -66,21 +81,25 @@
     height: 16px;
   }
 
+  /* 菜单项标签样式 */
   [data-slot="dropdown-menu-item-label"] {
     flex: 1;
   }
 
+  /* 菜单项描述样式 */
   [data-slot="dropdown-menu-item-description"] {
     font-size: var(--font-size-x-small);
     color: var(--text-weak);
   }
 
+  /* 下拉菜单分隔符样式 */
   [data-slot="dropdown-menu-separator"] {
     height: 1px;
     margin: 4px -4px;
     border-top-color: var(--border-weak-base);
   }
 
+  /* 下拉菜单组标签样式 */
   [data-slot="dropdown-menu-group-label"] {
     padding: 4px 8px;
     font-family: var(--font-family-sans);
@@ -91,11 +110,13 @@
     color: var(--text-weak);
   }
 
+  /* 下拉菜单箭头样式 */
   [data-slot="dropdown-menu-arrow"] {
     fill: var(--surface-raised-stronger-non-alpha);
   }
 }
 
+/* 下拉菜单展开动画 */
 @keyframes dropdown-menu-open {
   from {
     opacity: 0;
@@ -107,6 +128,7 @@
   }
 }
 
+/* 下拉菜单关闭动画 */
 @keyframes dropdown-menu-close {
   from {
     opacity: 1;

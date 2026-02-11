@@ -81,10 +81,10 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
   }
 
   return (
-    <Dialog title={props.title ?? "Open project"}>
+    <Dialog title={props.title ?? "打开项目"}>
       <List
-        search={{ placeholder: "Search folders", autofocus: true }}
-        emptyMessage="No folders found"
+        search={{ placeholder: "搜索文件夹", autofocus: true }}
+        emptyMessage="未找到文件夹"
         items={directories}
         key={(x) => x}
         onSelect={(path) => {

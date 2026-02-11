@@ -1,17 +1,18 @@
-import { Bus } from "../bus"
-import { File } from "../file"
-import { Log } from "../util/log"
-import path from "path"
-import z from "zod"
+import path from "path" // 导入路径处理模块
+import z from "zod" // 导入zod库用于数据验证
+import { Bus } from "../bus" // 导入总线
+import { File } from "../file" // 导入文件模块
+import { Log } from "../util/log" // 导入日志工具
 
-import * as Formatter from "./formatter"
-import { Config } from "../config/config"
-import { mergeDeep } from "remeda"
-import { Instance } from "../project/instance"
+import { mergeDeep } from "remeda" // 导入深度合并工具
+import { Config } from "../config/config" // 导入配置
+import { Instance } from "../project/instance" // 导入实例管理模块
+import * as Formatter from "./formatter" // 导入格式化工具
 
 export namespace Format {
-  const log = Log.create({ service: "format" })
+  const log = Log.create({ service: "format" }) // 创建格式化服务日志记录器
 
+  // 格式化工具状态schema
   export const Status = z
     .object({
       name: z.string(),
@@ -23,22 +24,26 @@ export namespace Format {
     })
   export type Status = z.infer<typeof Status>
 
+  // 格式化工具状态管理
   const state = Instance.state(async () => {
     const enabled: Record<string, boolean> = {}
     const cfg = await Config.get()
 
     const formatters: Record<string, Formatter.Info> = {}
+    // 如果配置禁用了所有格式化工具
     if (cfg.formatter === false) {
-      log.info("all formatters are disabled")
+      log.info("所有格式化工具已禁用")
       return {
         enabled,
         formatters,
       }
     }
 
+    // 初始化所有格式化工具
     for (const item of Object.values(Formatter)) {
       formatters[item.name] = item
     }
+    // 应用用户配置
     for (const [name, item] of Object.entries(cfg.formatter ?? {})) {
       if (item.disabled) {
         delete formatters[name]
@@ -63,6 +68,7 @@ export namespace Format {
     }
   })
 
+  // 检查格式化工具是否启用
   async function isEnabled(item: Formatter.Info) {
     const s = await state()
     let status = s.enabled[item.name]
@@ -73,19 +79,21 @@ export namespace Format {
     return status
   }
 
+  // 根据文件扩展名获取可用的格式化工具
   async function getFormatter(ext: string) {
     const formatters = await state().then((x) => x.formatters)
     const result = []
     for (const item of Object.values(formatters)) {
-      log.info("checking", { name: item.name, ext })
+      log.info("检查中", { name: item.name, ext })
       if (!item.extensions.includes(ext)) continue
       if (!(await isEnabled(item))) continue
-      log.info("enabled", { name: item.name, ext })
+      log.info("已启用", { name: item.name, ext })
       result.push(item)
     }
     return result
   }
 
+  // 获取所有格式化工具的状态
   export async function status() {
     const s = await state()
     const result: Status[] = []
@@ -100,15 +108,16 @@ export namespace Format {
     return result
   }
 
+  // 初始化格式化服务
   export function init() {
-    log.info("init")
+    log.info("初始化")
     Bus.subscribe(File.Event.Edited, async (payload) => {
       const file = payload.properties.file
-      log.info("formatting", { file })
+      log.info("格式化中", { file })
       const ext = path.extname(file)
 
       for (const item of await getFormatter(ext)) {
-        log.info("running", { command: item.command })
+        log.info("运行中", { command: item.command })
         try {
           const proc = Bun.spawn({
             cmd: item.command.map((x) => x.replace("$FILE", file)),
@@ -119,12 +128,12 @@ export namespace Format {
           })
           const exit = await proc.exited
           if (exit !== 0)
-            log.error("failed", {
+            log.error("失败", {
               command: item.command,
               ...item.environment,
             })
         } catch (error) {
-          log.error("failed to format file", {
+          log.error("格式化文件失败", {
             error,
             command: item.command,
             ...item.environment,

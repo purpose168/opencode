@@ -1,28 +1,30 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "child_process"
-import path from "path"
-import os from "os"
-import { Global } from "../global"
-import { Log } from "../util/log"
-import { BunProc } from "../bun"
-import { $, readableStreamToText } from "bun"
-import fs from "fs/promises"
-import { Filesystem } from "../util/filesystem"
-import { Instance } from "../project/instance"
-import { Flag } from "../flag/flag"
-import { Archive } from "../util/archive"
+import { $, readableStreamToText } from "bun" // 导入Bun工具
+import { spawn, type ChildProcessWithoutNullStreams } from "child_process" // 导入子进程生成器
+import fs from "fs/promises" // 导入文件系统Promise API
+import os from "os" // 导入操作系统工具模块
+import path from "path" // 导入路径处理模块
+import { BunProc } from "../bun" // 导入Bun进程工具
+import { Flag } from "../flag/flag" // 导入标志配置
+import { Global } from "../global" // 导入全局配置
+import { Instance } from "../project/instance" // 导入实例管理模块
+import { Archive } from "../util/archive" // 导入归档工具
+import { Filesystem } from "../util/filesystem" // 导入文件系统工具
+import { Log } from "../util/log" // 导入日志工具
 
 export namespace LSPServer {
-  const log = Log.create({ service: "lsp.server" })
+  const log = Log.create({ service: "lsp.server" }) // 创建LSP服务器服务日志记录器
 
   export interface Handle {
-    process: ChildProcessWithoutNullStreams
-    initialization?: Record<string, any>
+    process: ChildProcessWithoutNullStreams // 子进程
+    initialization?: Record<string, any> // 初始化选项
   }
 
-  type RootFunction = (file: string) => Promise<string | undefined>
+  type RootFunction = (file: string) => Promise<string | undefined> // 根目录函数类型
 
+  // 查找最近的根目录
   const NearestRoot = (includePatterns: string[], excludePatterns?: string[]): RootFunction => {
     return async (file) => {
+      // 如果有排除模式,先检查是否被排除
       if (excludePatterns) {
         const excludedFiles = Filesystem.up({
           targets: excludePatterns,
@@ -33,6 +35,7 @@ export namespace LSPServer {
         await excludedFiles.return()
         if (excluded.value) return undefined
       }
+      // 向上查找包含指定文件的目录
       const files = Filesystem.up({
         targets: includePatterns,
         start: path.dirname(file),
@@ -46,16 +49,18 @@ export namespace LSPServer {
   }
 
   export interface Info {
-    id: string
-    extensions: string[]
-    global?: boolean
-    root: RootFunction
-    spawn(root: string): Promise<Handle | undefined>
+    id: string // 服务器ID
+    extensions: string[] // 支持的文件扩展名
+    global?: boolean // 是否为全局服务器
+    root: RootFunction // 根目录函数
+    spawn(root: string): Promise<Handle | undefined> // 生成服务器进程
   }
 
+  // Deno LSP服务器
   export const Deno: Info = {
     id: "deno",
     root: async (file) => {
+      // 查找deno配置文件
       const files = Filesystem.up({
         targets: ["deno.json", "deno.jsonc"],
         start: path.dirname(file),
@@ -66,37 +71,40 @@ export namespace LSPServer {
       if (!first.value) return undefined
       return path.dirname(first.value)
     },
-    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs"],
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs"], // 支持的扩展名
     async spawn(root) {
-      const deno = Bun.which("deno")
+      const deno = Bun.which("deno") // 查找deno可执行文件
       if (!deno) {
-        log.info("deno not found, please install deno first")
+        log.info("未找到deno,请先安装deno")
         return
       }
       return {
         process: spawn(deno, ["lsp"], {
+          // 启动deno LSP服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // TypeScript LSP服务器
   export const Typescript: Info = {
     id: "typescript",
     root: NearestRoot(
-      ["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"],
-      ["deno.json", "deno.jsonc"],
+      ["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"], // 包管理器锁定文件
+      ["deno.json", "deno.jsonc"], // 排除deno配置文件
     ),
-    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"],
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"], // 支持的扩展名
     async spawn(root) {
-      const tsserver = await Bun.resolve("typescript/lib/tsserver.js", Instance.directory).catch(() => {})
-      log.info("typescript server", { tsserver })
+      const tsserver = await Bun.resolve("typescript/lib/tsserver.js", Instance.directory).catch(() => {}) // 解析tsserver路径
+      log.info("TypeScript服务器", { tsserver })
       if (!tsserver) return
       const proc = spawn(BunProc.which(), ["x", "typescript-language-server", "--stdio"], {
+        // 启动TypeScript语言服务器
         cwd: root,
         env: {
           ...process.env,
-          BUN_BE_BUN: "1",
+          BUN_BE_BUN: "1", // 使用Bun运行时
         },
       })
       return {
@@ -110,14 +118,16 @@ export namespace LSPServer {
     },
   }
 
+  // Vue LSP服务器
   export const Vue: Info = {
     id: "vue",
-    extensions: [".vue"],
-    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]),
+    extensions: [".vue"], // 支持的扩展名
+    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]), // 包管理器锁定文件
     async spawn(root) {
-      let binary = Bun.which("vue-language-server")
+      let binary = Bun.which("vue-language-server") // 查找vue-language-server可执行文件
       const args: string[] = []
       if (!binary) {
+        // 尝试使用本地安装的版本
         const js = path.join(
           Global.Path.bin,
           "node_modules",
@@ -127,8 +137,10 @@ export namespace LSPServer {
           "vue-language-server.js",
         )
         if (!(await Bun.file(js).exists())) {
+          // 如果不存在,尝试安装
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
           await Bun.spawn([BunProc.which(), "install", "@vue/language-server"], {
+            // 安装Vue语言服务器
             cwd: Global.Path.bin,
             env: {
               ...process.env,
@@ -144,6 +156,7 @@ export namespace LSPServer {
       }
       args.push("--stdio")
       const proc = spawn(binary, args, {
+        // 启动Vue语言服务器
         cwd: root,
         env: {
           ...process.env,
@@ -153,34 +166,37 @@ export namespace LSPServer {
       return {
         process: proc,
         initialization: {
-          // Leave empty; the server will auto-detect workspace TypeScript.
+          // 留空,服务器将自动检测工作区TypeScript
         },
       }
     },
   }
 
+  // ESLint LSP服务器
   export const ESLint: Info = {
     id: "eslint",
-    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]),
-    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".vue"],
+    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]), // 包管理器锁定文件
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".vue"], // 支持的扩展名
     async spawn(root) {
-      const eslint = await Bun.resolve("eslint", Instance.directory).catch(() => {})
+      const eslint = await Bun.resolve("eslint", Instance.directory).catch(() => {}) // 解析eslint路径
       if (!eslint) return
-      log.info("spawning eslint server")
+      log.info("启动ESLint服务器")
       const serverPath = path.join(Global.Path.bin, "vscode-eslint", "server", "out", "eslintServer.js")
       if (!(await Bun.file(serverPath).exists())) {
+        // 如果服务器不存在,尝试下载和构建
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading and building VS Code ESLint server")
-        const response = await fetch("https://github.com/microsoft/vscode-eslint/archive/refs/heads/main.zip")
+        log.info("下载并构建VS Code ESLint服务器")
+        const response = await fetch("https://github.com/microsoft/vscode-eslint/archive/refs/heads/main.zip") // 下载VS Code ESLint服务器
         if (!response.ok) return
 
         const zipPath = path.join(Global.Path.bin, "vscode-eslint.zip")
         await Bun.file(zipPath).write(response)
 
+        // 解压zip文件
         const ok = await Archive.extractZip(zipPath, Global.Path.bin)
           .then(() => true)
           .catch((error) => {
-            log.error("Failed to extract vscode-eslint archive", { error })
+            log.error("解压vscode-eslint归档文件失败", { error })
             return false
           })
         if (!ok) return
@@ -189,21 +205,24 @@ export namespace LSPServer {
         const extractedPath = path.join(Global.Path.bin, "vscode-eslint-main")
         const finalPath = path.join(Global.Path.bin, "vscode-eslint")
 
+        // 移除旧安装
         const stats = await fs.stat(finalPath).catch(() => undefined)
         if (stats) {
-          log.info("removing old eslint installation", { path: finalPath })
+          log.info("移除旧的ESLint安装", { path: finalPath })
           await fs.rm(finalPath, { force: true, recursive: true })
         }
         await fs.rename(extractedPath, finalPath)
 
+        // 安装依赖并编译
         const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm"
         await $`${npmCmd} install`.cwd(finalPath).quiet()
         await $`${npmCmd} run compile`.cwd(finalPath).quiet()
 
-        log.info("installed VS Code ESLint server", { serverPath })
+        log.info("已安装VS Code ESLint服务器", { serverPath })
       }
 
       const proc = spawn(BunProc.which(), [serverPath, "--stdio"], {
+        // 启动ESLint服务器
         cwd: root,
         env: {
           ...process.env,
@@ -217,10 +236,11 @@ export namespace LSPServer {
     },
   }
 
+  // Oxlint LSP服务器
   export const Oxlint: Info = {
     id: "oxlint",
     root: NearestRoot([
-      ".oxlintrc.json",
+      ".oxlintrc.json", // Oxlint配置文件
       "package-lock.json",
       "bun.lockb",
       "bun.lock",
@@ -228,17 +248,19 @@ export namespace LSPServer {
       "yarn.lock",
       "package.json",
     ]),
-    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".vue", ".astro", ".svelte"],
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".vue", ".astro", ".svelte"], // 支持的扩展名
     async spawn(root) {
-      const ext = process.platform === "win32" ? ".cmd" : ""
+      const ext = process.platform === "win32" ? ".cmd" : "" // Windows平台使用.cmd扩展名
 
       const serverTarget = path.join("node_modules", ".bin", "oxc_language_server" + ext)
       const lintTarget = path.join("node_modules", ".bin", "oxlint" + ext)
 
+      // 解析二进制文件路径
       const resolveBin = async (target: string) => {
         const localBin = path.join(root, target)
         if (await Bun.file(localBin).exists()) return localBin
 
+        // 向上查找二进制文件
         const candidates = Filesystem.up({
           targets: [target],
           start: root,
@@ -251,12 +273,14 @@ export namespace LSPServer {
         return undefined
       }
 
+      // 尝试查找oxlint
       let lintBin = await resolveBin(lintTarget)
       if (!lintBin) {
         const found = Bun.which("oxlint")
         if (found) lintBin = found
       }
 
+      // 检查oxlint是否支持LSP
       if (lintBin) {
         const proc = Bun.spawn([lintBin, "--help"], { stdout: "pipe" })
         await proc.exited
@@ -264,12 +288,14 @@ export namespace LSPServer {
         if (help.includes("--lsp")) {
           return {
             process: spawn(lintBin, ["--lsp"], {
+              // 启动oxlint LSP服务器
               cwd: root,
             }),
           }
         }
       }
 
+      // 尝试查找oxc_language_server
       let serverBin = await resolveBin(serverTarget)
       if (!serverBin) {
         const found = Bun.which("oxc_language_server")
@@ -278,20 +304,22 @@ export namespace LSPServer {
       if (serverBin) {
         return {
           process: spawn(serverBin, [], {
+            // 启动oxc语言服务器
             cwd: root,
           }),
         }
       }
 
-      log.info("oxlint not found, please install oxlint")
+      log.info("未找到oxlint,请先安装oxlint")
       return
     },
   }
 
+  // Biome LSP服务器
   export const Biome: Info = {
     id: "biome",
     root: NearestRoot([
-      "biome.json",
+      "biome.json", // Biome配置文件
       "biome.jsonc",
       "package-lock.json",
       "bun.lockb",
@@ -317,7 +345,7 @@ export namespace LSPServer {
       ".graphql",
       ".gql",
       ".html",
-    ],
+    ], // 支持的扩展名
     async spawn(root) {
       const localBin = path.join(root, "node_modules", ".bin", "biome")
       let bin: string | undefined
@@ -329,6 +357,7 @@ export namespace LSPServer {
 
       let args = ["lsp-proxy", "--stdio"]
 
+      // 如果找不到本地安装,使用Bun运行
       if (!bin) {
         const resolved = await Bun.resolve("biome", root).catch(() => undefined)
         if (!resolved) return
@@ -337,6 +366,7 @@ export namespace LSPServer {
       }
 
       const proc = spawn(bin, args, {
+        // 启动Biome LSP服务器
         cwd: root,
         env: {
           ...process.env,
@@ -350,24 +380,29 @@ export namespace LSPServer {
     },
   }
 
+  // Gopls LSP服务器
   export const Gopls: Info = {
     id: "gopls",
     root: async (file) => {
+      // 优先查找go.work,然后查找go.mod或go.sum
       const work = await NearestRoot(["go.work"])(file)
       if (work) return work
       return NearestRoot(["go.mod", "go.sum"])(file)
     },
-    extensions: [".go"],
+    extensions: [".go"], // 支持的扩展名
     async spawn(root) {
       let bin = Bun.which("gopls", {
+        // 查找gopls可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
       if (!bin) {
+        // 如果找不到gopls,尝试安装
         if (!Bun.which("go")) return
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
 
-        log.info("installing gopls")
+        log.info("安装gopls")
         const proc = Bun.spawn({
+          // 安装gopls
           cmd: ["go", "install", "golang.org/x/tools/gopls@latest"],
           env: { ...process.env, GOBIN: Global.Path.bin },
           stdout: "pipe",
@@ -376,7 +411,7 @@ export namespace LSPServer {
         })
         const exit = await proc.exited
         if (exit !== 0) {
-          log.error("Failed to install gopls")
+          log.error("安装gopls失败")
           return
         }
         bin = path.join(Global.Path.bin, "gopls" + (process.platform === "win32" ? ".exe" : ""))
@@ -386,30 +421,35 @@ export namespace LSPServer {
       }
       return {
         process: spawn(bin!, {
+          // 启动gopls服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // Rubocop LSP服务器
   export const Rubocop: Info = {
     id: "ruby-lsp",
-    root: NearestRoot(["Gemfile"]),
-    extensions: [".rb", ".rake", ".gemspec", ".ru"],
+    root: NearestRoot(["Gemfile"]), // Ruby依赖文件
+    extensions: [".rb", ".rake", ".gemspec", ".ru"], // 支持的扩展名
     async spawn(root) {
       let bin = Bun.which("rubocop", {
+        // 查找rubocop可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
       if (!bin) {
+        // 如果找不到rubocop,尝试安装
         const ruby = Bun.which("ruby")
         const gem = Bun.which("gem")
         if (!ruby || !gem) {
-          log.info("Ruby not found, please install Ruby first")
+          log.info("未找到Ruby,请先安装Ruby")
           return
         }
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("installing rubocop")
+        log.info("安装rubocop")
         const proc = Bun.spawn({
+          // 安装rubocop
           cmd: ["gem", "install", "rubocop", "--bindir", Global.Path.bin],
           stdout: "pipe",
           stderr: "pipe",
@@ -417,7 +457,7 @@ export namespace LSPServer {
         })
         const exit = await proc.exited
         if (exit !== 0) {
-          log.error("Failed to install rubocop")
+          log.error("安装rubocop失败")
           return
         }
         bin = path.join(Global.Path.bin, "rubocop" + (process.platform === "win32" ? ".exe" : ""))
@@ -427,17 +467,19 @@ export namespace LSPServer {
       }
       return {
         process: spawn(bin!, ["--lsp"], {
+          // 启动rubocop LSP服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // Ty LSP服务器
   export const Ty: Info = {
     id: "ty",
-    extensions: [".py", ".pyi"],
+    extensions: [".py", ".pyi"], // 支持的扩展名
     root: NearestRoot([
-      "pyproject.toml",
+      "pyproject.toml", // Python项目配置文件
       "ty.toml",
       "setup.py",
       "setup.cfg",
@@ -446,14 +488,16 @@ export namespace LSPServer {
       "pyrightconfig.json",
     ]),
     async spawn(root) {
+      // 如果未启用实验性标志,不使用ty
       if (!Flag.OPENCODE_EXPERIMENTAL_LSP_TY) {
         return undefined
       }
 
-      let binary = Bun.which("ty")
+      let binary = Bun.which("ty") // 查找ty可执行文件
 
       const initialization: Record<string, string> = {}
 
+      // 查找Python虚拟环境
       const potentialVenvPaths = [process.env["VIRTUAL_ENV"], path.join(root, ".venv"), path.join(root, "venv")].filter(
         (p): p is string => p !== undefined,
       )
@@ -469,6 +513,7 @@ export namespace LSPServer {
       }
 
       if (!binary) {
+        // 在虚拟环境中查找ty
         for (const venvPath of potentialVenvPaths) {
           const isWindows = process.platform === "win32"
           const potentialTyPath = isWindows
@@ -482,11 +527,12 @@ export namespace LSPServer {
       }
 
       if (!binary) {
-        log.error("ty not found, please install ty first")
+        log.error("未找到ty,请先安装ty")
         return
       }
 
       const proc = spawn(binary, ["server"], {
+        // 启动ty服务器
         cwd: root,
       })
 
@@ -497,18 +543,22 @@ export namespace LSPServer {
     },
   }
 
+  // Pyright LSP服务器
   export const Pyright: Info = {
     id: "pyright",
-    extensions: [".py", ".pyi"],
-    root: NearestRoot(["pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", "pyrightconfig.json"]),
+    extensions: [".py", ".pyi"], // 支持的扩展名
+    root: NearestRoot(["pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", "pyrightconfig.json"]), // Python项目配置文件
     async spawn(root) {
-      let binary = Bun.which("pyright-langserver")
+      let binary = Bun.which("pyright-langserver") // 查找pyright-langserver可执行文件
       const args = []
       if (!binary) {
+        // 尝试使用本地安装的版本
         const js = path.join(Global.Path.bin, "node_modules", "pyright", "dist", "pyright-langserver.js")
         if (!(await Bun.file(js).exists())) {
+          // 如果不存在,尝试安装
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
           await Bun.spawn([BunProc.which(), "install", "pyright"], {
+            // 安装pyright
             cwd: Global.Path.bin,
             env: {
               ...process.env,
@@ -523,6 +573,7 @@ export namespace LSPServer {
 
       const initialization: Record<string, string> = {}
 
+      // 查找Python虚拟环境
       const potentialVenvPaths = [process.env["VIRTUAL_ENV"], path.join(root, ".venv"), path.join(root, "venv")].filter(
         (p): p is string => p !== undefined,
       )
@@ -538,6 +589,7 @@ export namespace LSPServer {
       }
 
       const proc = spawn(binary, args, {
+        // 启动pyright服务器
         cwd: root,
         env: {
           ...process.env,
@@ -551,12 +603,13 @@ export namespace LSPServer {
     },
   }
 
+  // ElixirLS LSP服务器
   export const ElixirLS: Info = {
     id: "elixir-ls",
-    extensions: [".ex", ".exs"],
-    root: NearestRoot(["mix.exs", "mix.lock"]),
+    extensions: [".ex", ".exs"], // 支持的扩展名
+    root: NearestRoot(["mix.exs", "mix.lock"]), // Elixir Mix配置文件
     async spawn(root) {
-      let binary = Bun.which("elixir-ls")
+      let binary = Bun.which("elixir-ls") // 查找elixir-ls可执行文件
       if (!binary) {
         const elixirLsPath = path.join(Global.Path.bin, "elixir-ls")
         binary = path.join(
@@ -567,24 +620,26 @@ export namespace LSPServer {
         )
 
         if (!(await Bun.file(binary).exists())) {
+          // 如果不存在,尝试下载和构建
           const elixir = Bun.which("elixir")
           if (!elixir) {
-            log.error("elixir is required to run elixir-ls")
+            log.error("运行elixir-ls需要elixir")
             return
           }
 
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-          log.info("downloading elixir-ls from GitHub releases")
+          log.info("从GitHub发布版本下载elixir-ls")
 
-          const response = await fetch("https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip")
+          const response = await fetch("https://github.com/elixir-lsp/elixir-ls/archive/refs/heads/master.zip") // 下载elixir-ls
           if (!response.ok) return
           const zipPath = path.join(Global.Path.bin, "elixir-ls.zip")
           await Bun.file(zipPath).write(response)
 
+          // 解压zip文件
           const ok = await Archive.extractZip(zipPath, Global.Path.bin)
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract elixir-ls archive", { error })
+              log.error("解压elixir-ls归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -594,6 +649,7 @@ export namespace LSPServer {
             recursive: true,
           })
 
+          // 编译elixir-ls
           await $`mix deps.get && mix compile && mix elixir_ls.release2 -o release`
             .quiet()
             .cwd(path.join(Global.Path.bin, "elixir-ls-master"))
@@ -607,39 +663,45 @@ export namespace LSPServer {
 
       return {
         process: spawn(binary, {
+          // 启动elixir-ls服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // Zls LSP服务器
   export const Zls: Info = {
     id: "zls",
-    extensions: [".zig", ".zon"],
-    root: NearestRoot(["build.zig"]),
+    extensions: [".zig", ".zon"], // 支持的扩展名
+    root: NearestRoot(["build.zig"]), // Zig构建文件
     async spawn(root) {
       let bin = Bun.which("zls", {
+        // 查找zls可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
 
       if (!bin) {
+        // 如果找不到zls,尝试安装
         const zig = Bun.which("zig")
         if (!zig) {
-          log.error("Zig is required to use zls. Please install Zig first.")
+          log.error("使用zls需要Zig。请先安装Zig。")
           return
         }
 
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading zls from GitHub releases")
+        log.info("从GitHub发布版本下载zls")
 
+        // 获取最新版本信息
         const releaseResponse = await fetch("https://api.github.com/repos/zigtools/zls/releases/latest")
         if (!releaseResponse.ok) {
-          log.error("Failed to fetch zls release info")
+          log.error("获取zls发布信息失败")
           return
         }
 
         const release = (await releaseResponse.json()) as any
 
+        // 确定平台和架构
         const platform = process.platform
         const arch = process.arch
         let assetName = ""
@@ -680,20 +742,21 @@ export namespace LSPServer {
         }
 
         const downloadUrl = asset.browser_download_url
-        const downloadResponse = await fetch(downloadUrl)
+        const downloadResponse = await fetch(downloadUrl) // 下载zls
         if (!downloadResponse.ok) {
-          log.error("Failed to download zls")
+          log.error("下载zls失败")
           return
         }
 
         const tempPath = path.join(Global.Path.bin, assetName)
         await Bun.file(tempPath).write(downloadResponse)
 
+        // 解压文件
         if (ext === "zip") {
           const ok = await Archive.extractZip(tempPath, Global.Path.bin)
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract zls archive", { error })
+              log.error("解压zls归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -706,42 +769,48 @@ export namespace LSPServer {
         bin = path.join(Global.Path.bin, "zls" + (platform === "win32" ? ".exe" : ""))
 
         if (!(await Bun.file(bin).exists())) {
-          log.error("Failed to extract zls binary")
+          log.error("解压zls二进制文件失败")
           return
         }
 
+        // 设置可执行权限
         if (platform !== "win32") {
           await $`chmod +x ${bin}`.quiet().nothrow()
         }
 
-        log.info(`installed zls`, { bin })
+        log.info("已安装zls", { bin })
       }
 
       return {
         process: spawn(bin, {
+          // 启动zls服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // CSharp LSP服务器
   export const CSharp: Info = {
     id: "csharp",
-    root: NearestRoot([".sln", ".csproj", "global.json"]),
-    extensions: [".cs"],
+    root: NearestRoot([".sln", ".csproj", "global.json"]), // .NET项目文件
+    extensions: [".cs"], // 支持的扩展名
     async spawn(root) {
       let bin = Bun.which("csharp-ls", {
+        // 查找csharp-ls可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
       if (!bin) {
+        // 如果找不到csharp-ls,尝试安装
         if (!Bun.which("dotnet")) {
-          log.error(".NET SDK is required to install csharp-ls")
+          log.error("安装csharp-ls需要.NET SDK")
           return
         }
 
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("installing csharp-ls via dotnet tool")
+        log.info("通过dotnet工具安装csharp-ls")
         const proc = Bun.spawn({
+          // 安装csharp-ls
           cmd: ["dotnet", "tool", "install", "csharp-ls", "--tool-path", Global.Path.bin],
           stdout: "pipe",
           stderr: "pipe",
@@ -749,7 +818,7 @@ export namespace LSPServer {
         })
         const exit = await proc.exited
         if (exit !== 0) {
-          log.error("Failed to install csharp-ls")
+          log.error("安装csharp-ls失败")
           return
         }
 
@@ -759,29 +828,34 @@ export namespace LSPServer {
 
       return {
         process: spawn(bin, {
+          // 启动csharp-ls服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // FSharp LSP服务器
   export const FSharp: Info = {
     id: "fsharp",
-    root: NearestRoot([".sln", ".fsproj", "global.json"]),
-    extensions: [".fs", ".fsi", ".fsx", ".fsscript"],
+    root: NearestRoot([".sln", ".fsproj", "global.json"]), // .NET项目文件
+    extensions: [".fs", ".fsi", ".fsx", ".fsscript"], // 支持的扩展名
     async spawn(root) {
       let bin = Bun.which("fsautocomplete", {
+        // 查找fsautocomplete可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
       if (!bin) {
+        // 如果找不到fsautocomplete,尝试安装
         if (!Bun.which("dotnet")) {
-          log.error(".NET SDK is required to install fsautocomplete")
+          log.error("安装fsautocomplete需要.NET SDK")
           return
         }
 
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("installing fsautocomplete via dotnet tool")
+        log.info("通过dotnet工具安装fsautocomplete")
         const proc = Bun.spawn({
+          // 安装fsautocomplete
           cmd: ["dotnet", "tool", "install", "fsautocomplete", "--tool-path", Global.Path.bin],
           stdout: "pipe",
           stderr: "pipe",
@@ -789,7 +863,7 @@ export namespace LSPServer {
         })
         const exit = await proc.exited
         if (exit !== 0) {
-          log.error("Failed to install fsautocomplete")
+          log.error("安装fsautocomplete失败")
           return
         }
 
@@ -799,30 +873,33 @@ export namespace LSPServer {
 
       return {
         process: spawn(bin, {
+          // 启动fsautocomplete服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // SourceKit LSP服务器
   export const SourceKit: Info = {
     id: "sourcekit-lsp",
-    extensions: [".swift", ".objc", "objcpp"],
-    root: NearestRoot(["Package.swift", "*.xcodeproj", "*.xcworkspace"]),
+    extensions: [".swift", ".objc", "objcpp"], // 支持的扩展名
+    root: NearestRoot(["Package.swift", "*.xcodeproj", "*.xcworkspace"]), // Swift项目文件
     async spawn(root) {
-      // Check if sourcekit-lsp is available in the PATH
-      // This is installed with the Swift toolchain
+      // 检查PATH中是否有sourcekit-lsp
+      // 这是通过Swift工具链安装的
       const sourcekit = Bun.which("sourcekit-lsp")
       if (sourcekit) {
         return {
           process: spawn(sourcekit, {
+            // 启动sourcekit-lsp服务器
             cwd: root,
           }),
         }
       }
 
-      // If sourcekit-lsp not found, check if xcrun is available
-      // This is specific to macOS where sourcekit-lsp is typically installed with Xcode
+      // 如果找不到sourcekit-lsp,检查xcrun是否可用
+      // 这特定于macOS,其中sourcekit-lsp通常随Xcode安装
       if (!Bun.which("xcrun")) return
 
       const lspLoc = await $`xcrun --find sourcekit-lsp`.quiet().nothrow()
@@ -833,15 +910,18 @@ export namespace LSPServer {
 
       return {
         process: spawn(bin, {
+          // 启动sourcekit-lsp服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // RustAnalyzer LSP服务器
   export const RustAnalyzer: Info = {
     id: "rust",
     root: async (root) => {
+      // 查找Cargo项目根目录
       const crateRoot = await NearestRoot(["Cargo.toml", "Cargo.lock"])(root)
       if (crateRoot === undefined) {
         return undefined
@@ -849,67 +929,73 @@ export namespace LSPServer {
       let currentDir = crateRoot
 
       while (currentDir !== path.dirname(currentDir)) {
-        // Stop at filesystem root
+        // 在文件系统根目录停止
         const cargoTomlPath = path.join(currentDir, "Cargo.toml")
         try {
           const cargoTomlContent = await Bun.file(cargoTomlPath).text()
           if (cargoTomlContent.includes("[workspace]")) {
-            return currentDir
+            return currentDir // 返回工作区根目录
           }
         } catch (err) {
-          // File doesn't exist or can't be read, continue searching up
+          // 文件不存在或无法读取,继续向上搜索
         }
 
         const parentDir = path.dirname(currentDir)
-        if (parentDir === currentDir) break // Reached filesystem root
+        if (parentDir === currentDir) break // 到达文件系统根目录
         currentDir = parentDir
 
-        // Stop if we've gone above the app root
+        // 如果已经超过应用根目录则停止
         if (!currentDir.startsWith(Instance.worktree)) break
       }
 
       return crateRoot
     },
-    extensions: [".rs"],
+    extensions: [".rs"], // 支持的扩展名
     async spawn(root) {
-      const bin = Bun.which("rust-analyzer")
+      const bin = Bun.which("rust-analyzer") // 查找rust-analyzer可执行文件
       if (!bin) {
-        log.info("rust-analyzer not found in path, please install it")
+        log.info("未在PATH中找到rust-analyzer,请先安装")
         return
       }
       return {
         process: spawn(bin, {
+          // 启动rust-analyzer服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // Clangd LSP服务器
   export const Clangd: Info = {
     id: "clangd",
-    root: NearestRoot(["compile_commands.json", "compile_flags.txt", ".clangd", "CMakeLists.txt", "Makefile"]),
-    extensions: [".c", ".cpp", ".cc", ".cxx", ".c++", ".h", ".hpp", ".hh", ".hxx", ".h++"],
+    root: NearestRoot(["compile_commands.json", "compile_flags.txt", ".clangd", "CMakeLists.txt", "Makefile"]), // C/C++项目配置文件
+    extensions: [".c", ".cpp", ".cc", ".cxx", ".c++", ".h", ".hpp", ".hh", ".hxx", ".h++"], // 支持的扩展名
     async spawn(root) {
       const args = ["--background-index", "--clang-tidy"]
-      const fromPath = Bun.which("clangd")
+      const fromPath = Bun.which("clangd") // 查找clangd可执行文件
       if (fromPath) {
         return {
           process: spawn(fromPath, args, {
+            // 启动clangd服务器
             cwd: root,
           }),
         }
       }
 
+      // 尝试直接查找clangd
       const ext = process.platform === "win32" ? ".exe" : ""
       const direct = path.join(Global.Path.bin, "clangd" + ext)
       if (await Bun.file(direct).exists()) {
         return {
           process: spawn(direct, args, {
+            // 启动clangd服务器
             cwd: root,
           }),
         }
       }
 
+      // 在bin目录中查找clangd子目录
       const entries = await fs.readdir(Global.Path.bin, { withFileTypes: true }).catch(() => [])
       for (const entry of entries) {
         if (!entry.isDirectory()) continue
@@ -918,18 +1004,21 @@ export namespace LSPServer {
         if (await Bun.file(candidate).exists()) {
           return {
             process: spawn(candidate, args, {
+              // 启动clangd服务器
               cwd: root,
             }),
           }
         }
       }
 
+      // 如果找不到clangd,尝试下载
       if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-      log.info("downloading clangd from GitHub releases")
+      log.info("从GitHub发布版本下载clangd")
 
+      // 获取最新版本信息
       const releaseResponse = await fetch("https://api.github.com/repos/clangd/clangd/releases/latest")
       if (!releaseResponse.ok) {
-        log.error("Failed to fetch clangd release info")
+        log.error("获取clangd发布信息失败")
         return
       }
 
@@ -940,9 +1029,10 @@ export namespace LSPServer {
 
       const tag = release.tag_name
       if (!tag) {
-        log.error("clangd release did not include a tag name")
+        log.error("clangd发布版本未包含标签名称")
         return
       }
+      // 确定平台
       const platform = process.platform
       const tokens: Record<string, string> = {
         darwin: "mac",
@@ -955,6 +1045,7 @@ export namespace LSPServer {
         return
       }
 
+      // 查找匹配的资源
       const assets = release.assets ?? []
       const valid = (item: { name?: string; browser_download_url?: string }) => {
         if (!item.name) return false
@@ -968,29 +1059,30 @@ export namespace LSPServer {
         assets.find((item) => valid(item) && item.name?.endsWith(".tar.xz")) ??
         assets.find((item) => valid(item))
       if (!asset?.name || !asset.browser_download_url) {
-        log.error("clangd could not match release asset", { tag, platform })
+        log.error("clangd无法匹配发布资源", { tag, platform })
         return
       }
 
       const name = asset.name
-      const downloadResponse = await fetch(asset.browser_download_url)
+      const downloadResponse = await fetch(asset.browser_download_url) // 下载clangd
       if (!downloadResponse.ok) {
-        log.error("Failed to download clangd")
+        log.error("下载clangd失败")
         return
       }
 
       const archive = path.join(Global.Path.bin, name)
       const buf = await downloadResponse.arrayBuffer()
       if (buf.byteLength === 0) {
-        log.error("Failed to write clangd archive")
+        log.error("写入clangd归档文件失败")
         return
       }
       await Bun.write(archive, buf)
 
+      // 解压文件
       const zip = name.endsWith(".zip")
       const tar = name.endsWith(".tar.xz")
       if (!zip && !tar) {
-        log.error("clangd encountered unsupported asset", { asset: name })
+        log.error("clangd遇到不支持的资源", { asset: name })
         return
       }
 
@@ -998,7 +1090,7 @@ export namespace LSPServer {
         const ok = await Archive.extractZip(archive, Global.Path.bin)
           .then(() => true)
           .catch((error) => {
-            log.error("Failed to extract clangd archive", { error })
+            log.error("解压clangd归档文件失败", { error })
             return false
           })
         if (!ok) return
@@ -1010,14 +1102,16 @@ export namespace LSPServer {
 
       const bin = path.join(Global.Path.bin, "clangd_" + tag, "bin", "clangd" + ext)
       if (!(await Bun.file(bin).exists())) {
-        log.error("Failed to extract clangd binary")
+        log.error("解压clangd二进制文件失败")
         return
       }
 
+      // 设置可执行权限
       if (platform !== "win32") {
         await $`chmod +x ${bin}`.quiet().nothrow()
       }
 
+      // 创建符号链接
       await fs.unlink(path.join(Global.Path.bin, "clangd")).catch(() => {})
       await fs.symlink(bin, path.join(Global.Path.bin, "clangd")).catch(() => {})
 
@@ -1025,24 +1119,29 @@ export namespace LSPServer {
 
       return {
         process: spawn(bin, args, {
+          // 启动clangd服务器
           cwd: root,
         }),
       }
     },
   }
 
+  // Svelte LSP服务器
   export const Svelte: Info = {
     id: "svelte",
-    extensions: [".svelte"],
-    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]),
+    extensions: [".svelte"], // 支持的扩展名
+    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]), // 包管理器锁定文件
     async spawn(root) {
-      let binary = Bun.which("svelteserver")
+      let binary = Bun.which("svelteserver") // 查找svelteserver可执行文件
       const args: string[] = []
       if (!binary) {
+        // 尝试使用本地安装的版本
         const js = path.join(Global.Path.bin, "node_modules", "svelte-language-server", "bin", "server.js")
         if (!(await Bun.file(js).exists())) {
+          // 如果不存在,尝试安装
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
           await Bun.spawn([BunProc.which(), "install", "svelte-language-server"], {
+            // 安装Svelte语言服务器
             cwd: Global.Path.bin,
             env: {
               ...process.env,
@@ -1058,6 +1157,7 @@ export namespace LSPServer {
       }
       args.push("--stdio")
       const proc = spawn(binary, args, {
+        // 启动Svelte语言服务器
         cwd: root,
         env: {
           ...process.env,
@@ -1071,25 +1171,29 @@ export namespace LSPServer {
     },
   }
 
+  // Astro LSP服务器
   export const Astro: Info = {
     id: "astro",
-    extensions: [".astro"],
-    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]),
+    extensions: [".astro"], // 支持的扩展名
+    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]), // 包管理器锁定文件
     async spawn(root) {
-      const tsserver = await Bun.resolve("typescript/lib/tsserver.js", Instance.directory).catch(() => {})
+      const tsserver = await Bun.resolve("typescript/lib/tsserver.js", Instance.directory).catch(() => {}) // 解析tsserver路径
       if (!tsserver) {
-        log.info("typescript not found, required for Astro language server")
+        log.info("未找到typescript,Astro语言服务器需要")
         return
       }
       const tsdk = path.dirname(tsserver)
 
-      let binary = Bun.which("astro-ls")
+      let binary = Bun.which("astro-ls") // 查找astro-ls可执行文件
       const args: string[] = []
       if (!binary) {
+        // 尝试使用本地安装的版本
         const js = path.join(Global.Path.bin, "node_modules", "@astrojs", "language-server", "bin", "nodeServer.js")
         if (!(await Bun.file(js).exists())) {
+          // 如果不存在,尝试安装
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
           await Bun.spawn([BunProc.which(), "install", "@astrojs/language-server"], {
+            // 安装Astro语言服务器
             cwd: Global.Path.bin,
             env: {
               ...process.env,
@@ -1105,6 +1209,7 @@ export namespace LSPServer {
       }
       args.push("--stdio")
       const proc = spawn(binary, args, {
+        // 启动Astro语言服务器
         cwd: root,
         env: {
           ...process.env,
@@ -1115,23 +1220,25 @@ export namespace LSPServer {
         process: proc,
         initialization: {
           typescript: {
-            tsdk,
+            tsdk, // TypeScript SDK路径
           },
         },
       }
     },
   }
 
+  // JDTLS LSP服务器
   export const JDTLS: Info = {
     id: "jdtls",
-    root: NearestRoot(["pom.xml", "build.gradle", "build.gradle.kts", ".project", ".classpath"]),
-    extensions: [".java"],
+    root: NearestRoot(["pom.xml", "build.gradle", "build.gradle.kts", ".project", ".classpath"]), // Java项目配置文件
+    extensions: [".java"], // 支持的扩展名
     async spawn(root) {
-      const java = Bun.which("java")
+      const java = Bun.which("java") // 查找Java可执行文件
       if (!java) {
-        log.error("Java 21 or newer is required to run the JDTLS. Please install it first.")
+        log.error("运行JDTLS需要Java 21或更高版本。请先安装。")
         return
       }
+      // 获取Java版本
       const javaMajorVersion = await $`java -version`
         .quiet()
         .nothrow()
@@ -1140,15 +1247,17 @@ export namespace LSPServer {
           return !m ? undefined : parseInt(m[1])
         })
       if (javaMajorVersion == null || javaMajorVersion < 21) {
-        log.error("JDTLS requires at least Java 21.")
+        log.error("JDTLS需要至少Java 21。")
         return
       }
+      // 查找JDTLS安装目录
       const distPath = path.join(Global.Path.bin, "jdtls")
       const launcherDir = path.join(distPath, "plugins")
       const installed = await fs.exists(launcherDir)
       if (!installed) {
+        // 如果未安装,尝试下载
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("Downloading JDTLS LSP server.")
+        log.info("正在下载JDTLS LSP服务器。")
         await fs.mkdir(distPath, { recursive: true })
         const releaseURL =
           "https://www.eclipse.org/downloads/download.php?file=/jdtls/snapshots/jdt-language-server-latest.tar.gz"
@@ -1157,6 +1266,7 @@ export namespace LSPServer {
         await $`tar -xzf ${archivePath}`.cwd(distPath).quiet().nothrow()
         await fs.rm(archivePath, { force: true })
       }
+      // 查找启动器JAR文件
       const jarFileName = await $`ls org.eclipse.equinox.launcher_*.jar`
         .cwd(launcherDir)
         .quiet()
@@ -1167,6 +1277,7 @@ export namespace LSPServer {
         log.error(`Failed to locate the JDTLS launcher module in the installed directory: ${distPath}.`)
         return
       }
+      // 确定配置文件
       const configFile = path.join(
         distPath,
         (() => {
@@ -1182,9 +1293,11 @@ export namespace LSPServer {
           }
         })(),
       )
+      // 创建临时数据目录
       const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-jdtls-data"))
       return {
         process: spawn(
+          // 启动JDTLS服务器
           java,
           [
             "-jar",
@@ -1209,14 +1322,16 @@ export namespace LSPServer {
     },
   }
 
+  // YamlLS LSP服务器
   export const YamlLS: Info = {
     id: "yaml-ls",
-    extensions: [".yaml", ".yml"],
-    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]),
+    extensions: [".yaml", ".yml"], // 支持的扩展名
+    root: NearestRoot(["package-lock.json", "bun.lockb", "bun.lock", "pnpm-lock.yaml", "yarn.lock"]), // 包管理器锁定文件
     async spawn(root) {
-      let binary = Bun.which("yaml-language-server")
+      let binary = Bun.which("yaml-language-server") // 查找yaml-language-server可执行文件
       const args: string[] = []
       if (!binary) {
+        // 尝试使用本地安装的版本
         const js = path.join(
           Global.Path.bin,
           "node_modules",
@@ -1228,8 +1343,10 @@ export namespace LSPServer {
         )
         const exists = await Bun.file(js).exists()
         if (!exists) {
+          // 如果不存在,尝试安装
           if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
           await Bun.spawn([BunProc.which(), "install", "yaml-language-server"], {
+            // 安装YAML语言服务器
             cwd: Global.Path.bin,
             env: {
               ...process.env,
@@ -1245,6 +1362,7 @@ export namespace LSPServer {
       }
       args.push("--stdio")
       const proc = spawn(binary, args, {
+        // 启动YAML语言服务器
         cwd: root,
         env: {
           ...process.env,
@@ -1257,10 +1375,11 @@ export namespace LSPServer {
     },
   }
 
+  // LuaLS LSP服务器
   export const LuaLS: Info = {
     id: "lua-ls",
     root: NearestRoot([
-      ".luarc.json",
+      ".luarc.json", // Lua配置文件
       ".luarc.jsonc",
       ".luacheckrc",
       ".stylua.toml",
@@ -1268,24 +1387,28 @@ export namespace LSPServer {
       "selene.toml",
       "selene.yml",
     ]),
-    extensions: [".lua"],
+    extensions: [".lua"], // 支持的扩展名
     async spawn(root) {
       let bin = Bun.which("lua-language-server", {
+        // 查找lua-language-server可执行文件
         PATH: process.env["PATH"] + path.delimiter + Global.Path.bin,
       })
 
       if (!bin) {
+        // 如果找不到lua-language-server,尝试下载
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading lua-language-server from GitHub releases")
+        log.info("从GitHub发布版本下载lua-language-server")
 
+        // 获取最新版本信息
         const releaseResponse = await fetch("https://api.github.com/repos/LuaLS/lua-language-server/releases/latest")
         if (!releaseResponse.ok) {
-          log.error("Failed to fetch lua-language-server release info")
+          log.error("获取lua-language-server发布信息失败")
           return
         }
 
         const release = await releaseResponse.json()
 
+        // 确定平台和架构
         const platform = process.platform
         const arch = process.arch
         let assetName = ""
@@ -1321,26 +1444,26 @@ export namespace LSPServer {
 
         const asset = release.assets.find((a: any) => a.name === assetName)
         if (!asset) {
-          log.error(`Could not find asset ${assetName} in latest lua-language-server release`)
+          log.error(`无法在最新的lua-language-server发布版本中找到资源${assetName}`)
           return
         }
 
         const downloadUrl = asset.browser_download_url
-        const downloadResponse = await fetch(downloadUrl)
+        const downloadResponse = await fetch(downloadUrl) // 下载lua-language-server
         if (!downloadResponse.ok) {
-          log.error("Failed to download lua-language-server")
+          log.error("下载lua-language-server失败")
           return
         }
 
         const tempPath = path.join(Global.Path.bin, assetName)
         await Bun.file(tempPath).write(downloadResponse)
 
-        // Unlike zls which is a single self-contained binary,
-        // lua-language-server needs supporting files (meta/, locale/, etc.)
-        // Extract entire archive to dedicated directory to preserve all files
+        // 与zls不同,zls是单个自包含的二进制文件,
+        // lua-language-server需要支持文件(meta/, locale/等)
+        // 将整个归档文件提取到专用目录以保留所有文件
         const installDir = path.join(Global.Path.bin, `lua-language-server-${lualsArch}-${lualsPlatform}`)
 
-        // Remove old installation if exists
+        // 移除旧安装(如果存在)
         const stats = await fs.stat(installDir).catch(() => undefined)
         if (stats) {
           await fs.rm(installDir, { force: true, recursive: true })
@@ -1348,11 +1471,12 @@ export namespace LSPServer {
 
         await fs.mkdir(installDir, { recursive: true })
 
+        // 解压文件
         if (ext === "zip") {
           const ok = await Archive.extractZip(tempPath, installDir)
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract lua-language-server archive", { error })
+              log.error("解压lua-language-server归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -1361,7 +1485,7 @@ export namespace LSPServer {
             .quiet()
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract lua-language-server archive", { error })
+              log.error("解压lua-language-server归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -1369,28 +1493,30 @@ export namespace LSPServer {
 
         await fs.rm(tempPath, { force: true })
 
-        // Binary is located in bin/ subdirectory within the extracted archive
+        // 二进制文件位于提取归档文件的bin/子目录中
         bin = path.join(installDir, "bin", "lua-language-server" + (platform === "win32" ? ".exe" : ""))
 
         if (!(await Bun.file(bin).exists())) {
-          log.error("Failed to extract lua-language-server binary")
+          log.error("解压lua-language-server二进制文件失败")
           return
         }
 
+        // 设置可执行权限
         if (platform !== "win32") {
           const ok = await $`chmod +x ${bin}`.quiet().catch((error) => {
-            log.error("Failed to set executable permission for lua-language-server binary", {
+            log.error("无法为lua-language-server二进制文件设置可执行权限", {
               error,
             })
           })
           if (!ok) return
         }
 
-        log.info(`installed lua-language-server`, { bin })
+        log.info("已安装lua-language-server", { bin })
       }
 
       return {
         process: spawn(bin, {
+          // 启动lua-language-server服务器
           cwd: root,
         }),
       }
@@ -1444,7 +1570,7 @@ export namespace LSPServer {
     async spawn(root) {
       const prisma = Bun.which("prisma")
       if (!prisma) {
-        log.info("prisma not found, please install prisma")
+        log.info("未找到prisma,请先安装prisma")
         return
       }
       return {
@@ -1462,7 +1588,7 @@ export namespace LSPServer {
     async spawn(root) {
       const dart = Bun.which("dart")
       if (!dart) {
-        log.info("dart not found, please install dart first")
+        log.info("未找到dart,请先安装dart")
         return
       }
       return {
@@ -1480,7 +1606,7 @@ export namespace LSPServer {
     async spawn(root) {
       const bin = Bun.which("ocamllsp")
       if (!bin) {
-        log.info("ocamllsp not found, please install ocaml-lsp-server")
+        log.info("未找到ocamllsp,请先安装ocaml-lsp-server")
         return
       }
       return {
@@ -1540,11 +1666,11 @@ export namespace LSPServer {
 
       if (!bin) {
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading terraform-ls from GitHub releases")
+        log.info("从GitHub发布版本下载terraform-ls")
 
         const releaseResponse = await fetch("https://api.github.com/repos/hashicorp/terraform-ls/releases/latest")
         if (!releaseResponse.ok) {
-          log.error("Failed to fetch terraform-ls release info")
+          log.error("获取terraform-ls发布信息失败")
           return
         }
 
@@ -1554,7 +1680,7 @@ export namespace LSPServer {
         }
         const version = release.tag_name?.replace("v", "")
         if (!version) {
-          log.error("terraform-ls release did not include a version tag")
+          log.error("terraform-ls发布版本未包含版本标签")
           return
         }
 
@@ -1575,7 +1701,7 @@ export namespace LSPServer {
 
         const downloadResponse = await fetch(asset.browser_download_url)
         if (!downloadResponse.ok) {
-          log.error("Failed to download terraform-ls")
+          log.error("下载terraform-ls失败")
           return
         }
 
@@ -1585,7 +1711,7 @@ export namespace LSPServer {
         const ok = await Archive.extractZip(tempPath, Global.Path.bin)
           .then(() => true)
           .catch((error) => {
-            log.error("Failed to extract terraform-ls archive", { error })
+            log.error("解压terraform-ls归档文件失败", { error })
             return false
           })
         if (!ok) return
@@ -1594,7 +1720,7 @@ export namespace LSPServer {
         bin = path.join(Global.Path.bin, "terraform-ls" + (platform === "win32" ? ".exe" : ""))
 
         if (!(await Bun.file(bin).exists())) {
-          log.error("Failed to extract terraform-ls binary")
+          log.error("解压terraform-ls二进制文件失败")
           return
         }
 
@@ -1630,11 +1756,11 @@ export namespace LSPServer {
 
       if (!bin) {
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading texlab from GitHub releases")
+        log.info("从GitHub发布版本下载texlab")
 
         const response = await fetch("https://api.github.com/repos/latex-lsp/texlab/releases/latest")
         if (!response.ok) {
-          log.error("Failed to fetch texlab release info")
+          log.error("获取texlab发布信息失败")
           return
         }
 
@@ -1644,7 +1770,7 @@ export namespace LSPServer {
         }
         const version = release.tag_name?.replace("v", "")
         if (!version) {
-          log.error("texlab release did not include a version tag")
+          log.error("texlab发布版本未包含版本标签")
           return
         }
 
@@ -1665,7 +1791,7 @@ export namespace LSPServer {
 
         const downloadResponse = await fetch(asset.browser_download_url)
         if (!downloadResponse.ok) {
-          log.error("Failed to download texlab")
+          log.error("下载texlab失败")
           return
         }
 
@@ -1676,7 +1802,7 @@ export namespace LSPServer {
           const ok = await Archive.extractZip(tempPath, Global.Path.bin)
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract texlab archive", { error })
+              log.error("解压texlab归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -1690,7 +1816,7 @@ export namespace LSPServer {
         bin = path.join(Global.Path.bin, "texlab" + (platform === "win32" ? ".exe" : ""))
 
         if (!(await Bun.file(bin).exists())) {
-          log.error("Failed to extract texlab binary")
+          log.error("解压texlab二进制文件失败")
           return
         }
 
@@ -1698,7 +1824,7 @@ export namespace LSPServer {
           await $`chmod +x ${bin}`.quiet().nothrow()
         }
 
-        log.info("installed texlab", { bin })
+        log.info("已安装texlab", { bin })
       }
 
       return {
@@ -1755,7 +1881,7 @@ export namespace LSPServer {
     async spawn(root) {
       const gleam = Bun.which("gleam")
       if (!gleam) {
-        log.info("gleam not found, please install gleam first")
+        log.info("未找到gleam,请先安装gleam")
         return
       }
       return {
@@ -1776,7 +1902,7 @@ export namespace LSPServer {
         bin = Bun.which("clojure-lsp.exe")
       }
       if (!bin) {
-        log.info("clojure-lsp not found, please install clojure-lsp first")
+        log.info("未找到clojure-lsp,请先安装clojure-lsp")
         return
       }
       return {
@@ -1804,7 +1930,7 @@ export namespace LSPServer {
     async spawn(root) {
       const nixd = Bun.which("nixd")
       if (!nixd) {
-        log.info("nixd not found, please install nixd first")
+        log.info("未找到nixd,请先安装nixd")
         return
       }
       return {
@@ -1829,11 +1955,11 @@ export namespace LSPServer {
 
       if (!bin) {
         if (Flag.OPENCODE_DISABLE_LSP_DOWNLOAD) return
-        log.info("downloading tinymist from GitHub releases")
+        log.info("从GitHub发布版本下载tinymist")
 
         const response = await fetch("https://api.github.com/repos/Myriad-Dreamin/tinymist/releases/latest")
         if (!response.ok) {
-          log.error("Failed to fetch tinymist release info")
+          log.error("获取tinymist发布信息失败")
           return
         }
 
@@ -1871,7 +1997,7 @@ export namespace LSPServer {
 
         const downloadResponse = await fetch(asset.browser_download_url)
         if (!downloadResponse.ok) {
-          log.error("Failed to download tinymist")
+          log.error("下载tinymist失败")
           return
         }
 
@@ -1882,7 +2008,7 @@ export namespace LSPServer {
           const ok = await Archive.extractZip(tempPath, Global.Path.bin)
             .then(() => true)
             .catch((error) => {
-              log.error("Failed to extract tinymist archive", { error })
+              log.error("解压tinymist归档文件失败", { error })
               return false
             })
           if (!ok) return
@@ -1895,7 +2021,7 @@ export namespace LSPServer {
         bin = path.join(Global.Path.bin, "tinymist" + (platform === "win32" ? ".exe" : ""))
 
         if (!(await Bun.file(bin).exists())) {
-          log.error("Failed to extract tinymist binary")
+          log.error("解压tinymist二进制文件失败")
           return
         }
 
@@ -1903,7 +2029,7 @@ export namespace LSPServer {
           await $`chmod +x ${bin}`.quiet().nothrow()
         }
 
-        log.info("installed tinymist", { bin })
+        log.info("已安装tinymist", { bin })
       }
 
       return {
@@ -1919,7 +2045,7 @@ export namespace LSPServer {
     async spawn(root) {
       const bin = Bun.which("haskell-language-server-wrapper")
       if (!bin) {
-        log.info("haskell-language-server-wrapper not found, please install haskell-language-server")
+        log.info("未找到haskell-language-server-wrapper,请先安装haskell-language-server")
         return
       }
       return {

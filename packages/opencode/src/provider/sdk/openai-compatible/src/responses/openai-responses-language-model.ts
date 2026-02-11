@@ -19,153 +19,165 @@ import {
   postJsonToApi,
 } from "@ai-sdk/provider-utils"
 import { z } from "zod/v4"
-import type { OpenAIConfig } from "./openai-config"
-import { openaiFailedResponseHandler } from "./openai-error"
-import { codeInterpreterInputSchema, codeInterpreterOutputSchema } from "./tool/code-interpreter"
-import { fileSearchOutputSchema } from "./tool/file-search"
-import { imageGenerationOutputSchema } from "./tool/image-generation"
 import { convertToOpenAIResponsesInput } from "./convert-to-openai-responses-input"
 import { mapOpenAIResponseFinishReason } from "./map-openai-responses-finish-reason"
+import type { OpenAIConfig } from "./openai-config"
+import { openaiFailedResponseHandler } from "./openai-error"
 import type { OpenAIResponsesIncludeOptions, OpenAIResponsesIncludeValue } from "./openai-responses-api-types"
 import { prepareResponsesTools } from "./openai-responses-prepare-tools"
 import type { OpenAIResponsesModelId } from "./openai-responses-settings"
+import { codeInterpreterInputSchema, codeInterpreterOutputSchema } from "./tool/code-interpreter"
+import { fileSearchOutputSchema } from "./tool/file-search"
+import { imageGenerationOutputSchema } from "./tool/image-generation"
 import { localShellInputSchema } from "./tool/local-shell"
 
+// Web搜索调用项Schema定义
 const webSearchCallItem = z.object({
-  type: z.literal("web_search_call"),
-  id: z.string(),
-  status: z.string(),
-  action: z
+  type: z.literal("web_search_call"), // 类型:web_search_call
+  id: z.string(), // 调用ID
+  status: z.string(), // 状态
+  action: z // 操作
     .discriminatedUnion("type", [
       z.object({
-        type: z.literal("search"),
-        query: z.string().nullish(),
+        type: z.literal("search"), // 类型:search(搜索)
+        query: z.string().nullish(), // 查询字符串(可选)
       }),
       z.object({
-        type: z.literal("open_page"),
-        url: z.string(),
+        type: z.literal("open_page"), // 类型:open_page(打开页面)
+        url: z.string(), // URL
       }),
       z.object({
-        type: z.literal("find"),
-        url: z.string(),
-        pattern: z.string(),
+        type: z.literal("find"), // 类型:find(查找)
+        url: z.string(), // URL
+        pattern: z.string(), // 模式
       }),
     ])
-    .nullish(),
+    .nullish(), // 可选
 })
 
+// 文件搜索调用项Schema定义
 const fileSearchCallItem = z.object({
-  type: z.literal("file_search_call"),
-  id: z.string(),
-  queries: z.array(z.string()),
-  results: z
+  type: z.literal("file_search_call"), // 类型:file_search_call
+  id: z.string(), // 调用ID
+  queries: z.array(z.string()), // 查询数组
+  results: z // 结果数组
     .array(
       z.object({
-        attributes: z.record(z.string(), z.unknown()),
-        file_id: z.string(),
-        filename: z.string(),
-        score: z.number(),
-        text: z.string(),
+        attributes: z.record(z.string(), z.unknown()), // 属性
+        file_id: z.string(), // 文件ID
+        filename: z.string(), // 文件名
+        score: z.number(), // 分数
+        text: z.string(), // 文本
       }),
     )
-    .nullish(),
+    .nullish(), // 可选
 })
 
+// 代码解释器调用项Schema定义
 const codeInterpreterCallItem = z.object({
-  type: z.literal("code_interpreter_call"),
-  id: z.string(),
-  code: z.string().nullable(),
-  container_id: z.string(),
-  outputs: z
+  type: z.literal("code_interpreter_call"), // 类型:code_interpreter_call
+  id: z.string(), // 调用ID
+  code: z.string().nullable(), // 代码(可为null)
+  container_id: z.string(), // 容器ID
+  outputs: z // 输出数组
     .array(
       z.discriminatedUnion("type", [
-        z.object({ type: z.literal("logs"), logs: z.string() }),
-        z.object({ type: z.literal("image"), url: z.string() }),
+        z.object({ type: z.literal("logs"), logs: z.string() }), // 日志类型
+        z.object({ type: z.literal("image"), url: z.string() }), // 图像类型
       ]),
     )
-    .nullable(),
+    .nullable(), // 可为null
 })
 
+// 本地Shell调用项Schema定义
 const localShellCallItem = z.object({
-  type: z.literal("local_shell_call"),
-  id: z.string(),
-  call_id: z.string(),
+  type: z.literal("local_shell_call"), // 类型:local_shell_call
+  id: z.string(), // 调用ID
+  call_id: z.string(), // 调用ID
   action: z.object({
-    type: z.literal("exec"),
-    command: z.array(z.string()),
-    timeout_ms: z.number().optional(),
-    user: z.string().optional(),
-    working_directory: z.string().optional(),
-    env: z.record(z.string(), z.string()).optional(),
+    // 操作
+    type: z.literal("exec"), // 类型:exec(执行)
+    command: z.array(z.string()), // 命令数组
+    timeout_ms: z.number().optional(), // 超时时间(毫秒,可选)
+    user: z.string().optional(), // 用户(可选)
+    working_directory: z.string().optional(), // 工作目录(可选)
+    env: z.record(z.string(), z.string()).optional(), // 环境变量(可选)
   }),
 })
 
+// 图像生成调用项Schema定义
 const imageGenerationCallItem = z.object({
-  type: z.literal("image_generation_call"),
-  id: z.string(),
-  result: z.string(),
+  type: z.literal("image_generation_call"), // 类型:image_generation_call
+  id: z.string(), // 调用ID
+  result: z.string(), // 结果
 })
 
 /**
- * `top_logprobs` request body argument can be set to an integer between
- * 0 and 20 specifying the number of most likely tokens to return at each
- * token position, each with an associated log probability.
+ * `top_logprobs`请求体参数可以设置为0到20之间的整数
+ * 指定在每个令牌位置返回的最可能的令牌数量,每个令牌具有关联的对数概率
  *
  * @see https://platform.openai.com/docs/api-reference/responses/create#responses_create-top_logprobs
  */
-const TOP_LOGPROBS_MAX = 20
+const TOP_LOGPROBS_MAX = 20 // 最大的对数概率数量
 
+// 对数概率Schema定义
 const LOGPROBS_SCHEMA = z.array(
   z.object({
-    token: z.string(),
-    logprob: z.number(),
+    token: z.string(), // 令牌
+    logprob: z.number(), // 对数概率
     top_logprobs: z.array(
+      // 前N个对数概率
       z.object({
-        token: z.string(),
-        logprob: z.number(),
+        token: z.string(), // 令牌
+        logprob: z.number(), // 对数概率
       }),
     ),
   }),
 )
 
+// OpenAI Responses语言模型类,实现LanguageModelV2接口
 export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
-  readonly specificationVersion = "v2"
+  readonly specificationVersion = "v2" // 规范版本
 
-  readonly modelId: OpenAIResponsesModelId
+  readonly modelId: OpenAIResponsesModelId // 模型ID
 
-  private readonly config: OpenAIConfig
+  private readonly config: OpenAIConfig // 配置
 
+  // 构造函数,初始化模型ID和配置
   constructor(modelId: OpenAIResponsesModelId, config: OpenAIConfig) {
     this.modelId = modelId
     this.config = config
   }
 
+  // 支持的URL类型
   readonly supportedUrls: Record<string, RegExp[]> = {
-    "image/*": [/^https?:\/\/.*$/],
-    "application/pdf": [/^https?:\/\/.*$/],
+    "image/*": [/^https?:\/\/.*$/], // 图像类型支持HTTP/HTTPS
+    "application/pdf": [/^https?:\/\/.*$/], // PDF类型支持HTTP/HTTPS
   }
 
+  // 获取提供者名称
   get provider(): string {
     return this.config.provider
   }
 
+  // 获取API调用参数的私有方法
   private async getArgs({
-    maxOutputTokens,
-    temperature,
-    stopSequences,
-    topP,
-    topK,
-    presencePenalty,
-    frequencyPenalty,
-    seed,
-    prompt,
-    providerOptions,
-    tools,
-    toolChoice,
-    responseFormat,
+    maxOutputTokens, // 最大输出令牌数
+    temperature, // 温度参数
+    stopSequences, // 停止序列
+    topP, // Top-P参数
+    topK, // Top-K参数
+    presencePenalty, // 存在惩罚
+    frequencyPenalty, // 频率惩罚
+    seed, // 随机种子
+    prompt, // 提示内容
+    providerOptions, // 提供者选项
+    tools, // 工具列表
+    toolChoice, // 工具选择
+    responseFormat, // 响应格式
   }: Parameters<LanguageModelV2["doGenerate"]>[0]) {
-    const warnings: LanguageModelV2CallWarning[] = []
-    const modelConfig = getResponsesModelConfig(this.modelId)
+    const warnings: LanguageModelV2CallWarning[] = [] // 警告数组
+    const modelConfig = getResponsesModelConfig(this.modelId) // 获取模型配置
 
     if (topK != null) {
       warnings.push({ type: "unsupported-setting", setting: "topK" })
@@ -193,12 +205,14 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
       warnings.push({ type: "unsupported-setting", setting: "stopSequences" })
     }
 
+    // 解析提供者选项
     const openaiOptions = await parseProviderOptions({
       provider: "openai",
       providerOptions,
       schema: openaiResponsesProviderOptionsSchema,
     })
 
+    // 转换为OpenAI Responses输入格式
     const { input, warnings: inputWarnings } = await convertToOpenAIResponsesInput({
       prompt,
       systemMessageMode: modelConfig.systemMessageMode,
@@ -207,21 +221,23 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
       hasLocalShellTool: hasOpenAITool("openai.local_shell"),
     })
 
-    warnings.push(...inputWarnings)
+    warnings.push(...inputWarnings) // 合并输入警告
 
-    const strictJsonSchema = openaiOptions?.strictJsonSchema ?? false
+    const strictJsonSchema = openaiOptions?.strictJsonSchema ?? false // 严格JSON Schema模式
 
-    let include: OpenAIResponsesIncludeOptions = openaiOptions?.include
+    let include: OpenAIResponsesIncludeOptions = openaiOptions?.include // 包含选项
 
+    // 添加包含选项的辅助函数
     function addInclude(key: OpenAIResponsesIncludeValue) {
       include = include != null ? [...include, key] : [key]
     }
 
+    // 检查是否存在指定OpenAI工具的辅助函数
     function hasOpenAITool(id: string) {
       return tools?.find((tool) => tool.type === "provider-defined" && tool.id === id) != null
     }
 
-    // when logprobs are requested, automatically include them:
+    // 当请求logprobs时,自动包含它们:
     const topLogprobs =
       typeof openaiOptions?.logprobs === "number"
         ? openaiOptions?.logprobs
@@ -233,7 +249,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
       addInclude("message.output_text.logprobs")
     }
 
-    // when a web search tool is present, automatically include the sources:
+    // 当存在Web搜索工具时,自动包含源:
     const webSearchToolName = (
       tools?.find(
         (tool) =>
@@ -246,39 +262,41 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
       addInclude("web_search_call.action.sources")
     }
 
-    // when a code interpreter tool is present, automatically include the outputs:
+    // 当存在代码解释器工具时,自动包含输出:
     if (hasOpenAITool("openai.code_interpreter")) {
       addInclude("code_interpreter_call.outputs")
     }
 
+    // 构建基础参数
     const baseArgs = {
-      model: this.modelId,
-      input,
-      temperature,
-      top_p: topP,
-      max_output_tokens: maxOutputTokens,
+      model: this.modelId, // 模型ID
+      input, // 输入
+      temperature, // 温度
+      top_p: topP, // Top-P
+      max_output_tokens: maxOutputTokens, // 最大输出令牌数
 
+      // 响应格式和文本详细程度
       ...((responseFormat?.type === "json" || openaiOptions?.textVerbosity) && {
         text: {
           ...(responseFormat?.type === "json" && {
             format:
               responseFormat.schema != null
                 ? {
-                    type: "json_schema",
-                    strict: strictJsonSchema,
-                    name: responseFormat.name ?? "response",
-                    description: responseFormat.description,
-                    schema: responseFormat.schema,
+                    type: "json_schema", // JSON Schema类型
+                    strict: strictJsonSchema, // 严格模式
+                    name: responseFormat.name ?? "response", // 名称
+                    description: responseFormat.description, // 描述
+                    schema: responseFormat.schema, // Schema
                   }
-                : { type: "json_object" },
+                : { type: "json_object" }, // JSON对象类型
           }),
           ...(openaiOptions?.textVerbosity && {
-            verbosity: openaiOptions.textVerbosity,
+            verbosity: openaiOptions.textVerbosity, // 文本详细程度
           }),
         },
       }),
 
-      // provider options:
+      // 提供者选项:
       max_tool_calls: openaiOptions?.maxToolCalls,
       metadata: openaiOptions?.metadata,
       parallel_tool_calls: openaiOptions?.parallelToolCalls,
@@ -292,7 +310,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
       safety_identifier: openaiOptions?.safetyIdentifier,
       top_logprobs: topLogprobs,
 
-      // model-specific settings:
+      // 模型特定设置:
       ...(modelConfig.isReasoningModel &&
         (openaiOptions?.reasoningEffort != null || openaiOptions?.reasoningSummary != null) && {
           reasoning: {
@@ -310,14 +328,14 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
     }
 
     if (modelConfig.isReasoningModel) {
-      // remove unsupported settings for reasoning models
-      // see https://platform.openai.com/docs/guides/reasoning#limitations
+      // 移除推理模型的不支持设置
+      // 参见 https://platform.openai.com/docs/guides/reasoning#limitations
       if (baseArgs.temperature != null) {
         baseArgs.temperature = undefined
         warnings.push({
           type: "unsupported-setting",
           setting: "temperature",
-          details: "temperature is not supported for reasoning models",
+          details: "temperature参数不支持推理模型",
         })
       }
 
@@ -326,7 +344,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
         warnings.push({
           type: "unsupported-setting",
           setting: "topP",
-          details: "topP is not supported for reasoning models",
+          details: "topP参数不支持推理模型",
         })
       }
     } else {
@@ -334,7 +352,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
         warnings.push({
           type: "unsupported-setting",
           setting: "reasoningEffort",
-          details: "reasoningEffort is not supported for non-reasoning models",
+          details: "reasoningEffort参数不支持非推理模型",
         })
       }
 
@@ -342,44 +360,46 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
         warnings.push({
           type: "unsupported-setting",
           setting: "reasoningSummary",
-          details: "reasoningSummary is not supported for non-reasoning models",
+          details: "reasoningSummary参数不支持非推理模型",
         })
       }
     }
 
-    // Validate flex processing support
+    // 验证flex处理支持
     if (openaiOptions?.serviceTier === "flex" && !modelConfig.supportsFlexProcessing) {
       warnings.push({
         type: "unsupported-setting",
         setting: "serviceTier",
-        details: "flex processing is only available for o3, o4-mini, and gpt-5 models",
+        details: "flex处理仅适用于o3、o4-mini和gpt-5模型",
       })
-      // Remove from args if not supported
+      // 如果不支持,从参数中删除
       delete (baseArgs as any).service_tier
     }
 
-    // Validate priority processing support
+    // 验证priority处理支持
     if (openaiOptions?.serviceTier === "priority" && !modelConfig.supportsPriorityProcessing) {
       warnings.push({
         type: "unsupported-setting",
         setting: "serviceTier",
         details:
-          "priority processing is only available for supported models (gpt-4, gpt-5, gpt-5-mini, o3, o4-mini) and requires Enterprise access. gpt-5-nano is not supported",
+          "priority处理仅适用于支持的模型(gpt-4、gpt-5、gpt-5-mini、o3、o4-mini)并需要Enterprise访问权限。gpt-5-nano不支持",
       })
-      // Remove from args if not supported
+      // 如果不支持,从参数中删除
       delete (baseArgs as any).service_tier
     }
 
+    // 准备响应工具
     const {
-      tools: openaiTools,
-      toolChoice: openaiToolChoice,
-      toolWarnings,
+      tools: openaiTools, // OpenAI工具
+      toolChoice: openaiToolChoice, // OpenAI工具选择
+      toolWarnings, // 工具警告
     } = prepareResponsesTools({
       tools,
       toolChoice,
       strictJsonSchema,
     })
 
+    // 返回参数和警告
     return {
       webSearchToolName,
       args: {
@@ -391,60 +411,67 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
     }
   }
 
+  // 执行生成操作的方法
   async doGenerate(
     options: Parameters<LanguageModelV2["doGenerate"]>[0],
   ): Promise<Awaited<ReturnType<LanguageModelV2["doGenerate"]>>> {
-    const { args: body, warnings, webSearchToolName } = await this.getArgs(options)
+    const { args: body, warnings, webSearchToolName } = await this.getArgs(options) // 获取参数
     const url = this.config.url({
+      // 构建URL
       path: "/responses",
       modelId: this.modelId,
     })
 
+    // 发送POST请求到API
     const {
-      responseHeaders,
-      value: response,
-      rawValue: rawResponse,
+      responseHeaders, // 响应头
+      value: response, // 响应值
+      rawValue: rawResponse, // 原始响应
     } = await postJsonToApi({
       url,
-      headers: combineHeaders(this.config.headers(), options.headers),
-      body,
-      failedResponseHandler: openaiFailedResponseHandler,
+      headers: combineHeaders(this.config.headers(), options.headers), // 合并请求头
+      body, // 请求体
+      failedResponseHandler: openaiFailedResponseHandler, // 失败响应处理器
       successfulResponseHandler: createJsonResponseHandler(
+        // 成功响应处理器
         z.object({
-          id: z.string(),
-          created_at: z.number(),
-          error: z
+          id: z.string(), // 响应ID
+          created_at: z.number(), // 创建时间
+          error: z // 错误信息
             .object({
-              code: z.string(),
-              message: z.string(),
+              code: z.string(), // 错误代码
+              message: z.string(), // 错误消息
             })
             .nullish(),
-          model: z.string(),
+          model: z.string(), // 模型名称
           output: z.array(
+            // 输出数组
             z.discriminatedUnion("type", [
               z.object({
-                type: z.literal("message"),
-                role: z.literal("assistant"),
-                id: z.string(),
+                type: z.literal("message"), // 类型:message
+                role: z.literal("assistant"), // 角色:assistant
+                id: z.string(), // ID
                 content: z.array(
+                  // 内容数组
                   z.object({
-                    type: z.literal("output_text"),
-                    text: z.string(),
-                    logprobs: LOGPROBS_SCHEMA.nullish(),
+                    type: z.literal("output_text"), // 类型:output_text
+                    text: z.string(), // 文本
+                    logprobs: LOGPROBS_SCHEMA.nullish(), // 对数概率
                     annotations: z.array(
+                      // 注解数组
                       z.discriminatedUnion("type", [
                         z.object({
-                          type: z.literal("url_citation"),
-                          start_index: z.number(),
-                          end_index: z.number(),
-                          url: z.string(),
-                          title: z.string(),
+                          type: z.literal("url_citation"), // 类型:url_citation
+                          start_index: z.number(), // 开始索引
+                          end_index: z.number(), // 结束索引
+                          url: z.string(), // URL
+                          title: z.string(), // 标题
                         }),
                         z.object({
-                          type: z.literal("file_citation"),
-                          file_id: z.string(),
-                          filename: z.string().nullish(),
-                          index: z.number().nullish(),
+                          type: z.literal("file_citation"), // 类型:file_citation
+                          file_id: z.string(), // 文件ID
+                          filename: z.string().nullish(), // 文件名
+                          index: z.number().nullish(), // 索引
                           start_index: z.number().nullish(),
                           end_index: z.number().nullish(),
                           quote: z.string().nullish(),
@@ -511,14 +538,14 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
     const content: Array<LanguageModelV2Content> = []
     const logprobs: Array<z.infer<typeof LOGPROBS_SCHEMA>> = []
 
-    // flag that checks if there have been client-side tool calls (not executed by openai)
+    // 检查是否存在客户端工具调用的标志(非OpenAI执行)
     let hasFunctionCall = false
 
-    // map response content to content array
+    // 将响应内容映射到内容数组
     for (const part of response.output) {
       switch (part.type) {
         case "reasoning": {
-          // when there are no summary parts, we need to add an empty reasoning part:
+          // 当没有摘要部分时,我们需要添加一个空的推理部分:
           if (part.summary.length === 0) {
             part.summary.push({ type: "summary_text", text: "" })
           }
@@ -769,89 +796,103 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
     }
   }
 
+  // 执行流式生成操作的方法
   async doStream(
     options: Parameters<LanguageModelV2["doStream"]>[0],
   ): Promise<Awaited<ReturnType<LanguageModelV2["doStream"]>>> {
-    const { args: body, warnings, webSearchToolName } = await this.getArgs(options)
+    const { args: body, warnings, webSearchToolName } = await this.getArgs(options) // 获取参数
 
+    // 发送POST请求到API(流式)
     const { responseHeaders, value: response } = await postJsonToApi({
       url: this.config.url({
+        // 构建URL
         path: "/responses",
         modelId: this.modelId,
       }),
-      headers: combineHeaders(this.config.headers(), options.headers),
+      headers: combineHeaders(this.config.headers(), options.headers), // 合并请求头
       body: {
+        // 请求体
         ...body,
-        stream: true,
+        stream: true, // 启用流式传输
       },
-      failedResponseHandler: openaiFailedResponseHandler,
-      successfulResponseHandler: createEventSourceResponseHandler(openaiResponsesChunkSchema),
-      abortSignal: options.abortSignal,
-      fetch: this.config.fetch,
+      failedResponseHandler: openaiFailedResponseHandler, // 失败响应处理器
+      successfulResponseHandler: createEventSourceResponseHandler(openaiResponsesChunkSchema), // 成功响应处理器(事件流)
+      abortSignal: options.abortSignal, // 中止信号
+      fetch: this.config.fetch, // fetch函数
     })
 
     const self = this
 
-    let finishReason: LanguageModelV2FinishReason = "unknown"
+    let finishReason: LanguageModelV2FinishReason = "unknown" // 完成原因
     const usage: LanguageModelV2Usage = {
+      // 使用情况
       inputTokens: undefined,
       outputTokens: undefined,
       totalTokens: undefined,
     }
-    const logprobs: Array<z.infer<typeof LOGPROBS_SCHEMA>> = []
-    let responseId: string | null = null
+    const logprobs: Array<z.infer<typeof LOGPROBS_SCHEMA>> = [] // 对数概率数组
+    let responseId: string | null = null // 响应ID
     const ongoingToolCalls: Record<
+      // 进行中的工具调用
       number,
       | {
-          toolName: string
-          toolCallId: string
+          toolName: string // 工具名称
+          toolCallId: string // 工具调用ID
           codeInterpreter?: {
-            containerId: string
+            // 代码解释器
+            containerId: string // 容器ID
           }
         }
       | undefined
     > = {}
 
-    // flag that checks if there have been client-side tool calls (not executed by openai)
+    // 检查是否存在客户端工具调用的标志(非OpenAI执行)
     let hasFunctionCall = false
 
+    // 活跃的推理部分
     const activeReasoning: Record<
       string,
       {
-        encryptedContent?: string | null
-        summaryParts: number[]
+        encryptedContent?: string | null // 加密内容
+        summaryParts: number[] // 摘要部分索引数组
       }
     > = {}
 
-    // Track a stable text part id for the current assistant message.
-    // Copilot may change item_id across text deltas; normalize to one id.
+    // 跟踪当前助手消息的稳定文本部分ID
+    // Copilot可能会在文本增量之间更改item_id;规范化为一个ID
     let currentTextId: string | null = null
 
-    let serviceTier: string | undefined
+    let serviceTier: string | undefined // 服务层
 
+    // 返回流式响应
     return {
       stream: response.pipeThrough(
+        // 通过转换流处理响应
         new TransformStream<ParseResult<z.infer<typeof openaiResponsesChunkSchema>>, LanguageModelV2StreamPart>({
           start(controller) {
+            // 开始处理
             controller.enqueue({ type: "stream-start", warnings })
           },
 
           transform(chunk, controller) {
+            // 转换每个块
             if (options.includeRawChunks) {
               controller.enqueue({ type: "raw", rawValue: chunk.rawValue })
             }
 
-            // handle failed chunk parsing / validation:
+            // 处理失败的块解析/验证:
             if (!chunk.success) {
               finishReason = "error"
               controller.enqueue({ type: "error", error: chunk.error })
               return
             }
 
-            const value = chunk.value
+            const value = chunk.value // 获取块值
 
+            // 处理响应输出项添加块
             if (isResponseOutputItemAddedChunk(value)) {
               if (value.item.type === "function_call") {
+                // 函数调用
                 ongoingToolCalls[value.output_index] = {
                   toolName: value.item.name,
                   toolCallId: value.item.call_id,
@@ -921,7 +962,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
                   providerExecuted: true,
                 })
               } else if (value.item.type === "message") {
-                // Start a stable text part for this assistant message
+                // 为此助手消息启动一个稳定的文本部分
                 currentTextId = value.item.id
                 controller.enqueue({
                   type: "text-start",
@@ -1155,7 +1196,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
                   id: toolCall.toolCallId,
                 })
 
-                // immediately send the tool call after the input end:
+                // 在输入结束后立即发送工具调用:
                 controller.enqueue({
                   type: "tool-call",
                   toolCallId: toolCall.toolCallId,
@@ -1176,7 +1217,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
                 modelId: value.response.model,
               })
             } else if (isTextDeltaChunk(value)) {
-              // Ensure a text-start exists, and normalize deltas to a stable id
+              // 确保text-start存在,并将增量规范化为稳定的ID
               if (!currentTextId) {
                 currentTextId = value.item_id
                 controller.enqueue({
@@ -1198,7 +1239,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
                 logprobs.push(value.logprobs)
               }
             } else if (isResponseReasoningSummaryPartAddedChunk(value)) {
-              // the first reasoning start is pushed in isResponseOutputItemAddedReasoningChunk.
+              // 第一个推理开始在isResponseOutputItemAddedReasoningChunk中推送
               if (value.summary_index > 0) {
                 activeReasoning[value.item_id]?.summaryParts.push(value.summary_index)
 
@@ -1262,7 +1303,7 @@ export class OpenAIResponsesLanguageModel implements LanguageModelV2 {
           },
 
           flush(controller) {
-            // Close any dangling text part
+            // 关闭任何悬空的文本部分
             if (currentTextId) {
               controller.enqueue({ type: "text-end", id: currentTextId })
               currentTextId = null
@@ -1509,7 +1550,7 @@ const openaiResponsesChunkSchema = z.union([
   responseReasoningSummaryPartAddedSchema,
   responseReasoningSummaryTextDeltaSchema,
   errorChunkSchema,
-  z.object({ type: z.string() }).loose(), // fallback for unknown chunks
+  z.object({ type: z.string() }).loose(), // 未知块的回退处理
 ])
 
 type ExtractByType<T, K extends T extends { type: infer U } ? U : never> = T extends { type: K } ? T : never
@@ -1631,7 +1672,7 @@ function getResponsesModelConfig(modelId: string): ResponsesModelConfig {
     supportsPriorityProcessing,
   }
 
-  // gpt-5-chat models are non-reasoning
+  // gpt-5-chat模型是非推理模型
   if (modelId.startsWith("gpt-5-chat")) {
     return {
       ...defaults,
@@ -1639,7 +1680,7 @@ function getResponsesModelConfig(modelId: string): ResponsesModelConfig {
     }
   }
 
-  // o series reasoning models:
+  // o系列推理模型:
   if (
     modelId.startsWith("o") ||
     modelId.startsWith("gpt-5") ||
@@ -1661,14 +1702,14 @@ function getResponsesModelConfig(modelId: string): ResponsesModelConfig {
     }
   }
 
-  // gpt models:
+  // gpt模型:
   return {
     ...defaults,
     isReasoningModel: false,
   }
 }
 
-// TODO AI SDK 6: use optional here instead of nullish
+// TODO AI SDK 6: 在此处使用optional而不是nullish
 const openaiResponsesProviderOptionsSchema = z.object({
   include: z
     .array(z.enum(["reasoning.encrypted_content", "file_search_call.results", "message.output_text.logprobs"]))
@@ -1676,13 +1717,11 @@ const openaiResponsesProviderOptionsSchema = z.object({
   instructions: z.string().nullish(),
 
   /**
-   * Return the log probabilities of the tokens.
+   * 返回令牌的对数概率
    *
-   * Setting to true will return the log probabilities of the tokens that
-   * were generated.
+   * 设置为true将返回已生成的令牌的对数概率
    *
-   * Setting to a number will return the log probabilities of the top n
-   * tokens that were generated.
+   * 设置为数字将返回已生成的前n个令牌的对数概率
    *
    * @see https://platform.openai.com/docs/api-reference/responses/create
    * @see https://cookbook.openai.com/examples/using_logprobs
@@ -1690,9 +1729,9 @@ const openaiResponsesProviderOptionsSchema = z.object({
   logprobs: z.union([z.boolean(), z.number().min(1).max(TOP_LOGPROBS_MAX)]).optional(),
 
   /**
-   * The maximum number of total calls to built-in tools that can be processed in a response.
-   * This maximum number applies across all built-in tool calls, not per individual tool.
-   * Any further attempts to call a tool by the model will be ignored.
+   * 响应中可以处理的内置工具调用总数
+   * 此最大数量适用于所有内置工具调用,而不是每个单独的工具
+   * 模型进一步尝试调用工具将被忽略
    */
   maxToolCalls: z.number().nullish(),
 

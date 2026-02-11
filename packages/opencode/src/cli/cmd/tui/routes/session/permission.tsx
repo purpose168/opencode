@@ -121,7 +121,7 @@ export function PermissionPrompt(props: { request: PermissionRequest }) {
     <Switch>
       <Match when={store.always}>
         <Prompt
-          title="Always allow"
+          title="总是允许"
           body={
             <Switch>
               <Match when={props.request.always.length === 1 && props.request.always[0] === "*"}>
@@ -209,7 +209,7 @@ export function PermissionPrompt(props: { request: PermissionRequest }) {
               </Match>
             </Switch>
           }
-          options={{ once: "Allow once", always: "Allow always", reject: "Reject" }}
+          options={{ once: "允许一次", always: "总是允许", reject: "拒绝" }}
           onSelect={(option) => {
             if (option === "always") {
               setStore("always", true)

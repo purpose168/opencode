@@ -1,6 +1,6 @@
 ---
-import { logos } from 'virtual:starlight/user-images';
 import config from 'virtual:starlight/user-config';
+import { logos } from 'virtual:starlight/user-images';
 const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 ---
 
@@ -15,7 +15,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 					width={logos.dark.width}
 					height={logos.dark.height}
 				/>
-				{/* Show light alternate if a user configure both light and dark logos. */}
+				{/* 如果用户同时配置了浅色和深色 logo，则显示浅色备用版本 */}
 				{!('src' in config.logo) && (
 					<img
 						class="dark:sl-hidden print:block"
@@ -35,6 +35,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 
 <style>
 	@layer starlight.core {
+		/* 网站标题样式 */
 		.site-title {
 			align-items: center;
 			gap: var(--sl-nav-gap);
@@ -45,9 +46,11 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 			white-space: nowrap;
 			min-width: 0;
 		}
+		/* 文本溢出处理 */
 		span {
 			overflow: hidden;
 		}
+		/* Logo 图片样式 */
 		img {
 			height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));
 			width: auto;

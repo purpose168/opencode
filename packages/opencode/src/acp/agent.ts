@@ -31,9 +31,18 @@ import { z } from "zod"
 import { LoadAPIKeyError } from "ai"
 import type { OpencodeClient, SessionMessageResponse } from "@opencode-ai/sdk/v2"
 
+/**
+ * ACP (Agent Client Protocol) 命名空间
+ * 实现了 ACP 协议的智能体端功能，用于与客户端通信
+ */
 export namespace ACP {
   const log = Log.create({ service: "acp-agent" })
 
+  /**
+   * 初始化 ACP 智能体
+   * @param sdk Opencode 客户端 SDK
+   * @returns 创建智能体实例的工厂函数
+   */
   export async function init({ sdk }: { sdk: OpencodeClient }) {
     const model = await defaultModel({ sdk })
     return {
@@ -46,12 +55,21 @@ export namespace ACP {
     }
   }
 
+  /**
+   * ACP 智能体类，实现了 ACPAgent 接口
+   * 用于处理客户端的请求和事件
+   */
   export class Agent implements ACPAgent {
     private connection: AgentSideConnection
     private config: ACPConfig
     private sdk: OpencodeClient
     private sessionManager
 
+    /**
+     * 构造函数
+     * @param connection 智能体端连接
+     * @param config ACP 配置
+     */
     constructor(connection: AgentSideConnection, config: ACPConfig) {
       this.connection = connection
       this.config = config
@@ -59,21 +77,29 @@ export namespace ACP {
       this.sessionManager = new ACPSessionManager(this.sdk)
     }
 
+    /**
+     * 设置事件订阅
+     * @param session ACP 会话状态
+     */
     private setupEventSubscriptions(session: ACPSessionState) {
       const sessionId = session.id
       const directory = session.cwd
 
+      // 权限选项
       const options: PermissionOption[] = [
-        { optionId: "once", kind: "allow_once", name: "Allow once" },
-        { optionId: "always", kind: "allow_always", name: "Always allow" },
-        { optionId: "reject", kind: "reject_once", name: "Reject" },
+        { optionId: "once", kind: "allow_once", name: "允许一次" },
+        { optionId: "always", kind: "allow_always", name: "始终允许" },
+        { optionId: "reject", kind: "reject_once", name: "拒绝" },
       ]
+
+      // 订阅 SDK 事件
       this.config.sdk.event.subscribe({ directory }).then(async (events) => {
         for await (const event of events.stream) {
           switch (event.type) {
             case "permission.asked":
               try {
                 const permission = event.properties
+                // 向客户端请求权限
                 const res = await this.connection
                   .requestPermission({
                     sessionId,
@@ -88,11 +114,12 @@ export namespace ACP {
                     options,
                   })
                   .catch(async (error) => {
-                    log.error("failed to request permission from ACP", {
+                    log.error("向 ACP 请求权限失败", {
                       error,
                       permissionID: permission.id,
                       sessionID: permission.sessionID,
                     })
+                    // 失败时默认拒绝权限
                     await this.config.sdk.permission.reply({
                       requestID: permission.id,
                       reply: "reject",
@@ -102,6 +129,7 @@ export namespace ACP {
                   })
                 if (!res) return
                 if (res.outcome.outcome !== "selected") {
+                  // 如果没有选择权限，拒绝
                   await this.config.sdk.permission.reply({
                     requestID: permission.id,
                     reply: "reject",
@@ -109,23 +137,25 @@ export namespace ACP {
                   })
                   return
                 }
+                // 根据客户端的选择回复权限
                 await this.config.sdk.permission.reply({
                   requestID: permission.id,
                   reply: res.outcome.optionId as "once" | "always" | "reject",
                   directory,
                 })
               } catch (err) {
-                log.error("unexpected error when handling permission", { error: err })
+                log.error("处理权限时发生意外错误", { error: err })
               } finally {
                 break
               }
 
             case "message.part.updated":
-              log.info("message part updated", { event: event.properties })
+              log.info("消息部分更新", { event: event.properties })
               try {
                 const props = event.properties
                 const { part } = props
 
+                // 获取完整消息
                 const message = await this.config.sdk.session
                   .message(
                     {
@@ -137,7 +167,7 @@ export namespace ACP {
                   )
                   .then((x) => x.data)
                   .catch((err) => {
-                    log.error("unexpected error when fetching message", { error: err })
+                    log.error("获取消息时发生意外错误", { error: err })
                     return undefined
                   })
 
@@ -146,6 +176,7 @@ export namespace ACP {
                 if (part.type === "tool") {
                   switch (part.state.status) {
                     case "pending":
+                      // 发送工具调用待处理状态
                       await this.connection
                         .sessionUpdate({
                           sessionId,
@@ -160,10 +191,11 @@ export namespace ACP {
                           },
                         })
                         .catch((err) => {
-                          log.error("failed to send tool pending to ACP", { error: err })
+                          log.error("向 ACP 发送工具待处理状态失败", { error: err })
                         })
                       break
                     case "running":
+                      // 发送工具调用进行中状态
                       await this.connection
                         .sessionUpdate({
                           sessionId,
@@ -176,7 +208,7 @@ export namespace ACP {
                           },
                         })
                         .catch((err) => {
-                          log.error("failed to send tool in_progress to ACP", { error: err })
+                          log.error("向 ACP 发送工具进行中状态失败", { error: err })
                         })
                       break
                     case "completed":
@@ -192,6 +224,7 @@ export namespace ACP {
                       ]
 
                       if (kind === "edit") {
+                        // 处理编辑工具的差异
                         const input = part.state.input
                         const filePath = typeof input["filePath"] === "string" ? input["filePath"] : ""
                         const oldText = typeof input["oldString"] === "string" ? input["oldString"] : ""
@@ -210,6 +243,7 @@ export namespace ACP {
                       }
 
                       if (part.tool === "todowrite") {
+                        // 处理待办事项工具的输出
                         const parsedTodos = z.array(Todo.Info).safeParse(JSON.parse(part.state.output))
                         if (parsedTodos.success) {
                           await this.connection
@@ -229,13 +263,14 @@ export namespace ACP {
                               },
                             })
                             .catch((err) => {
-                              log.error("failed to send session update for todo", { error: err })
+                              log.error("发送待办事项会话更新失败", { error: err })
                             })
                         } else {
-                          log.error("failed to parse todo output", { error: parsedTodos.error })
+                          log.error("解析待办事项输出失败", { error: parsedTodos.error })
                         }
                       }
 
+                      // 发送工具调用完成状态
                       await this.connection
                         .sessionUpdate({
                           sessionId,
@@ -253,10 +288,11 @@ export namespace ACP {
                           },
                         })
                         .catch((err) => {
-                          log.error("failed to send tool completed to ACP", { error: err })
+                          log.error("向 ACP 发送工具完成状态失败", { error: err })
                         })
                       break
                     case "error":
+                      // 发送工具调用错误状态
                       await this.connection
                         .sessionUpdate({
                           sessionId,
@@ -279,11 +315,12 @@ export namespace ACP {
                           },
                         })
                         .catch((err) => {
-                          log.error("failed to send tool error to ACP", { error: err })
+                          log.error("向 ACP 发送工具错误状态失败", { error: err })
                         })
                       break
                   }
                 } else if (part.type === "text") {
+                  // 处理文本部分更新
                   const delta = props.delta
                   if (delta && part.synthetic !== true) {
                     await this.connection
@@ -298,10 +335,11 @@ export namespace ACP {
                         },
                       })
                       .catch((err) => {
-                        log.error("failed to send text to ACP", { error: err })
+                        log.error("向 ACP 发送文本失败", { error: err })
                       })
                   }
                 } else if (part.type === "reasoning") {
+                  // 处理推理部分更新
                   const delta = props.delta
                   if (delta) {
                     await this.connection
@@ -316,7 +354,7 @@ export namespace ACP {
                         },
                       })
                       .catch((err) => {
-                        log.error("failed to send reasoning to ACP", { error: err })
+                        log.error("向 ACP 发送推理失败", { error: err })
                       })
                   }
                 }
@@ -328,68 +366,86 @@ export namespace ACP {
       })
     }
 
+    /**
+     * 初始化 ACP 智能体
+     * @param params 初始化请求参数
+     * @returns 初始化响应
+     */
     async initialize(params: InitializeRequest): Promise<InitializeResponse> {
-      log.info("initialize", { protocolVersion: params.protocolVersion })
+      log.info("初始化", { protocolVersion: params.protocolVersion })
 
+      // 认证方法配置
       const authMethod: AuthMethod = {
-        description: "Run `opencode auth login` in the terminal",
-        name: "Login with opencode",
+        description: "在终端中运行 `opencode auth login`",
+        name: "使用 opencode 登录",
         id: "opencode-login",
       }
 
-      // If client supports terminal-auth capability, use that instead.
+      // 如果客户端支持终端认证能力，使用该能力
       if (params.clientCapabilities?._meta?.["terminal-auth"] === true) {
         authMethod._meta = {
           "terminal-auth": {
             command: "opencode",
             args: ["auth", "login"],
-            label: "OpenCode Login",
+            label: "OpenCode 登录",
           },
         }
       }
 
       return {
-        protocolVersion: 1,
+        protocolVersion: 1, // ACP 协议版本
         agentCapabilities: {
-          loadSession: true,
+          loadSession: true, // 支持加载会话
           mcpCapabilities: {
-            http: true,
-            sse: true,
+            http: true, // 支持 HTTP MCP
+            sse: true, // 支持 SSE MCP
           },
           promptCapabilities: {
-            embeddedContext: true,
-            image: true,
+            embeddedContext: true, // 支持嵌入上下文
+            image: true, // 支持图像
           },
         },
-        authMethods: [authMethod],
+        authMethods: [authMethod], // 认证方法
         agentInfo: {
-          name: "OpenCode",
-          version: Installation.VERSION,
+          name: "OpenCode", // 智能体名称
+          version: Installation.VERSION, // 版本号
         },
       }
     }
 
+    /**
+     * 认证方法（未实现）
+     * @param _params 认证请求参数
+     */
     async authenticate(_params: AuthenticateRequest) {
-      throw new Error("Authentication not implemented")
+      throw new Error("认证功能未实现")
     }
 
+    /**
+     * 创建新会话
+     * @param params 新会话请求参数
+     * @returns 新会话响应
+     */
     async newSession(params: NewSessionRequest) {
       const directory = params.cwd
       try {
+        // 获取默认模型
         const model = await defaultModel(this.config, directory)
 
-        // Store ACP session state
+        // 创建 ACP 会话状态
         const state = await this.sessionManager.create(params.cwd, params.mcpServers, model)
         const sessionId = state.id
 
-        log.info("creating_session", { sessionId, mcpServers: params.mcpServers.length })
+        log.info("创建会话", { sessionId, mcpServers: params.mcpServers.length })
 
+        // 加载会话模式
         const load = await this.loadSessionMode({
           cwd: directory,
           mcpServers: params.mcpServers,
           sessionId,
         })
 
+        // 设置事件订阅
         this.setupEventSubscriptions(state)
 
         return {
@@ -409,27 +465,35 @@ export namespace ACP {
       }
     }
 
+    /**
+     * 加载会话
+     * @param params 加载会话请求参数
+     * @returns 会话响应
+     */
     async loadSession(params: LoadSessionRequest) {
       const directory = params.cwd
       const sessionId = params.sessionId
 
       try {
+        // 获取默认模型
         const model = await defaultModel(this.config, directory)
 
-        // Store ACP session state
+        // 加载 ACP 会话状态
         const state = await this.sessionManager.load(sessionId, params.cwd, params.mcpServers, model)
 
-        log.info("load_session", { sessionId, mcpServers: params.mcpServers.length })
+        log.info("加载会话", { sessionId, mcpServers: params.mcpServers.length })
 
+        // 加载会话模式
         const mode = await this.loadSessionMode({
           cwd: directory,
           mcpServers: params.mcpServers,
           sessionId,
         })
 
+        // 设置事件订阅
         this.setupEventSubscriptions(state)
 
-        // Replay session history
+        // 重放会话历史
         const messages = await this.sdk.session
           .messages(
             {
@@ -440,12 +504,12 @@ export namespace ACP {
           )
           .then((x) => x.data)
           .catch((err) => {
-            log.error("unexpected error when fetching message", { error: err })
+            log.error("获取消息时发生意外错误", { error: err })
             return undefined
           })
 
         for (const msg of messages ?? []) {
-          log.debug("replay message", msg)
+          log.debug("重放消息", msg)
           await this.processMessage(msg)
         }
 
@@ -461,8 +525,12 @@ export namespace ACP {
       }
     }
 
+    /**
+     * 处理会话消息
+     * @param message 会话消息响应
+     */
     private async processMessage(message: SessionMessageResponse) {
-      log.debug("process message", message)
+      log.debug("处理消息", message)
       if (message.info.role !== "assistant" && message.info.role !== "user") return
       const sessionId = message.info.sessionID
 
@@ -484,7 +552,7 @@ export namespace ACP {
                   },
                 })
                 .catch((err) => {
-                  log.error("failed to send tool pending to ACP", { error: err })
+                  log.error("向 ACP 发送工具待处理状态失败", { error: err })
                 })
               break
             case "running":
@@ -500,7 +568,7 @@ export namespace ACP {
                   },
                 })
                 .catch((err) => {
-                  log.error("failed to send tool in_progress to ACP", { error: err })
+                  log.error("向 ACP 发送工具进行中状态失败", { error: err })
                 })
               break
             case "completed":
@@ -516,6 +584,7 @@ export namespace ACP {
               ]
 
               if (kind === "edit") {
+                // 处理编辑工具的差异
                 const input = part.state.input
                 const filePath = typeof input["filePath"] === "string" ? input["filePath"] : ""
                 const oldText = typeof input["oldString"] === "string" ? input["oldString"] : ""
@@ -534,6 +603,7 @@ export namespace ACP {
               }
 
               if (part.tool === "todowrite") {
+                // 处理待办事项工具的输出
                 const parsedTodos = z.array(Todo.Info).safeParse(JSON.parse(part.state.output))
                 if (parsedTodos.success) {
                   await this.connection
@@ -553,13 +623,14 @@ export namespace ACP {
                       },
                     })
                     .catch((err) => {
-                      log.error("failed to send session update for todo", { error: err })
+                      log.error("发送待办事项会话更新失败", { error: err })
                     })
                 } else {
-                  log.error("failed to parse todo output", { error: parsedTodos.error })
+                  log.error("解析待办事项输出失败", { error: parsedTodos.error })
                 }
               }
 
+              // 发送工具调用完成状态
               await this.connection
                 .sessionUpdate({
                   sessionId,
@@ -577,10 +648,11 @@ export namespace ACP {
                   },
                 })
                 .catch((err) => {
-                  log.error("failed to send tool completed to ACP", { error: err })
+                  log.error("向 ACP 发送工具完成状态失败", { error: err })
                 })
               break
             case "error":
+              // 发送工具调用错误状态
               await this.connection
                 .sessionUpdate({
                   sessionId,
@@ -603,11 +675,12 @@ export namespace ACP {
                   },
                 })
                 .catch((err) => {
-                  log.error("failed to send tool error to ACP", { error: err })
+                  log.error("向 ACP 发送工具错误状态失败", { error: err })
                 })
               break
           }
         } else if (part.type === "text") {
+          // 处理文本部分
           if (part.text) {
             await this.connection
               .sessionUpdate({
@@ -621,10 +694,11 @@ export namespace ACP {
                 },
               })
               .catch((err) => {
-                log.error("failed to send text to ACP", { error: err })
+                log.error("向 ACP 发送文本失败", { error: err })
               })
           }
         } else if (part.type === "reasoning") {
+          // 处理推理部分
           if (part.text) {
             await this.connection
               .sessionUpdate({
@@ -638,19 +712,26 @@ export namespace ACP {
                 },
               })
               .catch((err) => {
-                log.error("failed to send reasoning to ACP", { error: err })
+                log.error("向 ACP 发送推理失败", { error: err })
               })
           }
         }
       }
     }
 
+    /**
+     * 加载会话模式
+     * @param params 加载会话请求参数
+     * @returns 会话模式响应
+     */
     private async loadSessionMode(params: LoadSessionRequest) {
       const directory = params.cwd
       const model = await defaultModel(this.config, directory)
       const sessionId = params.sessionId
 
+      // 获取可用的模型提供商
       const providers = await this.sdk.config.providers({ directory }).then((x) => x.data!.providers)
+      // 按名称排序提供商
       const entries = providers.sort((a, b) => {
         const nameA = a.name.toLowerCase()
         const nameB = b.name.toLowerCase()
@@ -658,6 +739,7 @@ export namespace ACP {
         if (nameA > nameB) return 1
         return 0
       })
+      // 生成可用模型列表
       const availableModels = entries.flatMap((provider) => {
         const models = Provider.sort(Object.values(provider.models))
         return models.map((model) => ({
@@ -666,6 +748,7 @@ export namespace ACP {
         }))
       })
 
+      // 获取可用的智能体
       const agents = await this.config.sdk.app
         .agents(
           {
@@ -675,6 +758,7 @@ export namespace ACP {
         )
         .then((resp) => resp.data!)
 
+      // 获取可用的命令
       const commands = await this.config.sdk.command
         .list(
           {
@@ -684,17 +768,20 @@ export namespace ACP {
         )
         .then((resp) => resp.data!)
 
+      // 生成可用命令列表
       const availableCommands = commands.map((command) => ({
         name: command.name,
         description: command.description ?? "",
       }))
       const names = new Set(availableCommands.map((c) => c.name))
+      // 如果没有 compact 命令，添加它
       if (!names.has("compact"))
         availableCommands.push({
           name: "compact",
-          description: "compact the session",
+          description: "压缩会话",
         })
 
+      // 生成可用模式列表
       const availableModes = agents
         .filter((agent) => agent.mode !== "subagent" && !agent.hidden)
         .map((agent) => ({
@@ -703,12 +790,16 @@ export namespace ACP {
           description: agent.description,
         }))
 
+      // 获取默认智能体名称
       const defaultAgentName = await AgentModule.defaultAgent()
+      // 确定当前模式 ID
       const currentModeId = availableModes.find((m) => m.name === defaultAgentName)?.id ?? availableModes[0].id
 
+      // 处理 MCP 服务器配置
       const mcpServers: Record<string, Config.Mcp> = {}
       for (const server of params.mcpServers) {
         if ("type" in server) {
+          // 远程 MCP 服务器
           mcpServers[server.name] = {
             url: server.url,
             headers: server.headers.reduce<Record<string, string>>((acc, { name, value }) => {
@@ -718,6 +809,7 @@ export namespace ACP {
             type: "remote",
           }
         } else {
+          // 本地 MCP 服务器
           mcpServers[server.name] = {
             type: "local",
             command: [server.command, ...server.args],
@@ -729,6 +821,7 @@ export namespace ACP {
         }
       }
 
+      // 添加 MCP 服务器
       await Promise.all(
         Object.entries(mcpServers).map(async ([key, mcp]) => {
           await this.sdk.mcp
@@ -741,11 +834,12 @@ export namespace ACP {
               { throwOnError: true },
             )
             .catch((error) => {
-              log.error("failed to add mcp server", { name: key, error })
+              log.error("添加 MCP 服务器失败", { name: key, error })
             })
         }),
       )
 
+      // 异步发送可用命令更新
       setTimeout(() => {
         this.connection.sessionUpdate({
           sessionId,
@@ -770,11 +864,18 @@ export namespace ACP {
       }
     }
 
+    /**
+     * 设置会话模型
+     * @param params 设置会话模型请求参数
+     * @returns 设置会话模型响应
+     */
     async setSessionModel(params: SetSessionModelRequest) {
       const session = this.sessionManager.get(params.sessionId)
 
+      // 解析模型 ID
       const model = Provider.parseModel(params.modelId)
 
+      // 设置会话模型
       this.sessionManager.setModel(session.id, {
         providerID: model.providerID,
         modelID: model.modelID,
@@ -785,29 +886,42 @@ export namespace ACP {
       }
     }
 
+    /**
+     * 设置会话模式
+     * @param params 设置会话模式请求参数
+     * @returns 设置会话模式响应
+     */
     async setSessionMode(params: SetSessionModeRequest): Promise<SetSessionModeResponse | void> {
       this.sessionManager.get(params.sessionId)
       await this.config.sdk.app
         .agents({}, { throwOnError: true })
         .then((x) => x.data)
         .then((agent) => {
-          if (!agent) throw new Error(`Agent not found: ${params.modeId}`)
+          if (!agent) throw new Error(`未找到智能体: ${params.modeId}`)
         })
       this.sessionManager.setMode(params.sessionId, params.modeId)
     }
 
+    /**
+     * 处理用户提示
+     * @param params 提示请求参数
+     * @returns 提示响应
+     */
     async prompt(params: PromptRequest) {
       const sessionID = params.sessionId
       const session = this.sessionManager.get(sessionID)
       const directory = session.cwd
 
+      // 获取会话模型
       const current = session.model
       const model = current ?? (await defaultModel(this.config, directory))
       if (!current) {
         this.sessionManager.setModel(session.id, model)
       }
+      // 获取会话智能体
       const agent = session.modeId ?? (await AgentModule.defaultAgent())
 
+      // 处理提示内容
       const parts: Array<
         { type: "text"; text: string } | { type: "file"; url: string; filename: string; mime: string }
       > = []
@@ -840,7 +954,6 @@ export namespace ACP {
           case "resource_link":
             const parsed = parseUri(part.uri)
             parts.push(parsed)
-
             break
 
           case "resource":
@@ -858,8 +971,9 @@ export namespace ACP {
         }
       }
 
-      log.info("parts", { parts })
+      log.info("处理后的提示部分", { parts })
 
+      // 解析命令
       const cmd = (() => {
         const text = parts
           .filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -879,6 +993,7 @@ export namespace ACP {
       }
 
       if (!cmd) {
+        // 发送普通提示
         await this.sdk.session.prompt({
           sessionID,
           model: {
@@ -892,6 +1007,7 @@ export namespace ACP {
         return done
       }
 
+      // 处理命令
       const command = await this.config.sdk.command
         .list({ directory }, { throwOnError: true })
         .then((x) => x.data!.find((c) => c.name === cmd.name))
@@ -907,6 +1023,7 @@ export namespace ACP {
         return done
       }
 
+      // 处理内置命令
       switch (cmd.name) {
         case "compact":
           await this.config.sdk.session.summarize(
@@ -924,6 +1041,10 @@ export namespace ACP {
       return done
     }
 
+    /**
+     * 取消操作
+     * @param params 取消通知参数
+     */
     async cancel(params: CancelNotification) {
       const session = this.sessionManager.get(params.sessionId)
       await this.config.sdk.session.abort(
@@ -936,6 +1057,11 @@ export namespace ACP {
     }
   }
 
+  /**
+   * 将工具名称转换为工具类型
+   * @param toolName 工具名称
+   * @returns 工具类型
+   */
   function toToolKind(toolName: string): ToolKind {
     const tool = toolName.toLocaleLowerCase()
     switch (tool) {
@@ -964,6 +1090,12 @@ export namespace ACP {
     }
   }
 
+  /**
+   * 从工具输入中提取位置信息
+   * @param toolName 工具名称
+   * @param input 工具输入
+   * @returns 位置信息数组
+   */
   function toLocations(toolName: string, input: Record<string, any>): { path: string }[] {
     const tool = toolName.toLocaleLowerCase()
     switch (tool) {
@@ -983,6 +1115,12 @@ export namespace ACP {
     }
   }
 
+  /**
+   * 获取默认模型配置
+   * @param config ACP 配置
+   * @param cwd 工作目录
+   * @returns 默认模型配置
+   */
   async function defaultModel(config: ACPConfig, cwd?: string) {
     const sdk = config.sdk
     const configured = config.defaultModel
@@ -1000,13 +1138,18 @@ export namespace ACP {
         }
       })
       .catch((error) => {
-        log.error("failed to load user config for default model", { error })
+        log.error("加载用户配置获取默认模型失败", { error })
         return undefined
       })
 
     return model ?? { providerID: "opencode", modelID: "big-pickle" }
   }
 
+  /**
+   * 解析 URI
+   * @param uri URI 字符串
+   * @returns 解析后的资源对象
+   */
   function parseUri(
     uri: string,
   ): { type: "file"; url: string; filename: string; mime: string } | { type: "text"; text: string } {

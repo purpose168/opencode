@@ -17,15 +17,15 @@ export async function POST(input: APIEvent) {
 
   return (async () => {
     if (body.type === "customer.updated") {
-      // check default payment method changed
+      // 检查默认支付方式是否变更
       const prevInvoiceSettings = body.data.previous_attributes?.invoice_settings ?? {}
       if (!("default_payment_method" in prevInvoiceSettings)) return "ignored"
 
       const customerID = body.data.object.id
       const paymentMethodID = body.data.object.invoice_settings.default_payment_method as string
 
-      if (!customerID) throw new Error("Customer ID not found")
-      if (!paymentMethodID) throw new Error("Payment method ID not found")
+      if (!customerID) throw new Error("未找到客户ID")
+      if (!paymentMethodID) throw new Error("未找到支付方式ID")
 
       const paymentMethod = await Billing.stripe().paymentMethods.retrieve(paymentMethodID)
       await Database.use(async (tx) => {
@@ -46,17 +46,17 @@ export async function POST(input: APIEvent) {
       const paymentID = body.data.object.payment_intent as string
       const invoiceID = body.data.object.invoice as string
 
-      if (!workspaceID) throw new Error("Workspace ID not found")
-      if (!customerID) throw new Error("Customer ID not found")
-      if (!amountInCents) throw new Error("Amount not found")
-      if (!paymentID) throw new Error("Payment ID not found")
-      if (!invoiceID) throw new Error("Invoice ID not found")
+      if (!workspaceID) throw new Error("未找到工作区ID")
+      if (!customerID) throw new Error("未找到客户ID")
+      if (!amountInCents) throw new Error("未找到金额")
+      if (!paymentID) throw new Error("未找到支付ID")
+      if (!invoiceID) throw new Error("未找到发票ID")
 
       await Actor.provide("system", { workspaceID }, async () => {
         const customer = await Billing.get()
-        if (customer?.customerID && customer.customerID !== customerID) throw new Error("Customer ID mismatch")
+        if (customer?.customerID && customer.customerID !== customerID) throw new Error("客户ID不匹配")
 
-        // set customer metadata
+        // 设置客户元数据
         if (!customer?.customerID) {
           await Billing.stripe().customers.update(customerID, {
             metadata: {
@@ -65,12 +65,13 @@ export async function POST(input: APIEvent) {
           })
         }
 
-        // get payment method for the payment intent
+        // 获取支付意图并展开支付方式信息
         const paymentIntent = await Billing.stripe().paymentIntents.retrieve(paymentID, {
-          expand: ["payment_method"],
+          expand: ["payment_method"], // 展开支付方式字段
         })
         const paymentMethod = paymentIntent.payment_method
-        if (!paymentMethod || typeof paymentMethod === "string") throw new Error("Payment method not expanded")
+        // 检查支付方式是否存在且已展开（不是字符串ID）
+        if (!paymentMethod || typeof paymentMethod === "string") throw new Error("支付方式未展开")
 
         await Database.transaction(async (tx) => {
           await tx
@@ -81,7 +82,7 @@ export async function POST(input: APIEvent) {
               paymentMethodID: paymentMethod.id,
               paymentMethodLast4: paymentMethod.card?.last4 ?? null,
               paymentMethodType: paymentMethod.type,
-              // enable reload if first time enabling billing
+              // 如果是首次启用计费，启用自动充值
               ...(customer?.customerID
                 ? {}
                 : {
@@ -105,8 +106,8 @@ export async function POST(input: APIEvent) {
     if (body.type === "charge.refunded") {
       const customerID = body.data.object.customer as string
       const paymentIntentID = body.data.object.payment_intent as string
-      if (!customerID) throw new Error("Customer ID not found")
-      if (!paymentIntentID) throw new Error("Payment ID not found")
+      if (!customerID) throw new Error("未找到客户ID")
+      if (!paymentIntentID) throw new Error("未找到支付ID")
 
       const workspaceID = await Database.use((tx) =>
         tx
@@ -117,8 +118,9 @@ export async function POST(input: APIEvent) {
           .where(eq(BillingTable.customerID, customerID))
           .then((rows) => rows[0]?.workspaceID),
       )
-      if (!workspaceID) throw new Error("Workspace ID not found")
+      if (!workspaceID) throw new Error("未找到工作区ID")
 
+      // 获取支付金额
       const amount = await Database.use((tx) =>
         tx
           .select({
@@ -128,9 +130,10 @@ export async function POST(input: APIEvent) {
           .where(and(eq(PaymentTable.paymentID, paymentIntentID), eq(PaymentTable.workspaceID, workspaceID)))
           .then((rows) => rows[0]?.amount),
       )
-      if (!amount) throw new Error("Payment not found")
+      if (!amount) throw new Error("未找到支付记录")
 
       await Database.transaction(async (tx) => {
+        // 更新支付记录为已退款
         await tx
           .update(PaymentTable)
           .set({
@@ -138,6 +141,7 @@ export async function POST(input: APIEvent) {
           })
           .where(and(eq(PaymentTable.paymentID, paymentIntentID), eq(PaymentTable.workspaceID, workspaceID)))
 
+        // 从余额中扣除退款金额
         await tx
           .update(BillingTable)
           .set({
@@ -148,7 +152,7 @@ export async function POST(input: APIEvent) {
     }
   })()
     .then((message) => {
-      return Response.json({ message: message ?? "done" }, { status: 200 })
+      return Response.json({ message: message ?? "完成" }, { status: 200 })
     })
     .catch((error: any) => {
       return Response.json({ message: error.message }, { status: 500 })

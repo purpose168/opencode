@@ -1,7 +1,8 @@
 import z from "zod"
-import { Tool } from "./tool"
 import DESCRIPTION from "./codesearch.txt"
+import { Tool } from "./tool"
 
+// API配置常量
 const API_CONFIG = {
   BASE_URL: "https://mcp.exa.ai",
   ENDPOINTS: {
@@ -9,6 +10,7 @@ const API_CONFIG = {
   },
 } as const
 
+// MCP代码请求接口定义
 interface McpCodeRequest {
   jsonrpc: string
   id: number
@@ -22,6 +24,7 @@ interface McpCodeRequest {
   }
 }
 
+// MCP代码响应接口定义
 interface McpCodeResponse {
   jsonrpc: string
   result: {
@@ -32,13 +35,14 @@ interface McpCodeResponse {
   }
 }
 
+// 定义代码搜索工具，用于搜索API、库和SDK的相关上下文
 export const CodeSearchTool = Tool.define("codesearch", {
   description: DESCRIPTION,
   parameters: z.object({
     query: z
       .string()
       .describe(
-        "Search query to find relevant context for APIs, Libraries, and SDKs. For example, 'React useState hook examples', 'Python pandas dataframe filtering', 'Express.js middleware', 'Next js partial prerendering configuration'",
+        "搜索查询，用于查找API、库和SDK的相关上下文。例如，'React useState hook示例'、'Python pandas数据框过滤'、'Express.js中间件'、'Next.js部分预渲染配置'",
       ),
     tokensNum: z
       .number()
@@ -46,10 +50,11 @@ export const CodeSearchTool = Tool.define("codesearch", {
       .max(50000)
       .default(5000)
       .describe(
-        "Number of tokens to return (1000-50000). Default is 5000 tokens. Adjust this value based on how much context you need - use lower values for focused queries and higher values for comprehensive documentation.",
+        "要返回的token数量（1000-50000）。默认为5000个token。根据您需要的上下文量调整此值 - 对于针对性查询使用较低的值，对于综合文档使用较高的值。",
       ),
   }),
   async execute(params, ctx) {
+    // 请求代码搜索权限
     await ctx.ask({
       permission: "codesearch",
       patterns: [params.query],
@@ -60,6 +65,7 @@ export const CodeSearchTool = Tool.define("codesearch", {
       },
     })
 
+    // 构建代码搜索请求
     const codeRequest: McpCodeRequest = {
       jsonrpc: "2.0",
       id: 1,
@@ -73,15 +79,18 @@ export const CodeSearchTool = Tool.define("codesearch", {
       },
     }
 
+    // 设置超时控制器，30秒后中止请求
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 30000)
 
     try {
+      // 设置请求头
       const headers: Record<string, string> = {
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
       }
 
+      // 发送HTTP请求到代码搜索API
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTEXT}`, {
         method: "POST",
         headers,
@@ -91,14 +100,15 @@ export const CodeSearchTool = Tool.define("codesearch", {
 
       clearTimeout(timeoutId)
 
+      // 检查响应状态
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`Code search error (${response.status}): ${errorText}`)
+        throw new Error(`代码搜索错误（${response.status}）：${errorText}`)
       }
 
       const responseText = await response.text()
 
-      // Parse SSE response
+      // 解析服务器发送事件（SSE）响应
       const lines = responseText.split("\n")
       for (const line of lines) {
         if (line.startsWith("data: ")) {
@@ -106,24 +116,25 @@ export const CodeSearchTool = Tool.define("codesearch", {
           if (data.result && data.result.content && data.result.content.length > 0) {
             return {
               output: data.result.content[0].text,
-              title: `Code search: ${params.query}`,
+              title: `代码搜索：${params.query}`,
               metadata: {},
             }
           }
         }
       }
 
+      // 未找到代码片段或文档
       return {
-        output:
-          "No code snippets or documentation found. Please try a different query, be more specific about the library or programming concept, or check the spelling of framework names.",
-        title: `Code search: ${params.query}`,
+        output: "未找到代码片段或文档。请尝试不同的查询，更具体地说明库或编程概念，或检查框架名称的拼写。",
+        title: `代码搜索：${params.query}`,
         metadata: {},
       }
     } catch (error) {
       clearTimeout(timeoutId)
 
+      // 处理中止错误（超时或用户取消）
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error("Code search request timed out")
+        throw new Error("代码搜索请求超时")
       }
 
       throw error

@@ -42,31 +42,31 @@ interface PromptInputProps {
 }
 
 const PLACEHOLDERS = [
-  "Fix a TODO in the codebase",
-  "What is the tech stack of this project?",
-  "Fix broken tests",
-  "Explain how authentication works",
-  "Find and fix security vulnerabilities",
-  "Add unit tests for the user service",
-  "Refactor this function to be more readable",
-  "What does this error mean?",
-  "Help me debug this issue",
-  "Generate API documentation",
-  "Optimize database queries",
-  "Add input validation",
-  "Create a new component for...",
-  "How do I deploy this project?",
-  "Review my code for best practices",
-  "Add error handling to this function",
-  "Explain this regex pattern",
-  "Convert this to TypeScript",
-  "Add logging throughout the codebase",
-  "What dependencies are outdated?",
-  "Help me write a migration script",
-  "Implement caching for this endpoint",
-  "Add pagination to this list",
-  "Create a CLI command for...",
-  "How do environment variables work here?",
+  "修复代码库中的 TODO",
+  "这个项目的技术栈是什么？",
+  "修复损坏的测试",
+  "解释身份验证如何工作",
+  "查找并修复安全漏洞",
+  "为用户服务添加单元测试",
+  "重构此函数以提高可读性",
+  "这个错误是什么意思？",
+  "帮助我调试这个问题",
+  "生成 API 文档",
+  "优化数据库查询",
+  "添加输入验证",
+  "为...创建新组件",
+  "如何部署此项目？",
+  "审查我的代码以遵循最佳实践",
+  "为此函数添加错误处理",
+  "解释此正则表达式模式",
+  "将此转换为 TypeScript",
+  "在整个代码库中添加日志记录",
+  "哪些依赖项已过时？",
+  "帮助我编写迁移脚本",
+  "为此端点实现缓存",
+  "为此列表添加分页",
+  "为...创建 CLI 命令",
+  "环境变量在这里如何工作？",
 ]
 
 interface SlashCommand {
@@ -1315,7 +1315,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             <Match when={store.popover === "at"}>
               <Show
                 when={atFlat().length > 0}
-                fallback={<div class="text-text-weak px-2 py-1">No matching results</div>}
+                fallback={<div class="text-text-weak px-2 py-1">无匹配结果</div>}
               >
                 <For each={atFlat().slice(0, 10)}>
                   {(item) => (
@@ -1360,7 +1360,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             <Match when={store.popover === "slash"}>
               <Show
                 when={slashFlat().length > 0}
-                fallback={<div class="text-text-weak px-2 py-1">No matching commands</div>}
+                fallback={<div class="text-text-weak px-2 py-1">无匹配命令</div>}
               >
                 <For each={slashFlat()}>
                   {(cmd) => (
@@ -1468,8 +1468,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
           <Show when={!prompt.dirty() && store.imageAttachments.length === 0}>
             <div class="absolute top-0 inset-x-0 px-5 py-3 pr-12 text-14-regular text-text-weak pointer-events-none whitespace-nowrap truncate">
               {store.mode === "shell"
-                ? "Enter shell command..."
-                : `Ask anything... "${PLACEHOLDERS[store.placeholder]}"`}
+                ? "输入 shell 命令..."
+                : `询问任何问题... "${PLACEHOLDERS[store.placeholder]}"`}
             </div>
           </Show>
         </div>

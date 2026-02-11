@@ -4,77 +4,110 @@ import { createSignal, For, Show } from "solid-js"
 import { Database, desc, eq } from "@opencode-ai/console-core/drizzle/index.js"
 import { BenchmarkTable } from "@opencode-ai/console-core/schema/benchmark.sql.js"
 
+/**
+ * 任务源接口
+ */
 interface TaskSource {
-  repo: string
-  from: string
-  to: string
+  repo: string  // 仓库名称
+  from: string  // 起始提交
+  to: string    // 结束提交
 }
 
+/**
+ * 评判接口
+ */
 interface Judge {
-  score: number
-  rationale: string
-  judge: string
+  score: number     // 评分
+  rationale: string // 评分理由
+  judge: string     // 评判者
 }
 
+/**
+ * 评分详情接口
+ */
 interface ScoreDetail {
-  criterion: string
-  weight: number
-  average: number
-  variance?: number
-  judges?: Judge[]
+  criterion: string  // 评分标准
+  weight: number     // 权重
+  average: number    // 平均分
+  variance?: number  // 方差
+  judges?: Judge[]   // 评判列表
 }
 
+/**
+ * 运行用量接口
+ */
 interface RunUsage {
-  input: number
-  output: number
-  cost: number
+  input: number   // 输入用量
+  output: number  // 输出用量
+  cost: number    // 成本
 }
 
+/**
+ * 运行接口
+ */
 interface Run {
-  task: string
-  model: string
-  agent: string
+  task: string     // 任务
+  model: string    // 模型
+  agent: string    // 代理
   score: {
-    final: number
-    base: number
-    penalty: number
+    final: number    // 最终分数
+    base: number     // 基础分数
+    penalty: number  // 惩罚分数
   }
-  scoreDetails: ScoreDetail[]
-  usage?: RunUsage
-  duration?: number
+  scoreDetails: ScoreDetail[] // 评分详情
+  usage?: RunUsage            // 用量
+  duration?: number           // 持续时间
 }
 
+/**
+ * 提示接口
+ */
 interface Prompt {
-  commit: string
-  prompt: string
+  commit: string  // 提交
+  prompt: string  // 提示内容
 }
 
+/**
+ * 平均用量接口
+ */
 interface AverageUsage {
-  input: number
-  output: number
-  cost: number
+  input: number   // 平均输入用量
+  output: number  // 平均输出用量
+  cost: number    // 平均成本
 }
 
+/**
+ * 任务接口
+ */
 interface Task {
-  averageScore: number
-  averageDuration?: number
-  averageUsage?: AverageUsage
-  model?: string
-  agent?: string
-  summary?: string
-  runs?: Run[]
+  averageScore: number        // 平均分数
+  averageDuration?: number    // 平均持续时间
+  averageUsage?: AverageUsage // 平均用量
+  model?: string              // 模型
+  agent?: string              // 代理
+  summary?: string            // 摘要
+  runs?: Run[]                // 运行列表
   task: {
-    id: string
-    source: TaskSource
-    prompts?: Prompt[]
+    id: string               // 任务 ID
+    source: TaskSource       // 任务源
+    prompts?: Prompt[]       // 提示列表
   }
 }
 
+/**
+ * 基准测试结果接口
+ */
 interface BenchmarkResult {
-  averageScore: number
-  tasks: Task[]
+  averageScore: number  // 平均分数
+  tasks: Task[]         // 任务列表
 }
 
+/**
+ * 获取任务详情
+ * @param benchmarkId 基准测试 ID
+ * @param taskId 任务 ID
+ * @returns 任务详情
+ */
 async function getTaskDetail(benchmarkId: string, taskId: string) {
   "use server"
   const rows = await Database.use((tx) =>
@@ -88,16 +121,24 @@ async function getTaskDetail(benchmarkId: string, taskId: string) {
 
 const queryTaskDetail = query(getTaskDetail, "benchmark.task.detail")
 
+/**
+ * 格式化持续时间
+ * @param ms 毫秒数
+ * @returns 格式化后的时间字符串
+ */
 function formatDuration(ms: number): string {
   const seconds = Math.floor(ms / 1000)
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
   if (minutes > 0) {
-    return `${minutes}m ${remainingSeconds}s`
+    return `${minutes}分 ${remainingSeconds}秒`
   }
-  return `${remainingSeconds}s`
+  return `${remainingSeconds}秒`
 }
 
+/**
+ * 基准测试详情页面
+ */
 export default function BenchDetail() {
   const params = useParams()
   const [benchmarkId, taskId] = (params.id ?? "").split(":")
@@ -105,27 +146,27 @@ export default function BenchDetail() {
 
   return (
     <main data-page="bench-detail">
-      <Title>Benchmark - {taskId}</Title>
+      <Title>基准测试 - {taskId}</Title>
       <div style={{ padding: "1rem" }}>
-        <Show when={task()} fallback={<p>Task not found</p>}>
+        <Show when={task()} fallback={<p>未找到任务</p>}>
           <div style={{ "margin-bottom": "1rem" }}>
             <div>
-              <strong>Agent: </strong>
+              <strong>代理: </strong>
               {task()?.agent ?? "N/A"}
             </div>
             <div>
-              <strong>Model: </strong>
+              <strong>模型: </strong>
               {task()?.model ?? "N/A"}
             </div>
             <div>
-              <strong>Task: </strong>
+              <strong>任务: </strong>
               {task()!.task.id}
             </div>
           </div>
 
           <div style={{ "margin-bottom": "1rem" }}>
             <div>
-              <strong>Repo: </strong>
+              <strong>仓库: </strong>
               <a
                 href={`https://github.com/${task()!.task.source.repo}`}
                 target="_blank"
@@ -136,7 +177,7 @@ export default function BenchDetail() {
               </a>
             </div>
             <div>
-              <strong>From: </strong>
+              <strong>起始: </strong>
               <a
                 href={`https://github.com/${task()!.task.source.repo}/commit/${task()!.task.source.from}`}
                 target="_blank"
@@ -147,7 +188,7 @@ export default function BenchDetail() {
               </a>
             </div>
             <div>
-              <strong>To: </strong>
+              <strong>结束: </strong>
               <a
                 href={`https://github.com/${task()!.task.source.repo}/commit/${task()!.task.source.to}`}
                 target="_blank"
@@ -161,11 +202,11 @@ export default function BenchDetail() {
 
           <Show when={task()?.task.prompts && task()!.task.prompts!.length > 0}>
             <div style={{ "margin-bottom": "1rem" }}>
-              <strong>Prompt:</strong>
+              <strong>提示:</strong>
               <For each={task()!.task.prompts}>
                 {(p) => (
                   <div style={{ "margin-top": "0.5rem" }}>
-                    <div style={{ "font-size": "0.875rem", color: "#666" }}>Commit: {p.commit.slice(0, 7)}</div>
+                    <div style={{ "font-size": "0.875rem", color: "#666" }}>提交: {p.commit.slice(0, 7)}</div>
                     <p style={{ "margin-top": "0.25rem", "white-space": "pre-wrap" }}>{p.prompt}</p>
                   </div>
                 )}
@@ -177,33 +218,33 @@ export default function BenchDetail() {
 
           <div style={{ "margin-bottom": "1rem" }}>
             <div>
-              <strong>Average Duration: </strong>
+              <strong>平均持续时间: </strong>
               {task()?.averageDuration ? formatDuration(task()!.averageDuration!) : "N/A"}
             </div>
             <div>
-              <strong>Average Score: </strong>
+              <strong>平均分数: </strong>
               {task()?.averageScore?.toFixed(3) ?? "N/A"}
             </div>
             <div>
-              <strong>Average Cost: </strong>
+              <strong>平均成本: </strong>
               {task()?.averageUsage?.cost ? `$${task()!.averageUsage!.cost.toFixed(4)}` : "N/A"}
             </div>
           </div>
 
           <Show when={task()?.summary}>
             <div style={{ "margin-bottom": "1rem" }}>
-              <strong>Summary:</strong>
+              <strong>摘要:</strong>
               <p style={{ "margin-top": "0.5rem", "white-space": "pre-wrap" }}>{task()!.summary}</p>
             </div>
           </Show>
 
           <Show when={task()?.runs && task()!.runs!.length > 0}>
             <div style={{ "margin-bottom": "1rem" }}>
-              <strong>Runs:</strong>
+              <strong>运行结果:</strong>
               <table style={{ "margin-top": "0.5rem", "border-collapse": "collapse", width: "100%" }}>
                 <thead>
                   <tr>
-                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>Run</th>
+                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>运行</th>
                     <th
                       style={{
                         border: "1px solid #ccc",
@@ -212,10 +253,10 @@ export default function BenchDetail() {
                         "white-space": "nowrap",
                       }}
                     >
-                      Score (Base - Penalty)
+                      分数 (基础 - 惩罚)
                     </th>
-                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>Cost</th>
-                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>Duration</th>
+                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>成本</th>
+                    <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>持续时间</th>
                     <For each={task()!.runs![0]?.scoreDetails}>
                       {(detail) => (
                         <th style={{ border: "1px solid #ccc", padding: "0.5rem", "text-align": "left" }}>
@@ -265,17 +306,18 @@ export default function BenchDetail() {
               <For each={task()!.runs}>
                 {(run, index) => (
                   <div style={{ "margin-top": "1rem" }}>
-                    <h3 style={{ margin: "0 0 0.5rem 0" }}>Run {index() + 1}</h3>
+                    <h3 style={{ margin: "0 0 0.5rem 0" }}>运行 {index() + 1}</h3>
                     <div>
-                      <strong>Score: </strong>
-                      {run.score.final.toFixed(3)} (Base: {run.score.base.toFixed(3)} - Penalty:{" "}
-                      {run.score.penalty.toFixed(3)})
+                      <strong>分数: </strong>
+                      {run.score.final.toFixed(3)} (基础: {run.score.base.toFixed(3)} - 惩罚:{
+                        run.score.penalty.toFixed(3)
+                      })
                     </div>
                     <For each={run.scoreDetails}>
                       {(detail) => (
                         <div style={{ "margin-top": "1rem", "padding-left": "1rem", "border-left": "2px solid #ccc" }}>
                           <div>
-                            {detail.criterion} (weight: {detail.weight}){" "}
+                            {detail.criterion} (权重: {detail.weight}){" "}
                             <For each={detail.judges}>
                               {(judge) => (
                                 <span
@@ -350,7 +392,7 @@ export default function BenchDetail() {
                   onClick={() => setJsonExpanded(!jsonExpanded())}
                 >
                   <span style={{ "margin-right": "0.5rem" }}>{jsonExpanded() ? "▼" : "▶"}</span>
-                  Raw JSON
+                  原始 JSON
                 </button>
                 <Show when={jsonExpanded()}>
                   <pre>{JSON.stringify(task(), null, 2)}</pre>

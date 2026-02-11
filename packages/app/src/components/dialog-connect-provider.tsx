@@ -142,16 +142,16 @@ export function DialogConnectProvider(props: { provider: string }) {
           <div class="text-16-medium text-text-strong">
             <Switch>
               <Match when={props.provider === "anthropic" && method()?.label?.toLowerCase().includes("max")}>
-                Login with Claude Pro/Max
+                使用 Claude Pro/Max 登录
               </Match>
-              <Match when={true}>Connect {provider().name}</Match>
+              <Match when={true}>连接 {provider().name}</Match>
             </Switch>
           </div>
         </div>
         <div class="px-2.5 pb-10 flex flex-col gap-6">
           <Switch>
             <Match when={store.methodIndex === undefined}>
-              <div class="text-14-regular text-text-base">Select login method for {provider().name}.</div>
+              <div class="text-14-regular text-text-base">为 {provider().name} 选择登录方式。</div>
               <div class="">
                 <List
                   ref={(ref) => {
@@ -179,7 +179,7 @@ export function DialogConnectProvider(props: { provider: string }) {
               <div class="text-14-regular text-text-base">
                 <div class="flex items-center gap-x-2">
                   <Spinner />
-                  <span>Authorization in progress...</span>
+                  <span>授权进行中...</span>
                 </div>
               </div>
             </Match>
@@ -187,7 +187,7 @@ export function DialogConnectProvider(props: { provider: string }) {
               <div class="text-14-regular text-text-base">
                 <div class="flex items-center gap-x-2">
                   <Icon name="circle-ban-sign" class="text-icon-critical-base" />
-                  <span>Authorization failed: {store.error}</span>
+                  <span>授权失败: {store.error}</span>
                 </div>
               </div>
             </Match>
@@ -206,7 +206,7 @@ export function DialogConnectProvider(props: { provider: string }) {
                   const apiKey = formData.get("apiKey") as string
 
                   if (!apiKey?.trim()) {
-                    setFormStore("error", "API key is required")
+                    setFormStore("error", "API密钥是必需的")
                     return
                   }
 
@@ -227,25 +227,27 @@ export function DialogConnectProvider(props: { provider: string }) {
                       <Match when={provider().id === "opencode"}>
                         <div class="flex flex-col gap-4">
                           <div class="text-14-regular text-text-base">
-                            OpenCode Zen gives you access to a curated set of reliable optimized models for coding
-                            agents.
+                            OpenCode Zen 为您提供一组精心挑选的可靠优化模型，专为编码代理设计。
                           </div>
                           <div class="text-14-regular text-text-base">
-                            With a single API key you'll get access to models such as Claude, GPT, Gemini, GLM and more.
+                            使用单个 API 密钥，您将可以访问 Claude、GPT、Gemini、GLM 等多种模型。
                           </div>
                           <div class="text-14-regular text-text-base">
-                            Visit{" "}
+                            访问{
+                              " "
+                            }
                             <Link href="https://opencode.ai/zen" tabIndex={-1}>
                               opencode.ai/zen
-                            </Link>{" "}
-                            to collect your API key.
+                            </Link>{
+                              " "
+                            }
+                            来获取您的 API 密钥。
                           </div>
                         </div>
                       </Match>
                       <Match when={true}>
                         <div class="text-14-regular text-text-base">
-                          Enter your {provider().name} API key to connect your account and use {provider().name} models
-                          in OpenCode.
+                          输入您的 {provider().name} API 密钥以连接您的账户并在 OpenCode 中使用 {provider().name} 模型。
                         </div>
                       </Match>
                     </Switch>
@@ -253,8 +255,8 @@ export function DialogConnectProvider(props: { provider: string }) {
                       <TextField
                         autofocus
                         type="text"
-                        label={`${provider().name} API key`}
-                        placeholder="API key"
+                        label={`${provider().name} API 密钥`}
+                        placeholder="API 密钥"
                         name="apiKey"
                         value={formStore.value}
                         onChange={setFormStore.bind(null, "value")}
@@ -262,7 +264,7 @@ export function DialogConnectProvider(props: { provider: string }) {
                         error={formStore.error}
                       />
                       <Button class="w-auto" type="submit" size="large" variant="primary">
-                        Submit
+                        提交
                       </Button>
                     </form>
                   </div>
@@ -292,7 +294,7 @@ export function DialogConnectProvider(props: { provider: string }) {
                       const code = formData.get("code") as string
 
                       if (!code?.trim()) {
-                        setFormStore("error", "Authorization code is required")
+                        setFormStore("error", "授权码是必需的")
                         return
                       }
 
@@ -306,21 +308,20 @@ export function DialogConnectProvider(props: { provider: string }) {
                         await complete()
                         return
                       }
-                      setFormStore("error", "Invalid authorization code")
+                      setFormStore("error", "无效的授权码")
                     }
 
                     return (
                       <div class="flex flex-col gap-6">
                         <div class="text-14-regular text-text-base">
-                          Visit <Link href={store.authorization!.url}>this link</Link> to collect your authorization
-                          code to connect your account and use {provider().name} models in OpenCode.
+                          访问 <Link href={store.authorization!.url}>此链接</Link> 获取授权码，以连接您的账户并在 OpenCode 中使用 {provider().name} 模型。
                         </div>
                         <form onSubmit={handleSubmit} class="flex flex-col items-start gap-4">
                           <TextField
                             autofocus
                             type="text"
-                            label={`${method()?.label} authorization code`}
-                            placeholder="Authorization code"
+                            label={`${method()?.label} 授权码`}
+                            placeholder="授权码"
                             name="code"
                             value={formStore.value}
                             onChange={setFormStore.bind(null, "value")}
@@ -328,7 +329,7 @@ export function DialogConnectProvider(props: { provider: string }) {
                             error={formStore.error}
                           />
                           <Button class="w-auto" type="submit" size="large" variant="primary">
-                            Submit
+                            提交
                           </Button>
                         </form>
                       </div>
@@ -361,13 +362,12 @@ export function DialogConnectProvider(props: { provider: string }) {
                     return (
                       <div class="flex flex-col gap-6">
                         <div class="text-14-regular text-text-base">
-                          Visit <Link href={store.authorization!.url}>this link</Link> and enter the code below to
-                          connect your account and use {provider().name} models in OpenCode.
+                          访问 <Link href={store.authorization!.url}>此链接</Link> 并输入下面的代码，以连接您的账户并在 OpenCode 中使用 {provider().name} 模型。
                         </div>
-                        <TextField label="Confirmation code" class="font-mono" value={code()} readOnly copyable />
+                        <TextField label="确认码" class="font-mono" value={code()} readOnly copyable />
                         <div class="text-14-regular text-text-base flex items-center gap-4">
                           <Spinner />
-                          <span>Waiting for authorization...</span>
+                          <span>等待授权...</span>
                         </div>
                       </div>
                     )

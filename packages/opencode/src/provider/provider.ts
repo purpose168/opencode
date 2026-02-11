@@ -1,40 +1,40 @@
-import z from "zod"
-import fuzzysort from "fuzzysort"
-import { Config } from "../config/config"
-import { mapValues, mergeDeep, omit, pickBy, sortBy } from "remeda"
-import { NoSuchModelError, type Provider as SDK } from "ai"
-import { Log } from "../util/log"
-import { BunProc } from "../bun"
-import { Plugin } from "../plugin"
-import { ModelsDev } from "./models"
-import { NamedError } from "@opencode-ai/util/error"
-import { Auth } from "../auth"
-import { Env } from "../env"
-import { Instance } from "../project/instance"
-import { Flag } from "../flag/flag"
 import { iife } from "@/util/iife"
+import { NamedError } from "@opencode-ai/util/error"
+import { NoSuchModelError, type Provider as SDK } from "ai"
+import fuzzysort from "fuzzysort"
+import { mapValues, mergeDeep, omit, pickBy, sortBy } from "remeda"
+import z from "zod"
+import { Auth } from "../auth"
+import { BunProc } from "../bun"
+import { Config } from "../config/config"
+import { Env } from "../env"
+import { Flag } from "../flag/flag"
+import { Plugin } from "../plugin"
+import { Instance } from "../project/instance"
+import { Log } from "../util/log"
+import { ModelsDev } from "./models"
 
-// Direct imports for bundled providers
+// 内置提供者的直接导入
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock"
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { createAzure } from "@ai-sdk/azure"
+import { createCerebras } from "@ai-sdk/cerebras"
+import { createCohere } from "@ai-sdk/cohere"
+import { createDeepInfra } from "@ai-sdk/deepinfra"
+import { createGateway } from "@ai-sdk/gateway"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { createVertex } from "@ai-sdk/google-vertex"
 import { createVertexAnthropic } from "@ai-sdk/google-vertex/anthropic"
+import { createGroq } from "@ai-sdk/groq"
+import { createMistral } from "@ai-sdk/mistral"
 import { createOpenAI } from "@ai-sdk/openai"
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible"
+import { createPerplexity } from "@ai-sdk/perplexity"
+import { createTogetherAI } from "@ai-sdk/togetherai"
+import { createVercel } from "@ai-sdk/vercel"
+import { createXai } from "@ai-sdk/xai"
 import { createOpenRouter, type LanguageModelV2 } from "@openrouter/ai-sdk-provider"
 import { createOpenaiCompatible as createGitHubCopilotOpenAICompatible } from "./sdk/openai-compatible/src"
-import { createXai } from "@ai-sdk/xai"
-import { createMistral } from "@ai-sdk/mistral"
-import { createGroq } from "@ai-sdk/groq"
-import { createDeepInfra } from "@ai-sdk/deepinfra"
-import { createCerebras } from "@ai-sdk/cerebras"
-import { createCohere } from "@ai-sdk/cohere"
-import { createGateway } from "@ai-sdk/gateway"
-import { createTogetherAI } from "@ai-sdk/togetherai"
-import { createPerplexity } from "@ai-sdk/perplexity"
-import { createVercel } from "@ai-sdk/vercel"
 import { ProviderTransform } from "./transform"
 
 export namespace Provider {
@@ -60,7 +60,7 @@ export namespace Provider {
     "@ai-sdk/togetherai": createTogetherAI,
     "@ai-sdk/perplexity": createPerplexity,
     "@ai-sdk/vercel": createVercel,
-    // @ts-ignore (TODO: kill this code so we dont have to maintain it)
+    // @ts-ignore (TODO: 删除此代码,这样我们就不必维护它)
     "@ai-sdk/github-copilot": createGitHubCopilotOpenAICompatible,
   }
 
@@ -195,15 +195,15 @@ export namespace Provider {
           credentialProvider: fromNodeProviderChain(),
         },
         async getModel(sdk: any, modelID: string, options?: Record<string, any>) {
-          // Skip region prefixing if model already has global prefix
+          // 如果模型已经有全局前缀,则跳过区域前缀
           if (modelID.startsWith("global.")) {
             return sdk.languageModel(modelID)
           }
 
-          // Region resolution precedence (highest to lowest):
-          // 1. options.region from opencode.json provider config
-          // 2. defaultRegion from AWS_REGION environment variable
-          // 3. Default "us-east-1" (baked into defaultRegion)
+          // 区域解析优先级(从高到低):
+          // 1. opencode.json提供者配置中的options.region
+          // 2. AWS_REGION环境变量中的defaultRegion
+          // 3. 默认"us-east-1"(已内置到defaultRegion中)
           const region = options?.region ?? defaultRegion
 
           let regionPrefix = region.split("-")[0]
@@ -362,7 +362,7 @@ export namespace Provider {
 
       if (!accountId || !gateway) return { autoload: false }
 
-      // Get API token from env or auth prompt
+      // 从环境变量或认证提示获取API令牌
       const apiToken = await (async () => {
         const envToken = Env.get("CLOUDFLARE_API_TOKEN")
         if (envToken) return envToken
@@ -379,14 +379,14 @@ export namespace Provider {
         options: {
           baseURL: `https://gateway.ai.cloudflare.com/v1/${accountId}/${gateway}/compat`,
           headers: {
-            // Cloudflare AI Gateway uses cf-aig-authorization for authenticated gateways
-            // This enables Unified Billing where Cloudflare handles upstream provider auth
+            // Cloudflare AI Gateway对已认证的网关使用cf-aig-authorization
+            // 这启用了统一计费,其中Cloudflare处理上游提供者认证
             ...(apiToken ? { "cf-aig-authorization": `Bearer ${apiToken}` } : {}),
             "HTTP-Referer": "https://opencode.ai/",
             "X-Title": "opencode",
           },
-          // Custom fetch to strip Authorization header - AI Gateway uses cf-aig-authorization instead
-          // Sending Authorization header with invalid value causes auth errors
+          // 自定义fetch以移除Authorization头 - AI Gateway使用cf-aig-authorization代替
+          // 发送无效值的Authorization头会导致认证错误
           fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
             const headers = new Headers(init?.headers)
             headers.delete("Authorization")
@@ -591,11 +591,11 @@ export namespace Provider {
     } = {}
     const sdk = new Map<number, SDK>()
 
-    log.info("init")
+    log.info("初始化")
 
     const configProviders = Object.entries(config.provider ?? {})
 
-    // Add GitHub Copilot Enterprise provider that inherits from GitHub Copilot
+    // 添加继承自GitHub Copilot的GitHub Copilot Enterprise提供者
     if (database["github-copilot"]) {
       const githubCopilot = database["github-copilot"]
       database["github-copilot-enterprise"] = {
@@ -733,12 +733,12 @@ export namespace Provider {
       const providerID = plugin.auth.provider
       if (disabled.has(providerID)) continue
 
-      // For github-copilot plugin, check if auth exists for either github-copilot or github-copilot-enterprise
+      // 对于github-copilot插件,检查github-copilot或github-copilot-enterprise是否存在认证
       let hasAuth = false
       const auth = await Auth.get(providerID)
       if (auth) hasAuth = true
 
-      // Special handling for github-copilot: also check for enterprise auth
+      // github-copilot的特殊处理:也检查企业版认证
       if (providerID === "github-copilot" && !hasAuth) {
         const enterpriseAuth = await Auth.get("github-copilot-enterprise")
         if (enterpriseAuth) hasAuth = true
@@ -747,7 +747,7 @@ export namespace Provider {
       if (!hasAuth) continue
       if (!plugin.auth.loader) continue
 
-      // Load for the main provider if auth exists
+      // 如果存在认证,则为主提供者加载
       if (auth) {
         const options = await plugin.auth.loader(() => Auth.get(providerID) as any, database[plugin.auth.provider])
         mergeProvider(plugin.auth.provider, {
@@ -756,7 +756,7 @@ export namespace Provider {
         })
       }
 
-      // If this is github-copilot plugin, also register for github-copilot-enterprise if auth exists
+      // 如果这是github-copilot插件,并且存在认证,也为github-copilot-enterprise注册
       if (providerID === "github-copilot") {
         const enterpriseProviderID = "github-copilot-enterprise"
         if (!disabled.has(enterpriseProviderID)) {
@@ -825,7 +825,7 @@ export namespace Provider {
         )
           delete provider.models[modelID]
 
-        // Filter out disabled variants from config
+        // 从配置中过滤掉禁用的变体
         const configVariants = configProvider?.models?.[modelID]?.variants
         if (configVariants && model.variants) {
           const merged = mergeDeep(model.variants, configVariants)
@@ -841,7 +841,7 @@ export namespace Provider {
         continue
       }
 
-      log.info("found", { providerID })
+      log.info("找到", { providerID })
     }
 
     return {
@@ -884,7 +884,7 @@ export namespace Provider {
       const customFetch = options["fetch"]
 
       options["fetch"] = async (input: any, init?: BunFetchRequestInit) => {
-        // Preserve custom fetch if it exists, wrap it with timeout logic
+        // 如果存在自定义fetch,则保留它,并用超时逻辑包装
         const fetchFn = customFetch ?? fetch
         const opts = init ?? {}
 
@@ -905,12 +905,12 @@ export namespace Provider {
         })
       }
 
-      // Special case: google-vertex-anthropic uses a subpath import
+      // 特殊情况:google-vertex-anthropic使用子路径导入
       const bundledKey =
         model.providerID === "google-vertex-anthropic" ? "@ai-sdk/google-vertex/anthropic" : model.api.npm
       const bundledFn = BUNDLED_PROVIDERS[bundledKey]
       if (bundledFn) {
-        log.info("using bundled provider", { providerID: model.providerID, pkg: bundledKey })
+        log.info("使用内置提供者", { providerID: model.providerID, pkg: bundledKey })
         const loaded = bundledFn({
           name: model.providerID,
           ...options,
@@ -923,7 +923,7 @@ export namespace Provider {
       if (!model.api.npm.startsWith("file://")) {
         installedPath = await BunProc.install(model.api.npm, "latest")
       } else {
-        log.info("loading local provider", { pkg: model.api.npm })
+        log.info("加载本地提供者", { pkg: model.api.npm })
         installedPath = model.api.npm
       }
 
@@ -1036,7 +1036,7 @@ export namespace Provider {
       }
     }
 
-    // Check if opencode provider is available before using it
+    // 在使用opencode提供者之前检查其是否可用
     const opencodeProvider = await state().then((state) => state.providers["opencode"])
     if (opencodeProvider && opencodeProvider.models["gpt-5-nano"]) {
       return getModel("opencode", "gpt-5-nano")
@@ -1062,9 +1062,9 @@ export namespace Provider {
     const provider = await list()
       .then((val) => Object.values(val))
       .then((x) => x.find((p) => !cfg.provider || Object.keys(cfg.provider).includes(p.id)))
-    if (!provider) throw new Error("no providers found")
+    if (!provider) throw new Error("未找到提供者")
     const [model] = sort(Object.values(provider.models))
-    if (!model) throw new Error("no models found")
+    if (!model) throw new Error("未找到模型")
     return {
       providerID: provider.id,
       modelID: model.id,

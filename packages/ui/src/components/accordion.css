@@ -1,3 +1,9 @@
+/*
+ * 手风琴组件样式
+ * 包含手风琴容器、项目、标题、触发器和内容的样式定义
+ */
+
+/* 手风琴容器样式 */
 [data-component="accordion"] {
   display: flex;
   flex-direction: column;
@@ -5,6 +11,7 @@
   gap: 0px;
   align-self: stretch;
 
+  /* 手风琴项目样式 */
   [data-slot="accordion-item"] {
     width: 100%;
     display: flex;
@@ -14,6 +21,7 @@
     align-self: stretch;
     overflow: clip;
 
+    /* 手风琴标题样式 */
     [data-slot="accordion-header"] {
       width: 100%;
       display: flex;
@@ -21,6 +29,7 @@
       margin: 0;
       padding: 0;
 
+      /* 手风琴触发器样式 */
       [data-slot="accordion-trigger"] {
         width: 100%;
         display: flex;
@@ -38,7 +47,7 @@
         color: var(--text-strong);
         transition: background-color 0.15s ease;
 
-        /* text-12-regular */
+        /* 字体样式：12px 常规 */
         font-family: var(--font-family-sans);
         font-size: var(--font-size-small);
         font-style: normal;
@@ -46,27 +55,33 @@
         line-height: var(--line-height-large); /* 166.667% */
         letter-spacing: var(--letter-spacing-normal);
 
+        /* 悬停效果 */
         &:hover {
           background-color: var(--surface-base);
         }
+        /* 聚焦效果 */
         &:focus-visible {
           outline: none;
         }
+        /* 禁用状态 */
         &[data-disabled] {
           cursor: not-allowed;
         }
       }
     }
 
+    /* 展开状态样式 */
     &[data-expanded] {
       margin-top: 8px;
       margin-bottom: 8px;
 
+      /* 展开状态下的触发器样式 */
       [data-slot="accordion-trigger"] {
         border-top-left-radius: var(--radius-md);
         border-top-right-radius: var(--radius-md);
       }
 
+      /* 展开状态下的内容样式 */
       [data-slot="accordion-content"] {
         border: 1px solid var(--border-weak-base);
         border-top: none;
@@ -74,6 +89,7 @@
         border-bottom-right-radius: var(--radius-md);
       }
 
+      /* 展开项目后的下一个项目样式 */
       & + [data-slot="accordion-item"] {
         margin-top: 8px;
 
@@ -84,9 +100,11 @@
       }
     }
 
+    /* 当后面有展开的项目时的样式 */
     &:has(+ [data-slot="accordion-item"][data-expanded]) {
       margin-bottom: 8px;
 
+      /* 闭合状态下的样式 */
       &[data-closed] {
         border-bottom-left-radius: var(--radius-md);
         border-bottom-right-radius: var(--radius-md);
@@ -98,15 +116,18 @@
       }
     }
 
+    /* 闭合项目之间的样式 */
     &[data-closed] + &[data-closed] {
       [data-slot="accordion-trigger"] {
         border-top: none;
       }
     }
 
+    /* 第一个项目的样式 */
     &:first-child {
       margin-top: 0px;
 
+      /* 第一个闭合项目的样式 */
       &[data-closed] {
         [data-slot="accordion-trigger"] {
           border-top-left-radius: var(--radius-md);
@@ -115,9 +136,11 @@
       }
     }
 
+    /* 最后一个项目的样式 */
     &:last-child {
       margin-bottom: 0px;
 
+      /* 最后一个闭合项目的样式 */
       &[data-closed] {
         [data-slot="accordion-trigger"] {
           border-bottom-left-radius: var(--radius-md);
@@ -126,19 +149,22 @@
       }
     }
 
+    /* 手风琴内容样式 */
     [data-slot="accordion-content"] {
       overflow: hidden;
       width: 100%;
 
-      /* animation: slideUp 250ms cubic-bezier(0.87, 0, 0.13, 1); */
+      /* 动画效果（已注释） */
+      /* animation: slideDown 250ms cubic-bezier(0.87, 0, 0.13, 1); */
       /**/
-      /* &[data-expanded] { */
-      /*   animation: slideDown 250ms cubic-bezier(0.87, 0, 0.13, 1); */
-      /* } */
+      /* &[data-expanded] {
+        animation: slideDown 250ms cubic-bezier(0.87, 0, 0.13, 1);
+      } */
     }
   }
 }
 
+/* 展开动画 */
 @keyframes slideDown {
   from {
     height: 0;
@@ -148,6 +174,7 @@
   }
 }
 
+/* 收起动画 */
 @keyframes slideUp {
   from {
     height: var(--kb-accordion-content-height);

@@ -16,10 +16,10 @@ export function DialogSelectFile() {
   const sessionKey = createMemo(() => `${params.dir}${params.id ? "/" + params.id : ""}`)
   const tabs = createMemo(() => layout.tabs(sessionKey()))
   return (
-    <Dialog title="Select file">
+    <Dialog title="选择文件">
       <List
-        search={{ placeholder: "Search files", autofocus: true }}
-        emptyMessage="No files found"
+        search={{ placeholder: "搜索文件", autofocus: true }}
+        emptyMessage="未找到文件"
         items={local.file.searchFiles}
         key={(x) => x}
         onSelect={(path) => {

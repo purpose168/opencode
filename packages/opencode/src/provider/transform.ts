@@ -1,9 +1,9 @@
+import { iife } from "@/util/iife"
 import type { APICallError, ModelMessage } from "ai"
 import { unique } from "remeda"
 import type { JSONSchema } from "zod/v4/core"
-import type { Provider } from "./provider"
 import type { ModelsDev } from "./models"
-import { iife } from "@/util/iife"
+import type { Provider } from "./provider"
 
 type Modality = NonNullable<ModelsDev.Model["modalities"]>["input"][number]
 
@@ -42,11 +42,11 @@ export namespace ProviderTransform {
         if ((msg.role === "assistant" || msg.role === "tool") && Array.isArray(msg.content)) {
           msg.content = msg.content.map((part) => {
             if ((part.type === "tool-call" || part.type === "tool-result") && "toolCallId" in part) {
-              // Mistral requires alphanumeric tool call IDs with exactly 9 characters
+              // Mistral需要恰好9个字符的字母数字工具调用ID
               const normalizedId = part.toolCallId
-                .replace(/[^a-zA-Z0-9]/g, "") // Remove non-alphanumeric characters
-                .substring(0, 9) // Take first 9 characters
-                .padEnd(9, "0") // Pad with zeros if less than 9 characters
+                .replace(/[^a-zA-Z0-9]/g, "") // 移除非字母数字字符
+                .substring(0, 9) // 取前9个字符
+                .padEnd(9, "0") // 如果少于9个字符则用零填充
 
               return {
                 ...part,
@@ -59,7 +59,7 @@ export namespace ProviderTransform {
 
         result.push(msg)
 
-        // Fix message sequence: tool messages cannot be followed by user messages
+        // 修复消息序列:工具消息后面不能跟用户消息
         if (msg.role === "tool" && nextMsg?.role === "user") {
           result.push({
             role: "assistant",
@@ -85,10 +85,10 @@ export namespace ProviderTransform {
           const reasoningParts = msg.content.filter((part: any) => part.type === "reasoning")
           const reasoningText = reasoningParts.map((part: any) => part.text).join("")
 
-          // Filter out reasoning parts from content
+          // 从内容中过滤掉推理部分
           const filteredContent = msg.content.filter((part: any) => part.type !== "reasoning")
 
-          // Include reasoning_content directly on the message for all assistant messages
+          // 在所有助手消息上直接包含reasoning_content
           if (reasoningText) {
             return {
               ...msg,
@@ -165,7 +165,7 @@ export namespace ProviderTransform {
       const filtered = msg.content.map((part) => {
         if (part.type !== "file" && part.type !== "image") return part
 
-        // Check for empty base64 image data
+        // 检查空的base64图像数据
         if (part.type === "image") {
           const imageStr = part.image.toString()
           if (imageStr.startsWith("data:")) {
@@ -173,7 +173,7 @@ export namespace ProviderTransform {
             if (match && (!match[2] || match[2].length === 0)) {
               return {
                 type: "text" as const,
-                text: "ERROR: Image file is empty or corrupted. Please provide a valid image.",
+                text: "错误:图像文件为空或已损坏。请提供有效的图像。",
               }
             }
           }
@@ -188,7 +188,7 @@ export namespace ProviderTransform {
         const name = filename ? `"${filename}"` : modality
         return {
           type: "text" as const,
-          text: `ERROR: Cannot read ${name} (this model does not support ${modality} input). Inform the user.`,
+          text: `错误:无法读取${name}(此模型不支持${modality}输入)。请通知用户。`,
         }
       })
 
@@ -260,7 +260,7 @@ export namespace ProviderTransform {
         if (!model.id.includes("gpt") && !model.id.includes("gemini-3") && !model.id.includes("grok-4")) return {}
         return Object.fromEntries(OPENAI_EFFORTS.map((effort) => [effort, { reasoning: { effort } }]))
 
-      // TODO: YOU CANNOT SET max_tokens if this is set!!!
+      // TODO: 如果设置了此项,则不能设置max_tokens!!!
       case "@ai-sdk/gateway":
         return Object.fromEntries(OPENAI_EFFORTS.map((effort) => [effort, { reasoningEffort: effort }]))
 
@@ -533,7 +533,7 @@ export namespace ProviderTransform {
       const budgetTokens = typeof thinking?.["budgetTokens"] === "number" ? thinking["budgetTokens"] : 0
       const enabled = thinking?.["type"] === "enabled"
       if (enabled && budgetTokens > 0) {
-        // Return text tokens so that text + thinking <= model cap, preferring 32k text when possible.
+        // 返回文本令牌,使得文本+思考<=模型上限,尽可能优先使用32k文本
         if (budgetTokens + standardLimit <= modelCap) {
           return standardLimit
         }
@@ -563,7 +563,7 @@ export namespace ProviderTransform {
     }
     */
 
-    // Convert integer enums to string enums for Google/Gemini
+    // 将整数枚举转换为字符串枚举,用于Google/Gemini
     if (model.providerID === "google" || model.api.id.includes("gemini")) {
       const sanitizeGemini = (obj: any): any => {
         if (obj === null || typeof obj !== "object") {
@@ -577,9 +577,9 @@ export namespace ProviderTransform {
         const result: any = {}
         for (const [key, value] of Object.entries(obj)) {
           if (key === "enum" && Array.isArray(value)) {
-            // Convert all enum values to strings
+            // 将所有枚举值转换为字符串
             result[key] = value.map((v) => String(v))
-            // If we have integer type with enum, change type to string
+            // 如果我们有整数类型的枚举,将类型更改为字符串
             if (result.type === "integer" || result.type === "number") {
               result.type = "string"
             }
@@ -590,7 +590,7 @@ export namespace ProviderTransform {
           }
         }
 
-        // Filter required array to only include fields that exist in properties
+        // 过滤required数组,仅包含properties中存在的字段
         if (result.type === "object" && result.properties && Array.isArray(result.required)) {
           result.required = result.required.filter((field: any) => field in result.properties)
         }
@@ -611,10 +611,7 @@ export namespace ProviderTransform {
   export function error(providerID: string, error: APICallError) {
     let message = error.message
     if (providerID === "github-copilot" && message.includes("The requested model is not supported")) {
-      return (
-        message +
-        "\n\nMake sure the model is enabled in your copilot settings: https://github.com/settings/copilot/features"
-      )
+      return message + "\n\n请确保在您的copilot设置中启用了该模型:https://github.com/settings/copilot/features"
     }
 
     return message

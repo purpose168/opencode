@@ -102,9 +102,9 @@ export default function Layout(props: ParentProps) {
   const availableThemeEntries = createMemo(() => Object.entries(theme.themes()))
   const colorSchemeOrder: ColorScheme[] = ["system", "light", "dark"]
   const colorSchemeLabel: Record<ColorScheme, string> = {
-    system: "System",
-    light: "Light",
-    dark: "Dark",
+    system: "系统",
+    light: "浅色",
+    dark: "深色",
   }
 
   function cycleTheme(direction = 1) {
@@ -116,7 +116,7 @@ export default function Layout(props: ParentProps) {
     theme.setTheme(nextThemeId)
     const nextTheme = theme.themes()[nextThemeId]
     showToast({
-      title: "Theme switched",
+      title: "主题已切换",
       description: nextTheme?.name ?? nextThemeId,
     })
   }
@@ -129,7 +129,7 @@ export default function Layout(props: ParentProps) {
     const next = colorSchemeOrder[nextIndex]
     theme.setColorScheme(next)
     showToast({
-      title: "Color scheme",
+      title: "颜色方案",
       description: colorSchemeLabel[next],
     })
   }
@@ -145,18 +145,18 @@ export default function Layout(props: ParentProps) {
         toastId = showToast({
           persistent: true,
           icon: "download",
-          title: "Update available",
-          description: `A new version of OpenCode (${version}) is now available to install.`,
+          title: "更新可用",
+          description: `OpenCode 的新版本 (${version}) 现已可供安装。`,
           actions: [
             {
-              label: "Install and restart",
+              label: "安装并重启",
               onClick: async () => {
                 await platform.update!()
                 await platform.restart!()
               },
             },
             {
-              label: "Not yet",
+              label: "暂不",
               onClick: "dismiss",
             },
           ],
@@ -184,9 +184,9 @@ export default function Layout(props: ParentProps) {
       const [store] = globalSync.child(directory)
       const session = store.session.find((s) => s.id === perm.sessionID)
 
-      const sessionTitle = session?.title ?? "New session"
+      const sessionTitle = session?.title ?? "新会话"
       const projectName = getFilename(directory)
-      const description = `${sessionTitle} in ${projectName} needs permission`
+      const description = `${sessionTitle} 在 ${projectName} 中需要权限`
       const href = `/${base64Encode(directory)}/session/${perm.sessionID}`
 
       const now = Date.now()
@@ -194,7 +194,7 @@ export default function Layout(props: ParentProps) {
       if (now - lastAlerted < permissionAlertCooldownMs) return
       alertedAtBySession.set(sessionKey, now)
 
-      void platform.notify("Permission required", description, href)
+      void platform.notify("需要权限", description, href)
 
       const currentDir = params.dir ? base64Decode(params.dir) : undefined
       const currentSession = params.id
@@ -209,17 +209,17 @@ export default function Layout(props: ParentProps) {
       const toastId = showToast({
         persistent: true,
         icon: "checklist",
-        title: "Permission required",
+        title: "需要权限",
         description,
         actions: [
           {
-            label: "Go to session",
+            label: "前往会话",
             onClick: () => {
               navigate(href)
             },
           },
           {
-            label: "Dismiss",
+            label: "关闭",
             onClick: "dismiss",
           },
         ],
@@ -361,48 +361,48 @@ export default function Layout(props: ParentProps) {
     const commands: CommandOption[] = [
       {
         id: "sidebar.toggle",
-        title: "Toggle sidebar",
-        category: "View",
+        title: "切换侧边栏",
+        category: "视图",
         keybind: "mod+b",
         onSelect: () => layout.sidebar.toggle(),
       },
       {
         id: "project.open",
-        title: "Open project",
-        category: "Project",
+        title: "打开项目",
+        category: "项目",
         keybind: "mod+o",
         onSelect: () => chooseProject(),
       },
       {
         id: "provider.connect",
-        title: "Connect provider",
-        category: "Provider",
+        title: "连接提供者",
+        category: "提供者",
         onSelect: () => connectProvider(),
       },
       {
         id: "server.switch",
-        title: "Switch server",
-        category: "Server",
+        title: "切换服务器",
+        category: "服务器",
         onSelect: () => openServer(),
       },
       {
         id: "session.previous",
-        title: "Previous session",
-        category: "Session",
+        title: "上一个会话",
+        category: "会话",
         keybind: "alt+arrowup",
         onSelect: () => navigateSessionByOffset(-1),
       },
       {
         id: "session.next",
-        title: "Next session",
-        category: "Session",
+        title: "下一个会话",
+        category: "会话",
         keybind: "alt+arrowdown",
         onSelect: () => navigateSessionByOffset(1),
       },
       {
         id: "session.archive",
-        title: "Archive session",
-        category: "Session",
+        title: "归档会话",
+        category: "会话",
         keybind: "mod+shift+backspace",
         disabled: !params.dir || !params.id,
         onSelect: () => {
@@ -412,8 +412,8 @@ export default function Layout(props: ParentProps) {
       },
       {
         id: "theme.cycle",
-        title: "Cycle theme",
-        category: "Theme",
+        title: "切换主题",
+        category: "主题",
         keybind: "mod+shift+t",
         onSelect: () => cycleTheme(1),
       },
@@ -422,8 +422,8 @@ export default function Layout(props: ParentProps) {
     for (const [id, definition] of availableThemeEntries()) {
       commands.push({
         id: `theme.set.${id}`,
-        title: `Use theme: ${definition.name ?? id}`,
-        category: "Theme",
+        title: `使用主题: ${definition.name ?? id}`,
+        category: "主题",
         onSelect: () => theme.commitPreview(),
         onHighlight: () => {
           theme.previewTheme(id)
@@ -434,8 +434,8 @@ export default function Layout(props: ParentProps) {
 
     commands.push({
       id: "theme.scheme.cycle",
-      title: "Cycle color scheme",
-      category: "Theme",
+      title: "切换颜色方案",
+      category: "主题",
       keybind: "mod+shift+s",
       onSelect: () => cycleColorScheme(1),
     })
@@ -443,8 +443,8 @@ export default function Layout(props: ParentProps) {
     for (const scheme of colorSchemeOrder) {
       commands.push({
         id: `theme.scheme.${scheme}`,
-        title: `Use color scheme: ${colorSchemeLabel[scheme]}`,
-        category: "Theme",
+        title: `使用颜色方案: ${colorSchemeLabel[scheme]}`,
+        category: "主题",
         onSelect: () => theme.commitPreview(),
         onHighlight: () => {
           theme.previewColorScheme(scheme)
@@ -708,7 +708,7 @@ export default function Layout(props: ParentProps) {
                     <Match when={true}>
                       <span class="text-12-regular text-text-weak text-right whitespace-nowrap">
                         {Math.abs(updated().diffNow().as("seconds")) < 60
-                          ? "Now"
+                          ? "现在"
                           : updated()
                               .toRelative({
                                 style: "short",
@@ -725,7 +725,7 @@ export default function Layout(props: ParentProps) {
               </div>
               <Show when={props.session.summary?.files}>
                 <div class="flex justify-between items-center self-stretch">
-                  <span class="text-12-regular text-text-weak">{`${props.session.summary?.files || "No"} file${props.session.summary?.files !== 1 ? "s" : ""} changed`}</span>
+                  <span class="text-12-regular text-text-weak">{`${props.session.summary?.files || "无"} 个文件${props.session.summary?.files !== 1 ? "" : ""} 已更改`}</span>
                   <Show when={props.session.summary}>{(summary) => <DiffChanges changes={summary()} />}</Show>
                 </div>
               </Show>
@@ -734,7 +734,7 @@ export default function Layout(props: ParentProps) {
           <div class="hidden group-hover/session:flex group-active/session:flex group-focus-within/session:flex text-text-base gap-1 items-center absolute top-1 right-1">
             <TooltipKeybind
               placement={props.mobile ? "bottom" : "right"}
-              title="Archive session"
+              title="归档会话"
               keybind={command.keybind("session.archive")}
             >
               <IconButton icon="archive" variant="ghost" onClick={() => archiveSession(props.session)} />
@@ -798,15 +798,15 @@ export default function Layout(props: ParentProps) {
                         <DropdownMenu.Item
                           onSelect={() => dialog.show(() => <DialogEditProject project={props.project} />)}
                         >
-                          <DropdownMenu.ItemLabel>Edit project</DropdownMenu.ItemLabel>
+                          <DropdownMenu.ItemLabel>编辑项目</DropdownMenu.ItemLabel>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item onSelect={() => closeProject(props.project.worktree)}>
-                          <DropdownMenu.ItemLabel>Close project</DropdownMenu.ItemLabel>
+                          <DropdownMenu.ItemLabel>关闭项目</DropdownMenu.ItemLabel>
                         </DropdownMenu.Item>
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
                   </DropdownMenu>
-                  <TooltipKeybind placement="top" title="New session" keybind={command.keybind("session.new")}>
+                  <TooltipKeybind placement="top" title="新会话" keybind={command.keybind("session.new")}>
                     <IconButton as={A} href={`${slug()}/session`} icon="plus-small" variant="ghost" />
                   </TooltipKeybind>
                 </div>
@@ -825,14 +825,14 @@ export default function Layout(props: ParentProps) {
                     >
                       <div class="flex items-center self-stretch w-full">
                         <div class="flex-1 min-w-0">
-                          <Tooltip placement={props.mobile ? "bottom" : "right"} value="New session">
+                          <Tooltip placement={props.mobile ? "bottom" : "right"} value="新会话">
                             <A
                               href={`${slug()}/session`}
                               class="flex flex-col gap-1 min-w-0 text-left w-full focus:outline-none"
                             >
                               <div class="flex items-center self-stretch gap-6 justify-between">
                                 <span class="text-14-regular text-text-strong overflow-hidden text-ellipsis truncate">
-                                  New session
+                                  新会话
                                 </span>
                               </div>
                             </A>
@@ -849,7 +849,7 @@ export default function Layout(props: ParentProps) {
                         size="large"
                         onClick={loadMoreSessions}
                       >
-                        Load more
+                        加载更多
                       </Button>
                     </div>
                   </Show>
@@ -894,7 +894,7 @@ export default function Layout(props: ParentProps) {
             <TooltipKeybind
               class="shrink-0"
               placement="right"
-              title="Toggle sidebar"
+              title="切换侧边栏"
               keybind={command.keybind("sidebar.toggle")}
               inactive={expanded()}
             >
@@ -923,7 +923,7 @@ export default function Layout(props: ParentProps) {
                 </div>
                 <Show when={layout.sidebar.opened()}>
                   <div class="hidden group-hover/sidebar-toggle:block group-active/sidebar-toggle:block text-text-base">
-                    Toggle sidebar
+                    切换侧边栏
                   </div>
                 </Show>
               </Button>
@@ -959,24 +959,24 @@ export default function Layout(props: ParentProps) {
             <Match when={providers.all().length > 0 && !providers.paid().length && expanded()}>
               <div class="rounded-md bg-background-stronger shadow-xs-border-base">
                 <div class="p-3 flex flex-col gap-2">
-                  <div class="text-12-medium text-text-strong">Getting started</div>
-                  <div class="text-text-base">OpenCode includes free models so you can start immediately.</div>
-                  <div class="text-text-base">Connect any provider to use models, inc. Claude, GPT, Gemini etc.</div>
+                  <div class="text-12-medium text-text-strong">开始使用</div>
+                  <div class="text-text-base">OpenCode 包含免费模型，您可以立即开始使用。</div>
+                  <div class="text-text-base">连接任何提供者以使用模型，包括 Claude、GPT、Gemini 等。</div>
                 </div>
-                <Tooltip placement="right" value="Connect provider" inactive={expanded()}>
+                <Tooltip placement="right" value="连接提供者" inactive={expanded()}>
                   <Button
                     class="flex w-full text-left justify-start text-12-medium text-text-strong stroke-[1.5px] rounded-lg rounded-t-none shadow-none border-t border-border-weak-base pl-2.25 pb-px"
                     size="large"
                     icon="plus"
                     onClick={connectProvider}
                   >
-                    Connect provider
+                    连接提供者
                   </Button>
                 </Tooltip>
               </div>
             </Match>
             <Match when={providers.all().length > 0}>
-              <Tooltip placement="right" value="Connect provider" inactive={expanded()}>
+              <Tooltip placement="right" value="连接提供者" inactive={expanded()}>
                 <Button
                   class="flex w-full text-left justify-start text-text-base stroke-[1.5px] rounded-lg px-2"
                   variant="ghost"
@@ -984,7 +984,7 @@ export default function Layout(props: ParentProps) {
                   icon="plus"
                   onClick={connectProvider}
                 >
-                  <Show when={expanded()}>Connect provider</Show>
+                  <Show when={expanded()}>连接提供者</Show>
                 </Button>
               </Tooltip>
             </Match>
@@ -993,7 +993,7 @@ export default function Layout(props: ParentProps) {
             placement="right"
             value={
               <div class="flex items-center gap-2">
-                <span>Open project</span>
+                <span>打开项目</span>
                 <Show when={!sidebarProps.mobile}>
                   <span class="text-icon-base text-12-medium">{command.keybind("project.open")}</span>
                 </Show>
@@ -1008,10 +1008,10 @@ export default function Layout(props: ParentProps) {
               icon="folder-add-left"
               onClick={chooseProject}
             >
-              <Show when={expanded()}>Open project</Show>
+              <Show when={expanded()}>打开项目</Show>
             </Button>
           </Tooltip>
-          <Tooltip placement="right" value="Share feedback" inactive={expanded()}>
+          <Tooltip placement="right" value="分享反馈" inactive={expanded()}>
             <Button
               as={"a"}
               href="https://opencode.ai/desktop-feedback"
@@ -1021,7 +1021,7 @@ export default function Layout(props: ParentProps) {
               size="large"
               icon="bubble-5"
             >
-              <Show when={expanded()}>Share feedback</Show>
+              <Show when={expanded()}>分享反馈</Show>
             </Button>
           </Tooltip>
         </div>

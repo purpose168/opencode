@@ -1,88 +1,88 @@
 ---
-title: "Markdown syntax"
-description: "Text, title, and styling in standard markdown"
+title: "Markdown 语法"
+description: "标准 Markdown 中的文本、标题和样式"
 icon: "text-size"
 ---
 
-## Titles
+## 标题
 
-Best used for section headers.
+最适合用作章节标题。
 
 ```md
-## Titles
+## 标题  // 二级标题
 ```
 
-### Subtitles
+### 副标题
 
-Best used for subsection headers.
+最适合用作子章节标题。
 
 ```md
-### Subtitles
+### 副标题  // 三级标题
 ```
 
 <Tip>
 
-Each **title** and **subtitle** creates an anchor and also shows up on the table of contents on the right.
+每个 **标题** 和 **副标题** 都会创建一个锚点，并且会显示在右侧的目录中。
 
 </Tip>
 
-## Text formatting
+## 文本格式
 
-We support most markdown formatting. Simply add `**`, `_`, or `~` around text to format it.
+我们支持大多数 Markdown 格式。只需在文本周围添加 `**`、`_` 或 `~` 即可设置格式。
 
-| Style         | How to write it   | Result          |
-| ------------- | ----------------- | --------------- |
-| Bold          | `**bold**`        | **bold**        |
-| Italic        | `_italic_`        | _italic_        |
-| Strikethrough | `~strikethrough~` | ~strikethrough~ |
+| 样式         | 写法               | 效果             |
+| ------------ | ------------------ | ---------------- |
+| 粗体         | `**bold**`        | **bold**         |
+| 斜体         | `_italic_`        | _italic_         |
+| 删除线       | `~strikethrough~` | ~strikethrough~  |
 
-You can combine these. For example, write `**_bold and italic_**` to get **_bold and italic_** text.
+您可以组合使用这些格式。例如，写入 `**_bold and italic_**` 可获得 **_bold and italic_** 文本。
 
-You need to use HTML to write superscript and subscript text. That is, add `<sup>` or `<sub>` around your text.
+您需要使用 HTML 来编写上标和下标文本。也就是说，在文本周围添加 `<sup>` 或 `<sub>` 标签。
 
-| Text Size   | How to write it          | Result                 |
-| ----------- | ------------------------ | ---------------------- |
-| Superscript | `<sup>superscript</sup>` | <sup>superscript</sup> |
-| Subscript   | `<sub>subscript</sub>`   | <sub>subscript</sub>   |
+| 文本大小     | 写法                  | 效果                |
+| ------------ | --------------------- | ------------------- |
+| 上标         | `<sup>superscript</sup>` | <sup>superscript</sup> |
+| 下标         | `<sub>subscript</sub>`   | <sub>subscript</sub>   |
 
-## Linking to pages
+## 链接到页面
 
-You can add a link by wrapping text in `[]()`. You would write `[link to google](https://google.com)` to [link to google](https://google.com).
+您可以通过将文本包装在 `[]()` 中来添加链接。例如，写入 `[link to google](https://google.com)` 可创建 [link to google](https://google.com) 链接。
 
-Links to pages in your docs need to be root-relative. Basically, you should include the entire folder path. For example, `[link to text](/writing-content/text)` links to the page "Text" in our components section.
+链接到文档中的页面需要使用根相对路径。基本上，您应该包含完整的文件夹路径。例如，`[link to text](/writing-content/text)` 链接到我们组件部分中的 "Text" 页面。
 
-Relative links like `[link to text](../text)` will open slower because we cannot optimize them as easily.
+像 `[link to text](../text)` 这样的相对链接打开速度会更慢，因为我们无法轻松优化它们。
 
-## Blockquotes
+## 块引用
 
-### Singleline
+### 单行
 
-To create a blockquote, add a `>` in front of a paragraph.
+要创建块引用，请在段落前添加 `>`。
 
 > Dorothy followed her through many of the beautiful rooms in her castle.
 
 ```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
+> Dorothy followed her through many of the beautiful rooms in her castle.  // 单行块引用
 ```
 
-### Multiline
+### 多行
 
 > Dorothy followed her through many of the beautiful rooms in her castle.
 >
 > The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
 
 ```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
+> Dorothy followed her through many of the beautiful rooms in her castle.  // 第一行块引用
 >
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
+> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.  // 第二行块引用
 ```
 
 ### LaTeX
 
-Mintlify supports [LaTeX](https://www.latex-project.org) through the Latex component.
+Mintlify 通过 Latex 组件支持 [LaTeX](https://www.latex-project.org)。
 
 <Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
 
 ```md
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
+<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>  // LaTeX 数学公式
 ```

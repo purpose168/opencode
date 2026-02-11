@@ -9,25 +9,23 @@ import { Legal } from "~/component/legal"
 export default function PrivacyPolicy() {
   return (
     <main data-page="legal">
-      <Title>OpenCode | Privacy Policy</Title>
+      <Title>OpenCode | 隐私政策</Title>
       <Link rel="canonical" href={`${config.baseUrl}/legal/privacy-policy`} />
-      <Meta name="description" content="OpenCode privacy policy" />
+      <Meta name="description" content="OpenCode 隐私政策" />
       <div data-component="container">
         <Header />
 
         <div data-component="content">
           <section data-component="brand-content">
             <article data-component="privacy-policy">
-              <h1>Privacy Policy</h1>
-              <p class="effective-date">Effective date: Dec 16, 2025</p>
+              <h1>隐私政策</h1>
+              <p class="effective-date">生效日期：2025年12月16日</p>
 
               <p>
-                At OpenCode, we take your privacy seriously. Please read this Privacy Policy to learn how we treat your
-                personal data.{" "}
+                在 OpenCode，我们非常重视您的隐私。请阅读本隐私政策，了解我们如何处理您的个人数据。{
+                " "}
                 <strong>
-                  By using or accessing our Services in any manner, you acknowledge that you accept the practices and
-                  policies outlined below, and you hereby consent that we will collect, use and disclose your
-                  information as described in this Privacy Policy.
+                  您通过任何方式使用或访问我们的服务，即表示您承认接受以下所述的做法和政策，并同意我们按照本隐私政策所述收集、使用和披露您的信息。
                 </strong>
               </p>
 
@@ -50,198 +48,188 @@ export default function PrivacyPolicy() {
                 changes.
               </p>
 
-              <h2>Privacy Policy Table of Contents</h2>
+              <h2>隐私政策目录</h2>
               <ul>
                 <li>
-                  <a href="#what-this-privacy-policy-covers">What this Privacy Policy Covers</a>
+                  <a href="#what-this-privacy-policy-covers">本隐私政策涵盖的内容</a>
                 </li>
                 <li>
-                  <a href="#personal-data">Personal Data</a>
+                  <a href="#personal-data">个人数据</a>
                   <ul>
                     <li>
-                      <a href="#categories-of-personal-data">Categories of Personal Data We Collect</a>
+                      <a href="#categories-of-personal-data">我们收集的个人数据类别</a>
                     </li>
                     <li>
                       <a href="#commercial-purposes">
-                        Our Commercial or Business Purposes for Collecting Personal Data
+                        我们收集个人数据的商业目的
                       </a>
                     </li>
                     <li>
-                      <a href="#other-permitted-purposes">Other Permitted Purposes for Processing Personal Data</a>
+                      <a href="#other-permitted-purposes">处理个人数据的其他允许目的</a>
                     </li>
                     <li>
-                      <a href="#categories-of-sources">Categories of Sources of Personal Data</a>
+                      <a href="#categories-of-sources">个人数据的来源类别</a>
                     </li>
                   </ul>
                 </li>
                 <li>
-                  <a href="#how-we-disclose">How We Disclose Your Personal Data</a>
+                  <a href="#how-we-disclose">我们如何披露您的个人数据</a>
                 </li>
                 <li>
-                  <a href="#tracking-tools">Tracking Tools and Opt-Out</a>
+                  <a href="#tracking-tools">跟踪工具和选择退出</a>
                 </li>
                 <li>
-                  <a href="#data-security">Data Security</a>
+                  <a href="#data-security">数据安全</a>
                 </li>
                 <li>
-                  <a href="#personal-data-of-children">Personal Data of Children</a>
+                  <a href="#personal-data-of-children">儿童的个人数据</a>
                 </li>
                 <li>
-                  <a href="#california-resident-rights">California Resident Rights ("CCPA")</a>
+                  <a href="#california-resident-rights">加利福尼亚州居民权利（"CCPA"）</a>
                 </li>
                 <li>
-                  <a href="#colorado-resident-rights">Colorado Resident Rights ("CPA")</a>
+                  <a href="#colorado-resident-rights">科罗拉多州居民权利（"CPA"）</a>
                 </li>
                 <li>
-                  <a href="#connecticut-resident-rights">Connecticut Resident Rights ("CTDPA")</a>
+                  <a href="#connecticut-resident-rights">康涅狄格州居民权利（"CTDPA"）</a>
                 </li>
                 <li>
-                  <a href="#delaware-resident-rights">Delaware Resident Rights ("DPDPA")</a>
+                  <a href="#delaware-resident-rights">特拉华州居民权利（"DPDPA"）</a>
                 </li>
                 <li>
-                  <a href="#iowa-resident-rights">Iowa Resident Rights ("ICDPA")</a>
+                  <a href="#iowa-resident-rights">爱荷华州居民权利（"ICDPA"）</a>
                 </li>
                 <li>
-                  <a href="#montana-resident-rights">Montana Resident Rights ("MCDPA")</a>
+                  <a href="#montana-resident-rights">蒙大拿州居民权利（"MCDPA"）</a>
                 </li>
                 <li>
-                  <a href="#nebraska-resident-rights">Nebraska Resident Rights ("NDPA")</a>
+                  <a href="#nebraska-resident-rights">内布拉斯加州居民权利（"NDPA"）</a>
                 </li>
                 <li>
-                  <a href="#new-hampshire-resident-rights">New Hampshire Resident Rights ("NHPA")</a>
+                  <a href="#new-hampshire-resident-rights">新罕布什尔州居民权利（"NHPA"）</a>
                 </li>
                 <li>
-                  <a href="#new-jersey-resident-rights">New Jersey Resident Rights ("NJPA")</a>
+                  <a href="#new-jersey-resident-rights">新泽西州居民权利（"NJPA"）</a>
                 </li>
                 <li>
-                  <a href="#oregon-resident-rights">Oregon Resident Rights ("OCPA")</a>
+                  <a href="#oregon-resident-rights">俄勒冈州居民权利（"OCPA"）</a>
                 </li>
                 <li>
-                  <a href="#texas-resident-rights">Texas Resident Rights ("TDPSA")</a>
+                  <a href="#texas-resident-rights">德克萨斯州居民权利（"TDPSA"）</a>
                 </li>
                 <li>
-                  <a href="#utah-resident-rights">Utah Resident Rights ("UCPA")</a>
+                  <a href="#utah-resident-rights">犹他州居民权利（"UCPA"）</a>
                 </li>
                 <li>
-                  <a href="#virginia-resident-rights">Virginia Resident Rights ("VCDPA")</a>
+                  <a href="#virginia-resident-rights">弗吉尼亚州居民权利（"VCDPA"）</a>
                 </li>
                 <li>
-                  <a href="#exercising-your-rights">Exercising Your Rights under the State Privacy Laws</a>
+                  <a href="#exercising-your-rights">根据州隐私法行使您的权利</a>
                 </li>
                 <li>
-                  <a href="#other-state-law-privacy-rights">Other State Law Privacy Rights</a>
+                  <a href="#other-state-law-privacy-rights">其他州法律隐私权利</a>
                 </li>
                 <li>
-                  <a href="#contact-information">Contact Information</a>
+                  <a href="#contact-information">联系信息</a>
                 </li>
               </ul>
 
-              <h2 id="what-this-privacy-policy-covers">What this Privacy Policy Covers</h2>
+              <h2 id="what-this-privacy-policy-covers">本隐私政策涵盖的内容</h2>
               <p>
-                This Privacy Policy covers how we treat Personal Data that we gather when you access or use our
-                Services. "Personal Data" means any information that identifies or relates to a particular individual
-                and also includes information referred to as "personally identifiable information" or "personal
-                information" under applicable data privacy laws, rules or regulations. This Privacy Policy does not
-                cover the practices of companies we don't own or control or people we don't manage.
+                本隐私政策涵盖我们如何处理您访问或使用我们服务时收集的个人数据。"个人数据"指识别或涉及特定个人的任何信息，还包括适用数据隐私法律、规则或法规下称为"个人识别信息"或"个人信息"的信息。本隐私政策不涵盖我们不拥有或控制的公司或我们不管理的人员的做法。
               </p>
 
-              <h2 id="personal-data">Personal Data</h2>
+              <h2 id="personal-data">个人数据</h2>
 
-              <h3 id="categories-of-personal-data">Categories of Personal Data We Collect</h3>
+              <h3 id="categories-of-personal-data">我们收集的个人数据类别</h3>
               <p>
-                This chart details the categories of Personal Data that we collect and have collected over the past 12
-                months:
+                下表详细说明了我们在过去 12 个月内收集的个人数据类别：
               </p>
 
               <div class="table-wrapper">
                 <table>
                   <thead>
                     <tr>
-                      <th>Category of Personal Data (and Examples)</th>
-                      <th>Business or Commercial Purpose(s) for Collection</th>
-                      <th>Categories of Third Parties With Whom We Disclose this Personal Data</th>
+                      <th>个人数据类别（及示例）</th>
+                      <th>收集的商业目的</th>
+                      <th>我们披露此个人数据的第三方类别</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>
-                        <strong>Profile or Contact Data</strong> such as first and last name, email, phone number and
-                        mailing address.
+                        <strong>个人资料或联系数据</strong>，例如姓名、电子邮件、电话号码和邮寄地址。
                       </td>
                       <td>
                         <ul>
-                          <li>Providing, Customizing and Improving the Services</li>
-                          <li>Marketing the Services</li>
-                          <li>Corresponding with You</li>
+                          <li>提供、定制和改进服务</li>
+                          <li>营销服务</li>
+                          <li>与您通信</li>
                         </ul>
                       </td>
                       <td>
                         <ul>
-                          <li>Service Providers</li>
-                          <li>Business Partners</li>
-                          <li>Parties You Authorize, Access or Authenticate</li>
-                        </ul>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Payment Data</strong> such as financial account information, payment card type, full
-                        number of payment card, last 4 digits of payment card, bank account information, billing
-                        address, billing phone number and billing email
-                      </td>
-                      <td>
-                        <ul>
-                          <li>Providing, Customizing and Improving the Services</li>
-                          <li>Marketing the Services</li>
-                          <li>Corresponding with You</li>
-                        </ul>
-                      </td>
-                      <td>
-                        <ul>
-                          <li>Service Providers (specifically our payment processing partner)</li>
-                          <li>Business Partners</li>
-                          <li>Parties You Authorize, Access or Authenticate</li>
+                          <li>服务提供商</li>
+                          <li>业务合作伙伴</li>
+                          <li>您授权、访问或认证的方</li>
                         </ul>
                       </td>
                     </tr>
                     <tr>
                       <td>
-                        <strong>Device/IP Data</strong> such as IP address, device ID, domain server, type of
-                        device/operating system/browser used to access the Services.
+                        <strong>支付数据</strong>，例如金融账户信息、支付卡类型、支付卡完整号码、支付卡最后4位数字、银行账户信息、账单地址、账单电话号码和账单电子邮件
                       </td>
                       <td>
                         <ul>
-                          <li>Providing, Customizing and Improving the Services</li>
-                          <li>Marketing the Services</li>
-                          <li>Corresponding with You</li>
+                          <li>提供、定制和改进服务</li>
+                          <li>营销服务</li>
+                          <li>与您通信</li>
                         </ul>
                       </td>
                       <td>
                         <ul>
-                          <li>None</li>
-                          <li>Service Providers</li>
-                          <li>Business Partners</li>
-                          <li>Parties You Authorize, Access or Authenticate</li>
+                          <li>服务提供商（特别是我们的支付处理合作伙伴）</li>
+                          <li>业务合作伙伴</li>
+                          <li>您授权、访问或认证的方</li>
                         </ul>
                       </td>
                     </tr>
                     <tr>
                       <td>
-                        <strong>Other Identifying Information that You Voluntarily Choose to Provide</strong> such as
-                        information included in conversations or prompts that you submit to AI
+                        <strong>设备/IP 数据</strong>，例如 IP 地址、设备 ID、域名服务器、用于访问服务的设备/操作系统/浏览器类型。
                       </td>
                       <td>
                         <ul>
-                          <li>Providing, Customizing and Improving the Services</li>
-                          <li>Marketing the Services</li>
-                          <li>Corresponding with You</li>
+                          <li>提供、定制和改进服务</li>
+                          <li>营销服务</li>
+                          <li>与您通信</li>
                         </ul>
                       </td>
                       <td>
                         <ul>
-                          <li>Service Providers</li>
-                          <li>Business Partners</li>
-                          <li>Parties You Authorize, Access or Authenticate</li>
+                          <li>无</li>
+                          <li>服务提供商</li>
+                          <li>业务合作伙伴</li>
+                          <li>您授权、访问或认证的方</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>您自愿选择提供的其他识别信息</strong>，例如您提交给 AI 的对话或提示中包含的信息
+                      </td>
+                      <td>
+                        <ul>
+                          <li>提供、定制和改进服务</li>
+                          <li>营销服务</li>
+                          <li>与您通信</li>
+                        </ul>
+                      </td>
+                      <td>
+                        <ul>
+                          <li>服务提供商</li>
+                          <li>业务合作伙伴</li>
+                          <li>您授权、访问或认证的方</li>
                         </ul>
                       </td>
                     </tr>
@@ -249,1257 +237,827 @@ export default function PrivacyPolicy() {
                 </table>
               </div>
 
-              <h3 id="commercial-purposes">Our Commercial or Business Purposes for Collecting Personal Data</h3>
+              <h3 id="commercial-purposes">我们收集个人数据的商业目的</h3>
 
-              <h4>Providing, Customizing and Improving the Services</h4>
+              <h4>提供、定制和改进服务</h4>
               <ul>
-                <li>Creating and managing your account or other user profiles.</li>
-                <li>Providing you with the products, services or information you request.</li>
-                <li>Meeting or fulfilling the reason you provided the information to us.</li>
-                <li>Providing support and assistance for the Services.</li>
+                <li>创建和管理您的账户或其他用户资料。</li>
+                <li>向您提供您请求的产品、服务或信息。</li>
+                <li>满足您向我们提供信息的原因。</li>
+                <li>为服务提供支持和协助。</li>
                 <li>
-                  Improving the Services, including testing, research, internal analytics and product development.
+                  改进服务，包括测试、研究、内部分析和产品开发。
                 </li>
-                <li>Doing fraud protection, security and debugging.</li>
+                <li>进行欺诈保护、安全和调试。</li>
                 <li>
-                  Carrying out other business purposes stated when collecting your Personal Data or as otherwise set
-                  forth in applicable data privacy laws, such as the California Consumer Privacy Act, as amended by the
-                  California Privacy Rights Act of 2020 (the "CCPA"), the Colorado Privacy Act (the "CPA"), the
-                  Connecticut Data Privacy Act (the "CTDPA"), the Delaware Personal Data Privacy Act (the "DPDPA"), the
-                  Iowa Consumer Data Protection Act (the "ICDPA"), the Montana Consumer Data Privacy Act ("MCDPA"), the
-                  Nebraska Data Privacy Act (the "NDPA"), the New Hampshire Privacy Act (the "NHPA"), the New Jersey
-                  Privacy Act (the "NJPA"), the Oregon Consumer Privacy Act ("OCPA"), the Texas Data Privacy and
-                  Security Act ("TDPSA"), the Utah Consumer Privacy Act (the "UCPA"), or the Virginia Consumer Data
-                  Protection Act (the "VCDPA") (collectively, the "State Privacy Laws").
+                  执行为收集您的个人数据而声明的其他商业目的，或按照适用的数据隐私法律规定的其他目的，例如经 2020 年加利福尼亚隐私权利法案修订的加利福尼亚消费者隐私法案（"CCPA"）、科罗拉多隐私法案（"CPA"）、康涅狄格数据隐私法案（"CTDPA"）、特拉华个人数据隐私法案（"DPDPA"）、爱荷华消费者数据保护法案（"ICDPA"）、蒙大拿消费者数据隐私法案（"MCDPA"）、内布拉斯加数据隐私法案（"NDPA"）、新罕布什尔隐私法案（"NHPA"）、新泽西隐私法案（"NJPA"）、俄勒冈消费者隐私法案（"OCPA"）、德克萨斯数据隐私和安全法案（"TDPSA"）、犹他消费者隐私法案（"UCPA"）或弗吉尼亚消费者数据保护法案（"VCDPA"）（统称为"州隐私法"）。
                 </li>
               </ul>
 
-              <h4>Marketing the Services</h4>
+              <h4>营销服务</h4>
               <ul>
-                <li>Marketing and selling the Services.</li>
+                <li>营销和销售服务。</li>
               </ul>
 
-              <h4>Corresponding with You</h4>
+              <h4>与您通信</h4>
               <ul>
                 <li>
-                  Responding to correspondence that we receive from you, contacting you when necessary or requested, and
-                  sending you information about OpenCode.
+                  回复我们收到的来自您的通信，在必要或请求时联系您，以及向您发送有关 OpenCode 的信息。
                 </li>
-                <li>Sending emails and other communications according to your preferences.</li>
+                <li>根据您的偏好发送电子邮件和其他通信。</li>
               </ul>
 
-              <h3 id="other-permitted-purposes">Other Permitted Purposes for Processing Personal Data</h3>
+              <h3 id="other-permitted-purposes">处理个人数据的其他允许目的</h3>
               <p>
-                In addition, each of the above referenced categories of Personal Data may be collected, used, and
-                disclosed with the government, including law enforcement, or other parties to meet certain legal
-                requirements and enforcing legal terms including: fulfilling our legal obligations under applicable law,
-                regulation, court order or other legal process, such as preventing, detecting and investigating security
-                incidents and potentially illegal or prohibited activities; protecting the rights, property or safety of
-                you, OpenCode or another party; enforcing any agreements with you; responding to claims that any posting
-                or other content violates third-party rights; and resolving disputes.
+                此外，上述各类个人数据可能会与政府（包括执法部门）或其他方收集、使用和披露，以满足某些法律要求和执行法律条款，包括：履行我们在适用法律、法规、法院命令或其他法律程序下的法律义务，例如预防、检测和调查安全事件和潜在的非法或禁止活动；保护您、OpenCode 或另一方的权利、财产或安全；执行与您的任何协议；回应任何张贴或其他内容侵犯第三方权利的索赔；以及解决争议。
               </p>
 
               <p>
-                We will not collect additional categories of Personal Data or use the Personal Data we collected for
-                materially different, unrelated or incompatible purposes without providing you notice or obtaining your
-                consent.
+                我们不会在未向您发出通知或获得您同意的情况下，收集额外类别的个人数据或将我们收集的个人数据用于实质上不同、无关或不相容的目的。
               </p>
 
-              <h3 id="categories-of-sources">Categories of Sources of Personal Data</h3>
-              <p>We collect Personal Data about you from the following categories of sources:</p>
+              <h3 id="categories-of-sources">个人数据的来源类别</h3>
+              <p>我们从以下类别的来源收集关于您的个人数据：</p>
 
-              <h4>You</h4>
+              <h4>您</h4>
               <ul>
                 <li>
-                  When you provide such information directly to us.
+                  当您直接向我们提供此类信息时。
                   <ul>
-                    <li>When you create an account or use our interactive tools and Services.</li>
+                    <li>当您创建账户或使用我们的互动工具和服务时。</li>
                     <li>
-                      When you voluntarily provide information in free-form text boxes through the Services or through
-                      responses to surveys or questionnaires.
+                      当您通过服务在自由格式文本框中自愿提供信息或通过对调查或问卷的回应提供信息时。
                     </li>
-                    <li>When you send us an email or otherwise contact us.</li>
+                    <li>当您向我们发送电子邮件或以其他方式联系我们时。</li>
                   </ul>
                 </li>
                 <li>
-                  When you use the Services and such information is collected automatically.
+                  当您使用服务且此类信息被自动收集时。
                   <ul>
-                    <li>Through Cookies (defined in the "Tracking Tools and Opt-Out" section below).</li>
+                    <li>通过 Cookie（定义见下文"跟踪工具和选择退出"部分）。</li>
                     <li>
-                      If you download and install certain applications and software we make available, we may receive
-                      and collect information transmitted from your computing device for the purpose of providing you
-                      the relevant Services, such as information regarding when you are logged on and available to
-                      receive updates or alert notices.
+                      如果您下载并安装我们提供的某些应用程序和软件，我们可能会接收并收集从您的计算设备传输的信息，以向您提供相关服务，例如关于您何时登录并可接收更新或警报通知的信息。
                     </li>
                   </ul>
                 </li>
               </ul>
 
-              <h4>Public Records</h4>
+              <h4>公共记录</h4>
               <ul>
-                <li>From the government.</li>
+                <li>来自政府。</li>
               </ul>
 
-              <h4>Third Parties</h4>
+              <h4>第三方</h4>
               <ul>
                 <li>
-                  Vendors
+                  供应商
                   <ul>
                     <li>
-                      We may use analytics providers to analyze how you interact and engage with the Services, or third
-                      parties may help us provide you with customer support.
+                      我们可能使用分析提供商来分析您如何与服务互动和参与，或者第三方可能帮助我们为您提供客户支持。
                     </li>
-                    <li>We may use vendors to obtain information to generate leads and create user profiles.</li>
+                    <li>我们可能使用供应商获取信息以生成潜在客户并创建用户资料。</li>
                   </ul>
                 </li>
               </ul>
 
-              <h2 id="how-we-disclose">How We Disclose Your Personal Data</h2>
+              <h2 id="how-we-disclose">我们如何披露您的个人数据</h2>
               <p>
-                We disclose your Personal Data to the categories of service providers and other parties listed in this
-                section. Depending on state laws that may be applicable to you, some of these disclosures may constitute
-                a "sale" of your Personal Data. For more information, please refer to the state-specific sections below.
+                我们向本节列出的服务提供商和其他方类别披露您的个人数据。根据可能适用于您的州法律，其中一些披露可能构成对您个人数据的"出售"。有关更多信息，请参阅下面的州特定部分。
               </p>
 
-              <h3>Service Providers</h3>
+              <h3>服务提供商</h3>
               <p>
-                These parties help us provide the Services or perform business functions on our behalf. They include:
+                这些方帮助我们提供服务或代表我们执行业务功能。它们包括：
               </p>
               <ul>
-                <li>Hosting, technology and communication providers.</li>
-                <li>Analytics providers for web traffic or usage of the site.</li>
-                <li>Security and fraud prevention consultants.</li>
-                <li>Support and customer service vendors.</li>
+                <li>托管、技术和通信提供商。</li>
+                <li>网站流量或使用情况的分析提供商。</li>
+                <li>安全和欺诈预防顾问。</li>
+                <li>支持和客户服务供应商。</li>
               </ul>
 
-              <h3>Business Partners</h3>
-              <p>These parties partner with us in offering various services. They include:</p>
+              <h3>业务合作伙伴</h3>
+              <p>这些方与我们合作提供各种服务。它们包括：</p>
               <ul>
-                <li>Businesses that you have a relationship with.</li>
-                <li>Companies that we partner with to offer joint promotional offers or opportunities.</li>
+                <li>与您有关系的企业。</li>
+                <li>我们与之合作提供联合促销优惠或机会的公司。</li>
               </ul>
 
-              <h3>Parties You Authorize, Access or Authenticate</h3>
+              <h3>您授权、访问或认证的方</h3>
               <ul>
-                <li>Home buyers</li>
+                <li>购房者</li>
               </ul>
 
-              <h3>Legal Obligations</h3>
+              <h3>法律义务</h3>
               <p>
-                We may disclose any Personal Data that we collect with third parties in conjunction with any of the
-                activities set forth under "Other Permitted Purposes for Processing Personal Data" section above.
+                我们可能会与第三方披露我们收集的任何个人数据，以配合上述"处理个人数据的其他允许目的"部分所述的任何活动。
               </p>
 
-              <h3>Business Transfers</h3>
+              <h3>业务转让</h3>
               <p>
-                All of your Personal Data that we collect may be transferred to a third party if we undergo a merger,
-                acquisition, bankruptcy or other transaction in which that third party assumes control of our business
-                (in whole or in part).
+                如果我们发生合并、收购、破产或其他交易，其中第三方接管我们的业务（全部或部分），我们收集的所有您的个人数据可能会转让给该第三方。
               </p>
 
-              <h3>Data that is Not Personal Data</h3>
+              <h3>非个人数据</h3>
               <p>
-                We may create aggregated, de-identified or anonymized data from the Personal Data we collect, including
-                by removing information that makes the data personally identifiable to a particular user. We may use
-                such aggregated, de-identified or anonymized data and disclose it with third parties for our lawful
-                business purposes, including to analyze, build and improve the Services and promote our business,
-                provided that we will not disclose such data in a manner that could identify you.
+                我们可能会从我们收集的个人数据中创建聚合、去标识化或匿名化的数据，包括通过删除使数据对特定用户具有个人识别性的信息。我们可以使用此类聚合、去标识化或匿名化的数据并与第三方披露，用于我们的合法商业目的，包括分析、构建和改进服务以及推广我们的业务，前提是我们不会以可能识别您的方式披露此类数据。
               </p>
 
-              <h2 id="tracking-tools">Tracking Tools and Opt-Out</h2>
+              <h2 id="tracking-tools">跟踪工具和选择退出</h2>
               <p>
-                The Services use cookies and similar technologies such as pixel tags, web beacons, clear GIFs and
-                JavaScript (collectively, "Cookies") to enable our servers to recognize your web browser, tell us how
-                and when you visit and use our Services, analyze trends, learn about our user base and operate and
-                improve our Services. Cookies are small pieces of data– usually text files – placed on your computer,
-                tablet, phone or similar device when you use that device to access our Services. We may also supplement
-                the information we collect from you with information received from third parties, including third
-                parties that have placed their own Cookies on your device(s).
+                服务使用 Cookie 和类似技术，如像素标签、网络信标、透明 GIF 和 JavaScript（统称为"Cookie"），使我们的服务器能够识别您的网络浏览器，告诉我们您何时访问和使用我们的服务，分析趋势，了解我们的用户群，以及运营和改进我们的服务。Cookie 是小数据片段（通常是文本文件），当您使用设备访问我们的服务时，会被放置在您的计算机、平板电脑、手机或类似设备上。我们还可能使用从第三方（包括在您设备上放置了自己的 Cookie 的第三方）收到的信息来补充我们从您那里收集的信息。
               </p>
 
               <p>
-                Please note that because of our use of Cookies, the Services do not support "Do Not Track" requests sent
-                from a browser at this time.
+                请注意，由于我们使用 Cookie，服务目前不支持从浏览器发送的"请勿跟踪"请求。
               </p>
 
-              <p>We use the following types of Cookies:</p>
+              <p>我们使用以下类型的 Cookie：</p>
 
               <ul>
                 <li>
-                  <strong>Essential Cookies.</strong> Essential Cookies are required for providing you with features or
-                  services that you have requested. For example, certain Cookies enable you to log into secure areas of
-                  our Services. Disabling these Cookies may make certain features and services unavailable.
+                  <strong>必要 Cookie。</strong> 必要 Cookie 是提供您请求的功能或服务所必需的。例如，某些 Cookie 使您能够登录我们服务的安全区域。禁用这些 Cookie 可能会使某些功能和服务不可用。
                 </li>
                 <li>
-                  <strong>Functional Cookies.</strong> Functional Cookies are used to record your choices and settings
-                  regarding our Services, maintain your preferences over time and recognize you when you return to our
-                  Services. These Cookies help us to personalize our content for you, greet you by name and remember
-                  your preferences (for example, your choice of language or region).
+                  <strong>功能性 Cookie。</strong> 功能性 Cookie 用于记录您对我们服务的选择和设置，随时间维护您的偏好，并在您返回我们的服务时识别您。这些 Cookie 帮助我们为您个性化内容，以您的名字问候您，并记住您的偏好（例如，您选择的语言或地区）。
                 </li>
                 <li>
-                  <strong>Performance/Analytical Cookies.</strong> Performance/Analytical Cookies allow us to understand
-                  how visitors use our Services. They do this by collecting information about the number of visitors to
-                  the Services, what pages visitors view on our Services and how long visitors are viewing pages on the
-                  Services. Performance/Analytical Cookies also help us measure the performance of our advertising
-                  campaigns in order to help us improve our campaigns and the Services' content for those who engage
-                  with our advertising. For example, Google LLC ("Google") uses cookies in connection with its Google
-                  Analytics services. Google's ability to use and disclose information collected by Google Analytics
-                  about your visits to the Services is subject to the Google Analytics Terms of Use and the Google
-                  Privacy Policy. You have the option to opt-out of Google's use of Cookies by visiting the Google
-                  advertising opt-out page at{" "}
-                  <a href="http://www.google.com/privacy_ads.html">www.google.com/privacy_ads.html</a> or the Google
-                  Analytics Opt-out Browser Add-on at{" "}
-                  <a href="https://tools.google.com/dlpage/gaoptout/">https://tools.google.com/dlpage/gaoptout/</a>.
+                  <strong>性能/分析 Cookie。</strong> 性能/分析 Cookie 允许我们了解访问者如何使用我们的服务。它们通过收集有关服务访问者数量、访问者在我们服务上查看哪些页面以及访问者在服务页面上查看多长时间的信息来实现这一点。性能/分析 Cookie 还帮助我们衡量广告活动的性能，以帮助我们改进活动和为那些与我们广告互动的人提供服务内容。例如，Google LLC（"Google"）在其 Google Analytics 服务中使用 Cookie。Google 使用和披露 Google Analytics 收集的有关您访问服务的信息的能力受 Google Analytics 服务条款和 Google 隐私政策的约束。您可以通过访问 Google 广告选择退出页面{" "}
+                  <a href="http://www.google.com/privacy_ads.html">www.google.com/privacy_ads.html</a> 或 Google Analytics 选择退出浏览器插件{" "}
+                  <a href="https://tools.google.com/dlpage/gaoptout/">https://tools.google.com/dlpage/gaoptout/</a> 来选择退出 Google 对 Cookie 的使用。
                 </li>
               </ul>
 
               <p>
-                You can decide whether or not to accept Cookies through your internet browser's settings. Most browsers
-                have an option for turning off the Cookie feature, which will prevent your browser from accepting new
-                Cookies, as well as (depending on the sophistication of your browser software) allow you to decide on
-                acceptance of each new Cookie in a variety of ways. You can also delete all Cookies that are already on
-                your device. If you do this, however, you may have to manually adjust some preferences every time you
-                visit our website and some of the Services and functionalities may not work.
+                您可以通过互联网浏览器的设置决定是否接受 Cookie。大多数浏览器都有关闭 Cookie 功能的选项，这将防止您的浏览器接受新的 Cookie，并且（取决于您的浏览器软件的复杂程度）允许您以各种方式决定是否接受每个新的 Cookie。您还可以删除设备上已有的所有 Cookie。但是，如果您这样做，每次访问我们的网站时可能需要手动调整一些偏好，并且某些服务和功能可能无法正常工作。
               </p>
 
               <p>
-                To find out more information about Cookies generally, including information about how to manage and
-                delete Cookies, please visit{" "}
-                <a href="http://www.allaboutcookies.org/">http://www.allaboutcookies.org/</a>.
+                要了解有关 Cookie 的更多一般信息，包括如何管理和删除 Cookie 的信息，请访问{" "}
+                <a href="http://www.allaboutcookies.org/">http://www.allaboutcookies.org/</a>。
               </p>
 
-              <h2 id="data-security">Data Security</h2>
+              <h2 id="data-security">数据安全</h2>
               <p>
-                We seek to protect your Personal Data from unauthorized access, use and disclosure using appropriate
-                physical, technical, organizational and administrative security measures based on the type of Personal
-                Data and how we are processing that data. You should also help protect your data by appropriately
-                selecting and protecting your password and/or other sign-on mechanism; limiting access to your computer
-                or device and browser; and signing off after you have finished accessing your account. Although we work
-                to protect the security of your account and other data that we hold in our records, please be aware that
-                no method of transmitting data over the internet or storing data is completely secure.
+                我们基于个人数据的类型和我们如何处理该数据，使用适当的物理、技术、组织和行政安全措施来保护您的个人数据免受未经授权的访问、使用和披露。您还应通过适当选择和保护您的密码和/或其他登录机制、限制对您的计算机或设备和浏览器的访问、以及在完成访问您的账户后注销来帮助保护您的数据。虽然我们努力保护您账户的安全和我们记录中保存的其他数据，但请注意，通过互联网传输数据或存储数据的方法都不是完全安全的。
               </p>
 
-              <h3>Data Retention</h3>
+              <h3>数据保留</h3>
               <p>
-                We retain Personal Data about you for as long as necessary to provide you with our Services or to
-                perform our business or commercial purposes for collecting your Personal Data. When establishing a
-                retention period for specific categories of data, we consider who we collected the data from, our need
-                for the Personal Data, why we collected the Personal Data, and the sensitivity of the Personal Data. In
-                some cases we retain Personal Data for longer, if doing so is necessary to comply with our legal
-                obligations, resolve disputes or collect fees owed, or is otherwise permitted or required by applicable
-                law, rule or regulation. We may further retain information in an anonymous or aggregated form where that
-                information would not identify you personally.
+                我们会在为您提供服务或执行为收集您的个人数据的业务或商业目的所需的时间内保留关于您的个人数据。在为特定类别数据建立保留期时，我们会考虑我们从谁那里收集了数据、我们对个人数据的需求、我们为什么收集个人数据以及个人数据的敏感性。在某些情况下，我们会更长时间地保留个人数据，如果这样做是遵守我们的法律义务、解决争议或收取所欠费用所必需的，或者是适用法律、规则或法规允许或要求的。我们可能会以匿名或聚合形式进一步保留信息，其中该信息不会亲自识别您。
               </p>
 
-              <h2 id="personal-data-of-children">Personal Data of Children</h2>
+              <h2 id="personal-data-of-children">儿童的个人数据</h2>
               <p>
-                As noted in the Terms of Use, we do not knowingly collect or solicit Personal Data from children under
-                18 years of age; if you are a child under the age of 18, please do not attempt to register for or
-                otherwise use the Services or send us any Personal Data. If we learn we have collected Personal Data
-                from a child under 18 years of age, we will delete that information as quickly as possible. If you
-                believe that a child under 18 years of age may have provided Personal Data to us, please contact us at{" "}
-                <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如服务条款中所述，我们不会故意收集或征求 18 岁以下儿童的个人数据；如果您是 18 岁以下的儿童，请不要尝试注册或以其他方式使用服务或向我们发送任何个人数据。如果我们了解到我们已经收集了 18 岁以下儿童的个人数据，我们将尽快删除该信息。如果您认为 18 岁以下的儿童可能向我们提供了个人数据，请通过{" "}
+                <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h2 id="california-resident-rights">California Resident Rights</h2>
+              <h2 id="california-resident-rights">加利福尼亚居民权利</h2>
               <p>
-                If you are a California resident, you have the rights set forth in this section. Please see the
-                "Exercising Your Rights under the State Privacy Laws" section below for instructions regarding how to
-                exercise these rights. Please note that we may process Personal Data of our customers' end users or
-                employees in connection with our provision of certain services to our customers. If we are processing
-                your Personal Data as a service provider, you should contact the entity that collected your Personal
-                Data in the first instance to address your rights with respect to such data. Additionally, please note
-                that these rights are subject to certain conditions and exceptions under applicable law, which may
-                permit or require us to deny your request.
+                如果您是加利福尼亚居民，您拥有本节规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a California resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是加利福尼亚居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access</h3>
+              <h3>访问</h3>
               <p>
-                You have the right to request certain information about our collection and use of your Personal Data. In
-                response, we will provide you with the following information in the past 12 months:
+                您有权要求我们提供有关我们收集和使用您个人数据的某些信息。作为回应，我们将在过去 12 个月内为您提供以下信息：
               </p>
               <ul>
-                <li>The categories of Personal Data that we have collected about you.</li>
-                <li>The categories of sources from which that Personal Data was collected.</li>
-                <li>The business or commercial purpose for collecting or selling your Personal Data.</li>
-                <li>The categories of third parties with whom we have shared your Personal Data.</li>
-                <li>The specific pieces of Personal Data that we have collected about you.</li>
+                <li>我们收集的关于您的个人数据类别。</li>
+                <li>该个人数据的来源类别。</li>
+                <li>收集或出售您个人数据的商业目的。</li>
+                <li>我们与之共享您个人数据的第三方类别。</li>
+                <li>我们收集的关于您的具体个人数据。</li>
               </ul>
 
               <p>
-                If we have disclosed your Personal Data to any third parties for a business purpose over the past 12
-                months, we will identify the categories of Personal Data shared with each category of third party
-                recipient. If we have sold your Personal Data over the past 12 months, we will identify the categories
-                of Personal Data sold to each category of third party recipient.
+                如果在过去 12 个月内，我们为了商业目的向任何第三方披露了您的个人数据，我们将指明与每类第三方接收者共享的个人数据类别。如果在过去 12 个月内，我们出售了您的个人数据，我们将指明出售给每类第三方接收者的个人数据类别。
               </p>
 
               <p>
-                You may request the above information beyond the 12-month period, but no earlier than January 1, 2022.
-                If you do make such a request, we are required to provide that information unless doing so proves
-                impossible or would involve disproportionate effort.
+                您可以要求提供超过 12 个月期间的上述信息，但不早于 2022 年 1 月 1 日。如果您提出此类请求，我们必须提供该信息，除非这样做被证明是不可能的或会涉及不成比例的努力。
               </p>
 
-              <h3>Deletion</h3>
+              <h3>删除</h3>
               <p>
-                You have the right to request that we delete the Personal Data that we have collected from you. Under
-                the CCPA, this right is subject to certain exceptions: for example, we may need to retain your Personal
-                Data to provide you with the Services or complete a transaction or other action you have requested, or
-                if deletion of your Personal Data involves disproportionate effort. If your deletion request is subject
-                to one of these exceptions, we may deny your deletion request.
+                您有权要求我们删除我们从您那里收集的个人数据。根据 CCPA，这项权利受某些例外的限制：例如，我们可能需要保留您的个人数据，以向您提供服务或完成您请求的交易或其他行动，或者
+                如果删除您的个人数据涉及不成比例的努力。如果您的删除请求受这些例外之一的限制，我们可能会拒绝您的删除请求。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to request that we correct any inaccurate Personal Data we have collected about you.
-                Under the CCPA, this right is subject to certain exceptions: for example, if we decide, based on the
-                totality of circumstances related to your Personal Data, that such data is correct. If your correction
-                request is subject to one of these exceptions, we may deny your request.
+                您有权要求我们更正我们收集的关于您的任何不准确的个人数据。根据 CCPA，这项权利受某些例外的限制：例如，如果我们根据与您个人数据相关的全部情况决定此类数据是正确的。如果您的更正请求受这些例外之一的限制，我们可能会拒绝您的请求。
               </p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We will not sell or share your Personal Data, and have not done so over the last 12 months. To our
-                knowledge, we do not sell or share the Personal Data of minors under 13 years of age or of consumers
-                under 16 years of age.
+                我们不会出售或共享您的个人数据，并且在过去 12 个月内也没有这样做。据我们所知，我们不会出售或共享 13 岁以下未成年人或 16 岁以下消费者的个人数据。
               </p>
 
-              <h3>Limit the Use of Sensitive Personal Information</h3>
+              <h3>限制敏感个人信息的使用</h3>
               <p>
-                Consumers have certain rights over the processing of their Sensitive Personal Information. However, we
-                do not collect Sensitive Personal Information.
+                消费者对其敏感个人信息的处理拥有某些权利。但是，我们不收集敏感个人信息。
               </p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the CCPA</h3>
+              <h3>我们不会因您行使 CCPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the CCPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the CCPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the CCPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 CCPA 规定的权利而歧视您。如果您行使 CCPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 CCPA）的允许，提供不同层级的服务，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="colorado-resident-rights">Colorado Resident Rights</h2>
+              <h2 id="colorado-resident-rights">科罗拉多居民权利</h2>
               <p>
-                If you are a Colorado resident, you have the rights set forth under the Colorado Privacy Act ("CPA").
-                Please see the "Exercising Your Rights under the State Privacy Laws" section below for instructions
-                regarding how to exercise these rights. Please note that we may process Personal Data of our customers'
-                end users or employees in connection with our provision of certain services to our customers. If we are
-                processing your Personal Data as a service provider, you should contact the entity that collected your
-                Personal Data in the first instance to address your rights with respect to such data. Additionally,
-                please note that these rights are subject to certain conditions and exceptions under applicable law,
-                which may permit or require us to deny your request.
+                如果您是科罗拉多居民，您拥有科罗拉多隐私法案（"CPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Colorado resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是科罗拉多居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access and request a copy of your Personal Data in a machine-readable format, to the extent technically
-                feasible, twice within a calendar year.
+                您有权要求确认我们是否正在处理您的个人数据，并在一个日历年内向我们访问和请求一份以机器可读格式提供的您的个人数据副本，在技术可行的范围内，每年最多两次。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data concerning you.</p>
+              <h3>删除</h3>
+              <p>您有权删除与您有关的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the CPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 CPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the CPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic situation, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                CPA that concern you.
+                我们不会根据 CPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 CPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Personal Data from a known child under 13 years of age, 3) to sell, or process Personal Data for
-                Targeted Advertising or Profiling after you exercise your right to opt-out, or 4) Personal Data for
-                Secondary Use.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的个人数据，3) 在您行使选择退出权利后出售或处理个人数据用于定向广告或分析，或 4) 用于二次使用的个人数据。
               </p>
 
               <p>
-                If you would like to withdraw your consent, please follow the instructions under the "Exercising Your
-                Rights under the State Privacy Laws" section.
+                如果您想撤回您的同意，请按照"根据州隐私法行使您的权利"部分的说明操作。
               </p>
 
-              <h3>We Will Not Discriminate Against You</h3>
+              <h3>我们不会歧视您</h3>
               <p>
-                We will not process your personal data in violation of state and federal laws that prohibit unlawful
-                discrimination against consumers.
+                我们不会违反禁止对消费者进行非法歧视的州和联邦法律来处理您的个人数据。
               </p>
 
-              <h2 id="connecticut-resident-rights">Connecticut Resident Rights</h2>
+              <h2 id="connecticut-resident-rights">康涅狄格居民权利</h2>
               <p>
-                If you are a Connecticut resident, you have the rights set forth under the Connecticut Data Privacy Act
-                ("CTDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是康涅狄格居民，您拥有康涅狄格数据隐私法案（"CTDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Connecticut resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是康涅狄格居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并访问您的个人数据，以及在技术可行的范围内，请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the CTDPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 CTDPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" as defined under the CTDPA. "Profiling" means any
-                form of automated processing performed on personal data to evaluate, analyze or predict personal aspects
-                related to an identified or identifiable individual's economic situation, health, personal preferences,
-                interests, reliability, behavior, location or movements.
+                我们不会根据 CTDPA 的定义对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Sensitive Data from a known child under 13 years of age, or 3) to sell, or process Personal Data for
-                Targeted Advertising of a consumer at least 13 years of age but younger than 16 years of age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的敏感数据，或 3) 出售或处理至少 13 岁但不满 16 岁消费者的个人数据用于定向广告。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the CTDPA</h3>
+              <h3>我们不会因您行使 CTDPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the CTDPA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the CTDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the CTDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 CTDPA 规定的权利而歧视您。如果您行使 CTDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 CTDPA）的允许，提供不同层级的服务，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="delaware-resident-rights">Delaware Resident Rights</h2>
+              <h2 id="delaware-resident-rights">特拉华居民权利</h2>
               <p>
-                If you are a Delaware resident, you have the rights set forth under the Delaware Personal Data Privacy
-                Act ("DPDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是特拉华居民，您拥有特拉华个人数据隐私法案（"DPDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Delaware resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是特拉华居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access and request a copy of your Personal Data in a machine-readable format, to the extent technically
-                feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并在技术可行的范围内，访问并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the DPDPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 DPDPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the DPDPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                DPDPA that concern you. To our knowledge, we do not process the Personal Data of consumers under 18
-                years of age for the purpose of Profiling.
+                我们不会根据 DPDPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 DPDPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。据我们所知，我们不会为了分析目的处理 18 岁以下消费者的个人数据。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Sensitive Data from a known child under 13 years of age, 3) or to sell, or process Personal Data for
-                Targeted Advertising, or Profiling of a consumer at least 13 years of age but younger than 18 years of
-                age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的敏感数据，3) 出售或处理至少 13 岁但不满 18 岁消费者的个人数据用于定向广告或分析。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You</h3>
+              <h3>我们不会歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the DPDPA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the DPDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the DPDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 DPDPA 规定的权利而歧视您。如果您行使 DPDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 DPDPA）的允许，提供不同层级的服务，其价格、费率或
+                您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="iowa-resident-rights">Iowa Resident Rights</h2>
+              <h2 id="iowa-resident-rights">爱荷华居民权利</h2>
               <p>
-                If you are an Iowa resident, you have the rights set forth under the Iowa Consumer Data Protection Act
-                ("ICDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是爱荷华居民，您拥有爱荷华消费者数据保护法案（"ICDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are an Iowa resident, the portion that is more protective of Personal Data shall control to the extent
-                of such conflict. If you have any questions about this section or whether any of the following rights
-                apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是爱荷华居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access and request a copy of your Personal Data in a machine-readable format, to the extent technically
-                feasible, twice within a calendar year.
+                您有权要求确认我们是否正在处理您的个人数据，并在一个日历年内向我们访问和请求一份以机器可读格式提供的您的个人数据副本，在技术可行的范围内，每年最多两次。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们的个人数据。</p>
 
-              <h3>Opt-Out of Certain Processing Activities</h3>
+              <h3>选择退出某些处理活动</h3>
               <ul>
-                <li>Targeted Advertising: We do not process your Personal Data for targeted advertising purposes.</li>
-                <li>Sale of Personal Data: We do not currently sell your Personal Data as defined under the ICDPA.</li>
-                <li>Processing of Sensitive Personal Data: We do not process Sensitive Personal Data.</li>
+                <li>定向广告：我们不会为定向广告目的处理您的个人数据。</li>
+                <li>个人数据销售：我们目前不会按照 ICDPA 的定义出售您的个人数据。</li>
+                <li>敏感个人数据处理：我们不处理敏感个人数据。</li>
               </ul>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the ICDPA</h3>
+              <h3>我们不会因您行使 ICDPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the ICDPA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the ICDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the ICDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 ICDPA 规定的权利而歧视您。如果您行使 ICDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 ICDPA）的允许，提供不同层级的服务，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="montana-resident-rights">Montana Resident Rights</h2>
+              <h2 id="montana-resident-rights">蒙大拿居民权利</h2>
               <p>
-                If you are a Montana resident, you have the rights set forth under the Montana Consumer Data Privacy Act
-                ("MCDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是蒙大拿居民，您拥有蒙大拿消费者数据隐私法案（"MCDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Montana resident, the portion that is more protective of Personal Data shall control to the extent
-                of such conflict. If you have any questions about this section or whether any of the following rights
-                apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是蒙大拿居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并在技术可行的范围内，访问并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the MCDPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 MCDPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the MCDPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                MCDPA that concern you. To our knowledge, we do not process the Personal Data of consumers under 16
-                years of age for the purpose of Profiling.
+                我们不会根据 MCDPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 MCDPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。据我们所知，我们不会为了分析目的处理 16 岁以下消费者的个人数据。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Sensitive Data from a known child under 13 years of age, or 3) to sell, or process Personal Data for
-                Targeted Advertising or Profiling of a consumer at least 13 years of age but younger than 16 years of
-                age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的敏感数据，或 3) 出售或处理至少 13 岁但不满 16 岁消费者的个人数据用于定向广告或分析。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the MCDPA</h3>
+              <h3>我们不会因您行使 MCDPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the MCDPA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the MCDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the MCDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 MCDPA 规定的权利而歧视您。如果您行使 MCDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 MCDPA）的允许，提供不同层级的服务，其价格、费率或
+                您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="nebraska-resident-rights">Nebraska Resident Rights</h2>
+              <h2 id="nebraska-resident-rights">内布拉斯加居民权利</h2>
               <p>
-                If you are a Nebraska resident, you have the rights set forth under the Nebraska Data Privacy Act
-                ("NDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是内布拉斯加居民，您拥有内布拉斯加数据隐私法案（"NDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Nebraska resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是内布拉斯加居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible, twice within a calendar year.
+                您有权要求确认我们是否正在处理您的个人数据，并在一个日历年内向我们访问和请求一份以机器可读格式提供的您的个人数据副本，在技术可行的范围内，每年最多两次。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the NDPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 NDPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the NDPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                NDPA that concern you.
+                我们不会根据 NDPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 NDPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data and
-                2) Sensitive Data from a known child under 13 years of age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据和 2) 来自已知 13 岁以下儿童的敏感数据。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the NDPA</h3>
+              <h3>我们不会因您行使 NDPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the NDPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the NDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the NDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 NDPA 规定的权利而歧视您。如果您行使 NDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 NDPA）的允许，提供不同层级的服务，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="new-hampshire-resident-rights">New Hampshire Resident Rights</h2>
+              <h2 id="new-hampshire-resident-rights">新罕布什尔居民权利</h2>
               <p>
-                If you are a New Hampshire resident, you have the rights set forth under the New Hampshire Privacy Act
-                ("NHPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是新罕布什尔居民，您拥有新罕布什尔隐私法案（"NHPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a New Hampshire resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是新罕布什尔居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并在技术可行的范围内，访问并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the NHPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 NHPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the NHPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                NHPA that concern you.
+                我们不会根据 NHPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 NHPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data and
-                2) Sensitive Data from a known child under 13 years of age, 3) or to sell or process Personal Data for
-                Targeted Advertising of a consumer at least 13 years of age but younger than 16 years of age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据和 2) 来自已知 13 岁以下儿童的敏感数据，3) 或出售或处理至少 13 岁但不满 16 岁消费者的个人数据用于定向广告。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the NHPA</h3>
+              <h3>我们不会因您行使 NHPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the NHPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the NHPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the NHPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 NHPA 规定的权利而歧视您。如果您行使 NHPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 NHPA）的允许，提供不同层级的服务，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="new-jersey-resident-rights">New Jersey Resident Rights</h2>
+              <h2 id="new-jersey-resident-rights">新泽西居民权利</h2>
               <p>
-                If you are a New Jersey resident, you have the rights set forth under the New Jersey Privacy Act
-                ("NJPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是新泽西居民，您拥有新泽西隐私法案（"NJPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a New Jersey resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是新泽西居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access and request a copy of your Personal Data in a machine-readable format, to the extent technically
-                feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并在技术可行的范围内，访问并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data concerning you.</p>
+              <h3>删除</h3>
+              <p>您有权删除与您有关的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the NJPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 NJPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the NJPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                NJPA that concern you. To our knowledge, we do not process the Personal Data of consumers under 17 years
-                of age for the purpose of Profiling.
+                我们不会根据 NJPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 NJPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。据我们所知，我们不会为了分析目的处理 17 岁以下消费者的个人数据。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Sensitive Data from a known child under 13 years of age, 3) or to sell, or process Personal Data for
-                Targeted Advertising, or Profiling of a consumer at least 13 years of age but younger than 17 years of
-                age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的敏感数据，3) 或出售或处理至少 13 岁但不满 17 岁消费者的个人数据用于定向广告或分析。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You</h3>
+              <h3>我们不会歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the NJPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the NJPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the NJPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 NJPA 规定的权利而歧视您。如果您行使 NJPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会根据适用的数据隐私法律（包括 NJPA）的允许，提供不同层级的服务，其价格、费率或
+                您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="oregon-resident-rights">Oregon Resident Rights</h2>
+              <h2 id="oregon-resident-rights">俄勒冈居民权利</h2>
               <p>
-                If you are an Oregon resident, you have the rights set forth under the Oregon Consumer Privacy Act
-                ("OCPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是俄勒冈居民，您拥有俄勒冈消费者隐私法案（"OCPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are an Oregon resident, the portion that is more protective of Personal Data shall control to the extent
-                of such conflict. If you have any questions about this section or whether any of the following rights
-                apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是俄勒冈居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access and request a copy of your Personal Data, including a list of specific third parties, other than
-                natural persons, to which we have disclosed your Personal Data or any Personal Data, in a
-                machine-readable format, to the extent technically feasible.
+                您有权要求确认我们是否正在处理您的个人数据，并在技术可行的范围内，访问并请求以机器可读格式提供您的个人数据副本，包括我们已向其披露您的个人数据的特定第三方（自然人除外）的列表。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，此类更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们或我们获取的关于您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the OCPA.
+                我们目前不会出售或为定向广告目的处理您的个人数据，如 OCPA 所定义。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" to make "Decisions" under the OCPA. "Profiling"
-                means any form of automated processing performed on personal data to evaluate, analyze or predict
-                personal aspects related to an identified or identifiable individual's economic circumstances, health,
-                personal preferences, interests, reliability, behavior, location or movements. "Decision" means any
-                "Decisions that produce legal or similarly significant effects concerning a Consumer," as defined in the
-                OCPA that concern you. To our knowledge, we do not process the Personal Data of consumers under 16 years
-                of age for the purpose of Profiling.
+                我们不会根据 OCPA 为了做出"决策"而对您的个人数据进行"分析"。"分析"指对个人数据进行的任何形式的自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。"决策"指 OCPA 中定义的任何"对消费者产生法律或类似重大影响的决策"，这些决策与您有关。据我们所知，我们不会为了分析目的处理 16 岁以下消费者的个人数据。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, 2)
-                Sensitive Data from a known child under 13 years of age, or 3) to sell, or process Personal Data for
-                Targeted Advertising, or Profiling of a consumer at least 13 years of age but younger than 16 years of
-                age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1) 敏感数据，2) 来自已知 13 岁以下儿童的敏感数据，或 3) 出售或处理至少 13 岁但不满 16 岁消费者的个人数据用于定向广告或分析。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>然而，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You</h3>
+              <h3>我们不会歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the OCPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the OCPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the OCPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 OCPA 规定的权利而歧视您。如果您行使 OCPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会提供不同层级的
+                服务，如适用的数据隐私法律（包括 OCPA）所允许，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="texas-resident-rights">Texas Resident Rights</h2>
+              <h2 id="texas-resident-rights">德克萨斯居民权利</h2>
               <p>
-                If you are a Texas resident, you have the rights set forth under the Texas Data Privacy and Security Act
-                ("TDPSA"). Please see the "Exercising Your Rights under the State Privacy Laws" section below for
-                instructions regarding how to exercise these rights. Please note that we may process Personal Data of
-                our customers' end users or employees in connection with our provision of certain services to our
-                customers. If we are processing your Personal Data as a service provider, you should contact the entity
-                that collected your Personal Data in the first instance to address your rights with respect to such
-                data. Additionally, please note that these rights are subject to certain conditions and exceptions under
-                applicable law, which may permit or require us to deny your request.
+                如果您是德克萨斯居民，您拥有德克萨斯数据隐私和安全法案（"TDPSA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Texas resident, the portion that is more protective of Personal Data shall control to the extent
-                of such conflict. If you have any questions about this section or whether any of the following rights
-                apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是德克萨斯居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible, twice within a calendar year.
+                您有权请求确认我们是否正在处理您的个人数据，并在一个日历年内最多两次访问您的个人数据并请求以机器可读格式提供您的个人数据副本（在技术可行的范围内）。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，这种更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们的或我们获取的有关您的个人数据。</p>
 
-              <h3>Personal Data Sales Opt-Out</h3>
+              <h3>个人数据销售选择退出</h3>
               <p>
-                We do not currently sell or process for the purposes of targeted advertising your Personal Data as
-                defined under the TDPSA.
+                我们目前不出售或为定向广告目的处理您的个人数据（如 TDPSA 所定义）。
               </p>
 
-              <h3>Profiling Opt-Out</h3>
+              <h3>分析选择退出</h3>
               <p>
-                We do not process your Personal Data for "Profiling" as defined under the TDPSA. "Profiling" means any
-                form of solely automated processing performed on personal data to evaluate, analyze, or predict personal
-                aspects related to an identified or identifiable individual's economic situation, health, personal
-                preferences, interests, reliability, behavior, location, or movements.
+                我们不会为 TDPSA 所定义的 "分析"（Profiling）目的处理您的个人数据。"分析" 是指对个人数据进行的任何形式的纯自动化处理，以评估、分析或预测与已识别或可识别个人的经济状况、健康、个人偏好、兴趣、可靠性、行为、位置或移动相关的个人方面。
               </p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, or
-                2) Sensitive Data from a known child under 13 years of age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1）敏感数据，或 2）来自已知 13 岁以下儿童的敏感数据。
               </p>
 
-              <p>However, we currently do not collect or process your Personal Data as described above.</p>
+              <p>但是，我们目前不会按照上述方式收集或处理您的个人数据。</p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the TDPSA</h3>
+              <h3>我们不会因您行使 TDPSA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the TDPSA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the TDPSA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the TDPSA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 TDPSA 规定的权利而歧视您。如果您行使 TDPSA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会提供不同层级的
+                服务，如适用的数据隐私法律（包括 TDPSA）所允许，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="utah-resident-rights">Utah Resident Rights</h2>
+              <h2 id="utah-resident-rights">犹他居民权利</h2>
               <p>
-                If you are a Utah resident, you have the rights set forth under the Utah Consumer Privacy Act ("UCPA").
-                Please see the "Exercising Your Rights under the State Privacy Laws" section below for instructions
-                regarding how to exercise these rights. Please note that we may process Personal Data of our customers'
-                end users or employees in connection with our provision of certain services to our customers. If we are
-                processing your Personal Data as a service provider, you should contact the entity that collected your
-                Personal Data in the first instance to address your rights with respect to such data. Additionally,
-                please note that these rights are subject to certain conditions and exceptions under applicable law,
-                which may permit or require us to deny your request.
+                如果您是犹他居民，您拥有犹他消费者隐私法案（"UCPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Utah resident, the portion that is more protective of Personal Data shall control to the extent of
-                such conflict. If you have any questions about this section or whether any of the following rights apply
-                to you, please contact us at contact@anoma.ly.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是犹他居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 contact@anoma.ly 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible.
+                您有权请求确认我们是否正在处理您的个人数据，并在技术可行的范围内访问您的个人数据并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data that you have provided to us.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们的个人数据。</p>
 
-              <h3>Opt-Out of Certain Processing Activities</h3>
+              <h3>选择退出某些处理活动</h3>
               <ul>
-                <li>Targeted Advertising: We do not process your Personal Data for targeted advertising purposes.</li>
-                <li>Sale of Personal Data: We do not currently sell your Personal Data as defined under the UCPA.</li>
-                <li>Processing of Sensitive Personal Data: We do not process Sensitive Personal Data.</li>
+                <li>定向广告：我们不会为定向广告目的处理您的个人数据。</li>
+                <li>个人数据销售：我们目前不出售 UCPA 所定义的您的个人数据。</li>
+                <li>敏感个人数据处理：我们不处理敏感个人数据。</li>
               </ul>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the UCPA</h3>
+              <h3>我们不会因您行使 UCPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the UCPA. We will not deny you our
-                goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the UCPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the UCPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 UCPA 规定的权利而歧视您。如果您行使 UCPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会提供不同层级的
+                服务，如适用的数据隐私法律（包括 UCPA）所允许，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="virginia-resident-rights">Virginia Resident Rights</h2>
+              <h2 id="virginia-resident-rights">弗吉尼亚居民权利</h2>
               <p>
-                If you are a Virginia resident, you have the rights set forth under the Virginia Consumer Data
-                Protection Act ("VCDPA"). Please see the "Exercising Your Rights under the State Privacy Laws" section
-                below for instructions regarding how to exercise these rights. Please note that we may process Personal
-                Data of our customers' end users or employees in connection with our provision of certain services to
-                our customers. If we are processing your Personal Data as a service provider, you should contact the
-                entity that collected your Personal Data in the first instance to address your rights with respect to
-                such data. Additionally, please note that these rights are subject to certain conditions and exceptions
-                under applicable law, which may permit or require us to deny your request.
+                如果您是弗吉尼亚居民，您拥有弗吉尼亚消费者数据保护法案（"VCDPA"）规定的权利。有关如何行使这些权利的说明，请参阅下文"根据州隐私法行使您的权利"部分。请注意，我们可能会在向客户提供某些服务的过程中处理客户的最终用户或员工的个人数据。如果我们作为服务提供商处理您的个人数据，您应首先联系收集您个人数据的实体，以解决您对此类数据的权利问题。此外，请注意，这些权利受适用法律规定的某些条件和例外的约束，这些条件和例外可能允许或要求我们拒绝您的请求。
               </p>
 
               <p>
-                If there are any conflicts between this section and any other provision of this Privacy Policy and you
-                are a Virginia resident, the portion that is more protective of Personal Data shall control to the
-                extent of such conflict. If you have any questions about this section or whether any of the following
-                rights apply to you, please contact us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                如果本节与本隐私政策的任何其他条款之间存在任何冲突，且您是弗吉尼亚居民，则在该冲突范围内，更保护个人数据的部分应优先适用。如果您对本节或以下任何权利是否适用于您有任何疑问，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
-              <h3>Access and Portability</h3>
+              <h3>访问和可携带性</h3>
               <p>
-                You have the right to request confirmation of whether or not we are processing your Personal Data and to
-                access your Personal Data, and request a copy of your Personal Data in a machine-readable format, to the
-                extent technically feasible.
+                您有权请求确认我们是否正在处理您的个人数据，并在技术可行的范围内访问您的个人数据并请求以机器可读格式提供您的个人数据副本。
               </p>
 
-              <h3>Correction</h3>
+              <h3>更正</h3>
               <p>
-                You have the right to correct inaccuracies in your Personal Data, to the extent such correction is
-                appropriate in consideration of the nature of such data and our purposes of processing your Personal
-                Data.
+                您有权更正您个人数据中的不准确之处，在考虑到此类数据的性质和我们处理您个人数据的目的的情况下，这种更正适当的范围内。
               </p>
 
-              <h3>Deletion</h3>
-              <p>You have the right to delete Personal Data you have provided to us or we have obtained about you.</p>
+              <h3>删除</h3>
+              <p>您有权删除您提供给我们的或我们获取的有关您的个人数据。</p>
 
-              <h3>Consent or "Opt-in" Required and How to Withdraw</h3>
+              <h3>需要同意或"选择加入"以及如何撤回</h3>
               <p>
-                We may seek your consent to collect or process certain Personal Data, including: 1) Sensitive Data, or
-                2) Sensitive Data from a known child under 13 years of age.
+                我们可能会寻求您的同意来收集或处理某些个人数据，包括：1）敏感数据，或 2）来自已知 13 岁以下儿童的敏感数据。
               </p>
 
-              <p>However, we currently do not collect or process Personal data as described above.</p>
+              <p>但是，我们目前不会按照上述方式收集或处理个人数据。</p>
 
-              <h3>Opt-Out of Certain Processing Activities</h3>
+              <h3>选择退出某些处理活动</h3>
               <ul>
-                <li>Targeted Advertising: We do not process your Personal Data for targeted advertising purposes.</li>
-                <li>Sale of Personal Data: We do not currently sell your Personal Data as defined under the VDCPA.</li>
+                <li>定向广告：我们不会为定向广告目的处理您的个人数据。</li>
+                <li>个人数据销售：我们目前不出售 VDCPA 所定义的您的个人数据。</li>
                 <li>
-                  Processing for Profiling Purposes: We do not currently process your Personal Data for the purposes of
-                  profiling.
+                  为分析目的处理：我们目前不会为分析目的处理您的个人数据。
                 </li>
               </ul>
 
               <p>
-                To exercise any of your rights for these certain processing activities, please follow the instructions
-                under the "Exercising Your Rights under the State Privacy Laws" section.
+                要行使这些特定处理活动的任何权利，请按照"根据州隐私法行使您的权利"部分的说明操作。
               </p>
 
-              <h3>We Will Not Discriminate Against You for Exercising Your Rights Under the VCDPA</h3>
+              <h3>我们不会因您行使 VCDPA 规定的权利而歧视您</h3>
               <p>
-                We will not discriminate against you for exercising your rights under the VCDPA. We will not deny you
-                our goods or services, charge you different prices or rates, or provide you a lower quality of goods and
-                services if you exercise your rights under the VCDPA. However, we may offer different tiers of our
-                Services as allowed by applicable data privacy laws (including the VCDPA) with varying prices, rates or
-                levels of quality of the goods or services you receive related to the value of Personal Data that we
-                receive from you.
+                我们不会因您行使 VCDPA 规定的权利而歧视您。如果您行使 VCDPA 规定的权利，我们不会拒绝向您提供我们的商品或服务，不会向您收取不同的价格或费率，也不会向您提供质量较低的商品和服务。但是，我们可能会提供不同层级的
+                服务，如适用的数据隐私法律（包括 VCDPA）所允许，其价格、费率或您收到的商品或服务的质量水平与我们从您那里收到的个人数据的价值相关。
               </p>
 
-              <h2 id="exercising-your-rights">Exercising Your Rights under the State Privacy Laws</h2>
+              <h2 id="exercising-your-rights">根据州隐私法行使您的权利</h2>
               <p>
-                To exercise the rights described in this Privacy Policy, you or, if you are a California, Colorado,
-                Connecticut, Delaware, Montana, Nebraska, New Hampshire, New Jersey, Oregon or Texas resident, your
-                Authorized Agent (defined below) must send us a request that (1) provides sufficient information to
-                allow us to verify that you are the person about whom we have collected Personal Data, and (2) describes
-                your request in sufficient detail to allow us to understand, evaluate and respond to it. Each request
-                that meets both of these criteria will be considered a "Valid Request." We may not respond to requests
-                that do not meet these criteria. We will only use Personal Data provided in a Valid Request to verify
-                your identity and complete your request. You do not need an account to submit a Valid Request.
+                要行使本隐私政策中描述的权利，您或（如果您是加利福尼亚、科罗拉多、康涅狄格、特拉华、蒙大拿、内布拉斯加、新罕布什尔、新泽西、俄勒冈或德克萨斯居民）您的授权代理人（定义如下）必须向我们发送请求，该请求（1）提供足够的信息以
+                允许我们验证您是我们收集了个人数据的个人，并且（2）足够详细地描述您的请求，以便我们理解、评估和回应。符合这两个标准的每个请求将被视为"有效请求"。我们可能不会回应不符合这些标准的请求。我们只会使用有效请求中提供的个人数据来验证
+                您的身份并完成您的请求。您不需要账户即可提交有效请求。
               </p>
 
               <p>
-                We will work to respond to your Valid Request within the time period required by applicable law. We will
-                not charge you a fee for making a Valid Request unless your Valid Request(s) is excessive, repetitive or
-                manifestly unfounded. If we determine that your Valid Request warrants a fee, we will notify you of the
-                fee and explain that decision before completing your request.
+                我们将在适用法律要求的时间段内努力回应您的有效请求。我们不会因您提出有效请求而收取费用，除非您的有效请求是过度的、重复的或明显无根据的。如果我们确定您的有效请求需要收费，我们将在完成您的请求之前通知您费用并解释该决定。
               </p>
 
-              <h3>Request to Withdraw Consent to Certain Processing Activities</h3>
+              <h3>请求撤回对某些处理活动的同意</h3>
               <p>
-                If you are a California resident, you may withdraw your consent allowing us: 1) to sell or share your
-                Personal Data, by using the following method:
+                如果您是加利福尼亚居民，您可以通过以下方法撤回允许我们：1）出售或共享您的个人数据的同意：
               </p>
               <ul>
                 <li>
-                  Email us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
+                  发送电子邮件至 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
                 </li>
-                <li>Call us at: +1 415 794-0209</li>
+                <li>致电我们：+1 415 794-0209</li>
               </ul>
 
-              <h3>Request to Access, Delete, or Correct</h3>
+              <h3>请求访问、删除或更正</h3>
               <p>
-                You may submit a Valid Request for any other rights afforded to you in this Privacy Policy by using the
-                following methods:
+                您可以通过以下方法提交有效请求，以行使本隐私政策赋予您的任何其他权利：
               </p>
               <ul>
                 <li>
-                  Email us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
+                  发送电子邮件至 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
                 </li>
-                <li>Call us at: +1 415 794-0209</li>
+                <li>致电我们：+1 415 794-0209</li>
               </ul>
 
               <p>
-                If you are a California, Colorado, Connecticut, Delaware, Montana, Nebraska, New Hampshire, New Jersey,
-                Oregon or Texas resident, you may also authorize an agent (an "Authorized Agent") to exercise your
-                rights on your behalf. To do this, you must provide your Authorized Agent with written permission to
-                exercise your rights on your behalf, and we may request a copy of this written permission from your
-                Authorized Agent when they make a request on your behalf.
+                如果您是加利福尼亚、科罗拉多、康涅狄格、特拉华、蒙大拿、内布拉斯加、新罕布什尔、新泽西、俄勒冈或德克萨斯居民，您还可以授权代理人（"授权代理人"）代表您行使您的权利。要做到这一点，您必须向您的授权代理人提供书面许可，以
+                代表您行使您的权利，并且当您的授权代理人代表您提出请求时，我们可能会要求他们提供此书面许可的副本。
               </p>
 
-              <h3>Appealing a Denial</h3>
+              <h3>对拒绝的上诉</h3>
               <p>
-                If you are a Colorado, Connecticut, Delaware, Iowa, Montana, Nebraska, New Hampshire, New Jersey,
-                Oregon, Texas or Virginia resident and we refuse to take action on your request within a reasonable
-                period of time after receiving your request in accordance with this section, you may appeal our
-                decision. In such appeal, you must (1) provide sufficient information to allow us to verify that you are
-                the person about whom the original request pertains and to identify the original request, and (2)
-                provide a description of the basis of your appeal. Please note that your appeal will be subject to your
-                rights and obligations afforded to you under the State Privacy Laws (as applicable). We will respond to
-                your appeal within the time period required under the applicable law. You can submit a Verified Request
-                to appeal by the following methods:
+                如果您是科罗拉多、康涅狄格、特拉华、爱荷华、蒙大拿、内布拉斯加、新罕布什尔、新泽西、俄勒冈、德克萨斯或弗吉尼亚居民，并且我们在根据本节收到您的请求后的合理时间内拒绝就您的请求采取行动，您可以对我们的
+                决定提出上诉。在该上诉中，您必须（1）提供足够的信息以允许我们验证您是原始请求所涉及的个人并识别原始请求，并且（2）提供您上诉的依据说明。请注意，您的上诉将受州隐私法（如适用）赋予您的权利和义务的约束。我们将在适用法律要求的时间段内回应
+                您的上诉。您可以通过以下方法提交经核实的上诉请求：
               </p>
               <ul>
                 <li>
-                  Email us at <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
+                  发送电子邮件至 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
                 </li>
-                <li>Call us at: +1 415 794-0209</li>
+                <li>致电我们：+1 415 794-0209</li>
               </ul>
 
               <p>
-                If we deny your appeal, you have the right to contact the Attorney General of your State, including by
-                the following links: Colorado, Connecticut, Delaware, Iowa, Montana, Nebraska, New Hampshire, New
-                Jersey, Oregon, Texas and Virginia.
+                如果我们拒绝您的上诉，您有权联系您所在州的总检察长，包括通过以下链接：科罗拉多、康涅狄格、特拉华、爱荷华、蒙大拿、内布拉斯加、新罕布什尔、新泽西、俄勒冈、德克萨斯和弗吉尼亚。
               </p>
 
-              <h2 id="other-state-law-privacy-rights">Other State Law Privacy Rights</h2>
+              <h2 id="other-state-law-privacy-rights">其他州法律隐私权利</h2>
 
-              <h3>California Resident Rights</h3>
+              <h3>加利福尼亚居民权利</h3>
               <p>
-                Under California Civil Code Sections 1798.83-1798.84, California residents are entitled to contact us to
-                prevent disclosure of Personal Data to third parties for such third parties' direct marketing purposes;
-                in order to submit such a request, please contact us at{" "}
-                <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>.
+                根据加利福尼亚民法典第 1798.83-1798.84 节，加利福尼亚居民有权联系我们，以防止将个人数据披露给第三方用于此类第三方的直接营销目的；要提交此类请求，请通过 <a href="mailto:contact@anoma.ly">contact@anoma.ly</a> 联系我们。
               </p>
 
               <p>
-                Your browser may offer you a "Do Not Track" option, which allows you to signal to operators of websites
-                and web applications and services that you do not wish such operators to track certain of your online
-                activities over time and across different websites. Our Services do not support Do Not Track requests at
-                this time. To find out more about "Do Not Track," you can visit{" "}
-                <a href="http://www.allaboutdnt.com">www.allaboutdnt.com</a>.
+                您的浏览器可能会为您提供"请勿跟踪"选项，该选项允许您向网站和网络应用程序及服务的运营商发出信号，表示您不希望此类运营商随时间跨不同网站跟踪您的某些在线活动。我们的服务目前不支持"请勿跟踪"请求。要了解更多关于"请勿跟踪"的信息，您可以访问 <a href="http://www.allaboutdnt.com">www.allaboutdnt.com</a>。
               </p>
 
-              <h3>Nevada Resident Rights</h3>
+              <h3>内华达居民权利</h3>
               <p>
-                Please note that we do not currently sell your Personal Data as sales are defined in Nevada Revised
-                Statutes Chapter 603A.
+                请注意，我们目前不出售您的个人数据，如内华达修订法规第 603A 章中定义的销售。
               </p>
 
-              <h2 id="contact-information">Contact Information</h2>
+              <h2 id="contact-information">联系信息</h2>
               <p>
-                If you have any questions or comments about this Privacy Policy, the ways in which we collect and use
-                your Personal Data or your choices and rights regarding such collection and use, please do not hesitate
-                to contact us at:
+                如果您对本隐私政策、我们收集和使用您的个人数据的方式或您对此类收集和使用的选择和权利有任何问题或意见，请随时通过以下方式联系我们：
               </p>
               <ul>
                 <li>
-                  Email: <a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
+                  电子邮件：<a href="mailto:contact@anoma.ly">contact@anoma.ly</a>
                 </li>
-                <li>Phone: +1 415 794-0209</li>
+                <li>电话：+1 415 794-0209</li>
               </ul>
             </article>
           </section>

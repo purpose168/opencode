@@ -1,76 +1,84 @@
-import z from "zod"
-import * as path from "path"
 import * as fs from "fs/promises"
+import * as path from "path"
+import z from "zod"
 import { Log } from "../util/log"
 
 export namespace Patch {
-  const log = Log.create({ service: "patch" })
+  const log = Log.create({ service: "patch" }) // 创建补丁服务日志记录器
 
-  // Schema definitions
+  // Schema定义
   export const PatchSchema = z.object({
-    patchText: z.string().describe("The full patch text that describes all changes to be made"),
+    patchText: z.string().describe("描述所有要进行的更改的完整补丁文本"),
   })
 
   export type PatchParams = z.infer<typeof PatchSchema>
 
-  // Core types matching the Rust implementation
+  // 与Rust实现匹配的核心类型
   export interface ApplyPatchArgs {
-    patch: string
-    hunks: Hunk[]
-    workdir?: string
+    patch: string // 补丁文本
+    hunks: Hunk[] // 补丁块列表
+    workdir?: string // 工作目录(可选)
   }
 
+  // 补丁块类型定义,支持添加、删除和更新文件
   export type Hunk =
-    | { type: "add"; path: string; contents: string }
-    | { type: "delete"; path: string }
-    | { type: "update"; path: string; move_path?: string; chunks: UpdateFileChunk[] }
+    | { type: "add"; path: string; contents: string } // 添加文件
+    | { type: "delete"; path: string } // 删除文件
+    | { type: "update"; path: string; move_path?: string; chunks: UpdateFileChunk[] } // 更新文件
 
+  // 更新文件的块定义
   export interface UpdateFileChunk {
-    old_lines: string[]
-    new_lines: string[]
-    change_context?: string
-    is_end_of_file?: boolean
+    old_lines: string[] // 旧行内容
+    new_lines: string[] // 新行内容
+    change_context?: string // 更改上下文(可选)
+    is_end_of_file?: boolean // 是否为文件结束标记(可选)
   }
 
+  // 应用补丁操作接口
   export interface ApplyPatchAction {
-    changes: Map<string, ApplyPatchFileChange>
-    patch: string
-    cwd: string
+    changes: Map<string, ApplyPatchFileChange> // 文件更改映射表
+    patch: string // 补丁文本
+    cwd: string // 当前工作目录
   }
 
+  // 应用补丁文件更改类型
   export type ApplyPatchFileChange =
-    | { type: "add"; content: string }
-    | { type: "delete"; content: string }
-    | { type: "update"; unified_diff: string; move_path?: string; new_content: string }
+    | { type: "add"; content: string } // 添加文件
+    | { type: "delete"; content: string } // 删除文件
+    | { type: "update"; unified_diff: string; move_path?: string; new_content: string } // 更新文件
 
+  // 受影响的路径接口
   export interface AffectedPaths {
-    added: string[]
-    modified: string[]
-    deleted: string[]
+    added: string[] // 添加的文件路径列表
+    modified: string[] // 修改的文件路径列表
+    deleted: string[] // 删除的文件路径列表
   }
 
+  // 应用补丁错误枚举
   export enum ApplyPatchError {
-    ParseError = "ParseError",
-    IoError = "IoError",
-    ComputeReplacements = "ComputeReplacements",
-    ImplicitInvocation = "ImplicitInvocation",
+    ParseError = "ParseError", // 解析错误
+    IoError = "IoError", // 输入输出错误
+    ComputeReplacements = "ComputeReplacements", // 计算替换错误
+    ImplicitInvocation = "ImplicitInvocation", // 隐式调用错误
   }
 
+  // 可能应用补丁枚举
   export enum MaybeApplyPatch {
-    Body = "Body",
-    ShellParseError = "ShellParseError",
-    PatchParseError = "PatchParseError",
-    NotApplyPatch = "NotApplyPatch",
+    Body = "Body", // 主体
+    ShellParseError = "ShellParseError", // Shell解析错误
+    PatchParseError = "PatchParseError", // 补丁解析错误
+    NotApplyPatch = "NotApplyPatch", // 不是应用补丁命令
   }
 
+  // 可能应用补丁验证枚举
   export enum MaybeApplyPatchVerified {
-    Body = "Body",
-    ShellParseError = "ShellParseError",
-    CorrectnessError = "CorrectnessError",
-    NotApplyPatch = "NotApplyPatch",
+    Body = "Body", // 主体
+    ShellParseError = "ShellParseError", // Shell解析错误
+    CorrectnessError = "CorrectnessError", // 正确性错误
+    NotApplyPatch = "NotApplyPatch", // 不是应用补丁命令
   }
 
-  // Parser implementation
+  // 解析器实现
   function parsePatchHeader(
     lines: string[],
     startIdx: number,
@@ -92,7 +100,7 @@ export namespace Patch {
       let movePath: string | undefined
       let nextIdx = startIdx + 1
 
-      // Check for move directive
+      // 检查移动指令
       if (nextIdx < lines.length && lines[nextIdx].startsWith("*** Move to:")) {
         movePath = lines[nextIdx].split(":", 2)[1]?.trim()
         nextIdx++
@@ -110,7 +118,7 @@ export namespace Patch {
 
     while (i < lines.length && !lines[i].startsWith("***")) {
       if (lines[i].startsWith("@@")) {
-        // Parse context line
+        // 解析上下文行
         const contextLine = lines[i].substring(2).trim()
         i++
 
@@ -118,7 +126,7 @@ export namespace Patch {
         const newLines: string[] = []
         let isEndOfFile = false
 
-        // Parse change lines
+        // 解析更改行
         while (i < lines.length && !lines[i].startsWith("@@") && !lines[i].startsWith("***")) {
           const changeLine = lines[i]
 
@@ -129,15 +137,15 @@ export namespace Patch {
           }
 
           if (changeLine.startsWith(" ")) {
-            // Keep line - appears in both old and new
+            // 保留行 - 同时出现在旧文件和新文件中
             const content = changeLine.substring(1)
             oldLines.push(content)
             newLines.push(content)
           } else if (changeLine.startsWith("-")) {
-            // Remove line - only in old
+            // 删除行 - 仅在旧文件中
             oldLines.push(changeLine.substring(1))
           } else if (changeLine.startsWith("+")) {
-            // Add line - only in new
+            // 添加行 - 仅在新文件中
             newLines.push(changeLine.substring(1))
           }
 
@@ -169,7 +177,7 @@ export namespace Patch {
       i++
     }
 
-    // Remove trailing newline
+    // 移除末尾换行符
     if (content.endsWith("\n")) {
       content = content.slice(0, -1)
     }
@@ -182,7 +190,7 @@ export namespace Patch {
     const hunks: Hunk[] = []
     let i = 0
 
-    // Look for Begin/End patch markers
+    // 查找开始/结束补丁标记
     const beginMarker = "*** Begin Patch"
     const endMarker = "*** End Patch"
 
@@ -190,10 +198,10 @@ export namespace Patch {
     const endIdx = lines.findIndex((line) => line.trim() === endMarker)
 
     if (beginIdx === -1 || endIdx === -1 || beginIdx >= endIdx) {
-      throw new Error("Invalid patch format: missing Begin/End markers")
+      throw new Error("无效的补丁格式：缺少开始/结束标记")
     }
 
-    // Parse content between markers
+    // 解析标记之间的内容
     i = beginIdx + 1
 
     while (i < endIdx) {
@@ -234,48 +242,23 @@ export namespace Patch {
     return { hunks }
   }
 
-  // Apply patch functionality
+  // 应用补丁功能
   export function maybeParseApplyPatch(
     argv: string[],
   ):
     | { type: MaybeApplyPatch.Body; args: ApplyPatchArgs }
     | { type: MaybeApplyPatch.PatchParseError; error: Error }
     | { type: MaybeApplyPatch.NotApplyPatch } {
-    const APPLY_PATCH_COMMANDS = ["apply_patch", "applypatch"]
+      const APPLY_PATCH_COMMANDS = ["apply_patch", "applypatch"]
 
-    // Direct invocation: apply_patch <patch>
-    if (argv.length === 2 && APPLY_PATCH_COMMANDS.includes(argv[0])) {
-      try {
-        const { hunks } = parsePatch(argv[1])
-        return {
-          type: MaybeApplyPatch.Body,
-          args: {
-            patch: argv[1],
-            hunks,
-          },
-        }
-      } catch (error) {
-        return {
-          type: MaybeApplyPatch.PatchParseError,
-          error: error as Error,
-        }
-      }
-    }
-
-    // Bash heredoc form: bash -lc 'apply_patch <<"EOF" ...'
-    if (argv.length === 3 && argv[0] === "bash" && argv[1] === "-lc") {
-      // Simple extraction - in real implementation would need proper bash parsing
-      const script = argv[2]
-      const heredocMatch = script.match(/apply_patch\s*<<['"](\w+)['"]\s*\n([\s\S]*?)\n\1/)
-
-      if (heredocMatch) {
-        const patchContent = heredocMatch[2]
+      // 直接调用: apply_patch <patch>
+      if (argv.length === 2 && APPLY_PATCH_COMMANDS.includes(argv[0])) {
         try {
-          const { hunks } = parsePatch(patchContent)
+          const { hunks } = parsePatch(argv[1])
           return {
             type: MaybeApplyPatch.Body,
             args: {
-              patch: patchContent,
+              patch: argv[1],
               hunks,
             },
           }
@@ -286,19 +269,44 @@ export namespace Patch {
           }
         }
       }
+
+      // Bash heredoc形式: bash -lc 'apply_patch <<"EOF" ...'
+      if (argv.length === 3 && argv[0] === "bash" && argv[1] === "-lc") {
+        // 简单提取 - 在实际实现中需要正确的bash解析
+        const script = argv[2]
+        const heredocMatch = script.match(/apply_patch\s*<<['"](\w+)['"]\s*\n([\s\S]*?)\n\1/)
+
+        if (heredocMatch) {
+          const patchContent = heredocMatch[2]
+          try {
+            const { hunks } = parsePatch(patchContent)
+            return {
+              type: MaybeApplyPatch.Body,
+              args: {
+                patch: patchContent,
+                hunks,
+              },
+            }
+          } catch (error) {
+            return {
+              type: MaybeApplyPatch.PatchParseError,
+              error: error as Error,
+            }
+          }
+        }
+      }
+
+      return { type: MaybeApplyPatch.NotApplyPatch }
     }
 
-    return { type: MaybeApplyPatch.NotApplyPatch }
-  }
-
-  // File content manipulation
+  // 文件内容操作
   interface ApplyPatchFileUpdate {
     unified_diff: string
     content: string
   }
 
   export function deriveNewContentsFromChunks(filePath: string, chunks: UpdateFileChunk[]): ApplyPatchFileUpdate {
-    // Read original file content
+    // 读取原始文件内容
     let originalContent: string
     try {
       originalContent = require("fs").readFileSync(filePath, "utf-8")
@@ -308,7 +316,7 @@ export namespace Patch {
 
     let originalLines = originalContent.split("\n")
 
-    // Drop trailing empty element for consistent line counting
+    // 移除末尾空元素以保持一致的行计数
     if (originalLines.length > 0 && originalLines[originalLines.length - 1] === "") {
       originalLines.pop()
     }
@@ -316,14 +324,14 @@ export namespace Patch {
     const replacements = computeReplacements(originalLines, filePath, chunks)
     let newLines = applyReplacements(originalLines, replacements)
 
-    // Ensure trailing newline
+    // 确保末尾换行
     if (newLines.length === 0 || newLines[newLines.length - 1] !== "") {
       newLines.push("")
     }
 
     const newContent = newLines.join("\n")
 
-    // Generate unified diff
+    // 生成统一差异
     const unifiedDiff = generateUnifiedDiff(originalContent, newContent)
 
     return {
@@ -341,7 +349,7 @@ export namespace Patch {
     let lineIndex = 0
 
     for (const chunk of chunks) {
-      // Handle context-based seeking
+      // 处理基于上下文的查找
       if (chunk.change_context) {
         const contextIdx = seekSequence(originalLines, [chunk.change_context], lineIndex)
         if (contextIdx === -1) {
@@ -350,7 +358,7 @@ export namespace Patch {
         lineIndex = contextIdx + 1
       }
 
-      // Handle pure addition (no old lines)
+      // 处理纯添加(没有旧行)
       if (chunk.old_lines.length === 0) {
         const insertionIdx =
           originalLines.length > 0 && originalLines[originalLines.length - 1] === ""
@@ -360,12 +368,12 @@ export namespace Patch {
         continue
       }
 
-      // Try to match old lines in the file
+      // 尝试在文件中匹配旧行
       let pattern = chunk.old_lines
       let newSlice = chunk.new_lines
       let found = seekSequence(originalLines, pattern, lineIndex)
 
-      // Retry without trailing empty line if not found
+      // 如果未找到,重试不带末尾空行的情况
       if (found === -1 && pattern.length > 0 && pattern[pattern.length - 1] === "") {
         pattern = pattern.slice(0, -1)
         if (newSlice.length > 0 && newSlice[newSlice.length - 1] === "") {
@@ -382,23 +390,23 @@ export namespace Patch {
       }
     }
 
-    // Sort replacements by index to apply in order
+    // 按索引排序替换项以按顺序应用
     replacements.sort((a, b) => a[0] - b[0])
 
     return replacements
   }
 
   function applyReplacements(lines: string[], replacements: Array<[number, number, string[]]>): string[] {
-    // Apply replacements in reverse order to avoid index shifting
+    // 按相反顺序应用替换以避免索引偏移
     const result = [...lines]
 
     for (let i = replacements.length - 1; i >= 0; i--) {
       const [startIdx, oldLen, newSegment] = replacements[i]
 
-      // Remove old lines
+      // 移除旧行
       result.splice(startIdx, oldLen)
 
-      // Insert new lines
+      // 插入新行
       for (let j = 0; j < newSegment.length; j++) {
         result.splice(startIdx + j, 0, newSegment[j])
       }
@@ -410,7 +418,7 @@ export namespace Patch {
   function seekSequence(lines: string[], pattern: string[], startIndex: number): number {
     if (pattern.length === 0) return -1
 
-    // Simple substring search implementation
+    // 简单的子字符串搜索实现
     for (let i = startIndex; i <= lines.length - pattern.length; i++) {
       let matches = true
 
@@ -433,10 +441,10 @@ export namespace Patch {
     const oldLines = oldContent.split("\n")
     const newLines = newContent.split("\n")
 
-    // Simple diff generation - in a real implementation you'd use a proper diff algorithm
+    // 简单的差异生成 - 在实际实现中应使用适当的差异算法
     let diff = "@@ -1 +1 @@\n"
 
-    // Find changes (simplified approach)
+    // 查找更改(简化方法)
     const maxLen = Math.max(oldLines.length, newLines.length)
     let hasChanges = false
 
@@ -456,10 +464,10 @@ export namespace Patch {
     return hasChanges ? diff : ""
   }
 
-  // Apply hunks to filesystem
+  // 将补丁块应用到文件系统
   export async function applyHunksToFiles(hunks: Hunk[]): Promise<AffectedPaths> {
     if (hunks.length === 0) {
-      throw new Error("No files were modified.")
+      throw new Error("没有文件被修改。")
     }
 
     const added: string[] = []
@@ -469,7 +477,7 @@ export namespace Patch {
     for (const hunk of hunks) {
       switch (hunk.type) {
         case "add":
-          // Create parent directories
+          // 创建父目录
           const addDir = path.dirname(hunk.path)
           if (addDir !== "." && addDir !== "/") {
             await fs.mkdir(addDir, { recursive: true })
@@ -490,7 +498,7 @@ export namespace Patch {
           const fileUpdate = deriveNewContentsFromChunks(hunk.path, hunk.chunks)
 
           if (hunk.move_path) {
-            // Handle file move
+            // 处理文件移动
             const moveDir = path.dirname(hunk.move_path)
             if (moveDir !== "." && moveDir !== "/") {
               await fs.mkdir(moveDir, { recursive: true })
@@ -501,7 +509,7 @@ export namespace Patch {
             modified.push(hunk.move_path)
             log.info(`Moved file: ${hunk.path} -> ${hunk.move_path}`)
           } else {
-            // Regular update
+            // 常规更新
             await fs.writeFile(hunk.path, fileUpdate.content, "utf-8")
             modified.push(hunk.path)
             log.info(`Updated file: ${hunk.path}`)
@@ -513,13 +521,13 @@ export namespace Patch {
     return { added, modified, deleted }
   }
 
-  // Main patch application function
+  // 主补丁应用函数
   export async function applyPatch(patchText: string): Promise<AffectedPaths> {
     const { hunks } = parsePatch(patchText)
     return applyHunksToFiles(hunks)
   }
 
-  // Async version of maybeParseApplyPatchVerified
+  // maybeParseApplyPatchVerified的异步版本
   export async function maybeParseApplyPatchVerified(
     argv: string[],
     cwd: string,
@@ -528,7 +536,7 @@ export namespace Patch {
     | { type: MaybeApplyPatchVerified.CorrectnessError; error: Error }
     | { type: MaybeApplyPatchVerified.NotApplyPatch }
   > {
-    // Detect implicit patch invocation (raw patch without apply_patch command)
+    // 检测隐式补丁调用(没有apply_patch命令的原始补丁)
     if (argv.length === 1) {
       try {
         parsePatch(argv[0])
@@ -537,7 +545,7 @@ export namespace Patch {
           error: new Error(ApplyPatchError.ImplicitInvocation),
         }
       } catch {
-        // Not a patch, continue
+        // 不是补丁,继续
       }
     }
 
@@ -564,7 +572,7 @@ export namespace Patch {
               break
 
             case "delete":
-              // For delete, we need to read the current content
+              // 对于删除,需要读取当前内容
               const deletePath = path.resolve(effectiveCwd, hunk.path)
               try {
                 const content = await fs.readFile(deletePath, "utf-8")

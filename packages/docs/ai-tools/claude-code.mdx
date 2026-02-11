@@ -1,83 +1,84 @@
 ---
-title: "Claude Code setup"
-description: "Configure Claude Code for your documentation workflow"
+title: "Claude Code 设置"
+description: "配置 Claude Code 以用于文档工作流程"
 icon: "asterisk"
 ---
 
-Claude Code is Anthropic's official CLI tool. This guide will help you set up Claude Code to help you write and maintain your documentation.
+Claude Code 是 Anthropic 官方的命令行工具（CLI）。本指南将帮助您设置 Claude Code，以协助您编写和维护文档。
 
-## Prerequisites
+## 前提条件
 
-- Active Claude subscription (Pro, Max, or API access)
+- 有效的 Claude 订阅（Pro、Max 或 API 访问权限）
 
-## Setup
+## 设置
 
-1. Install Claude Code globally:
+1. 全局安装 Claude Code：
 
 ```bash
+# 全局安装 Claude Code 命令行工具
 npm install -g @anthropic-ai/claude-code
 ```
 
-2. Navigate to your docs directory.
-3. (Optional) Add the `CLAUDE.md` file below to your project.
-4. Run `claude` to start.
+2. 导航到您的文档目录。
+3. （可选）将下方的 `CLAUDE.md` 文件添加到您的项目中。
+4. 运行 `claude` 启动工具。
 
-## Create `CLAUDE.md`
+## 创建 `CLAUDE.md`
 
-Create a `CLAUDE.md` file at the root of your documentation repository to train Claude Code on your specific documentation standards:
+在文档仓库的根目录创建一个 `CLAUDE.md` 文件，用于训练 Claude Code 了解您特定的文档标准：
 
 ```markdown
-# Mintlify documentation
+# Mintlify 文档
 
-## Working relationship
+## 工作关系
 
-- You can push back on ideas-this can lead to better documentation. Cite sources and explain your reasoning when you do so
-- ALWAYS ask for clarification rather than making assumptions
-- NEVER lie, guess, or make up information
+- 您可以对想法提出异议，这可能会带来更好的文档。当您这样做时，请引用来源并解释您的推理过程
+- 始终要求澄清，而不是做出假设
+- 永远不要说谎、猜测或编造信息
 
-## Project context
+## 项目背景
 
-- Format: MDX files with YAML frontmatter
-- Config: docs.json for navigation, theme, settings
-- Components: Mintlify components
+- 格式：带有 YAML 前置元数据的 MDX 文件
+- 配置：使用 docs.json 进行导航、主题和设置
+- 组件：Mintlify 组件
 
-## Content strategy
+## 内容策略
 
-- Document just enough for user success - not too much, not too little
-- Prioritize accuracy and usability of information
-- Make content evergreen when possible
-- Search for existing information before adding new content. Avoid duplication unless it is done for a strategic reason
-- Check existing patterns for consistency
-- Start by making the smallest reasonable changes
+- 文档内容要恰到好处，足以确保用户成功使用，不多也不少
+- 优先考虑信息的准确性和可用性
+- 尽可能使内容具有持久性（evergreen）
+- 在添加新内容之前，先搜索现有信息。除非出于战略原因，否则避免重复
+- 检查现有模式以保持一致性
+- 从做出最小的合理更改开始
 
-## Frontmatter requirements for pages
+## 页面的前置元数据要求
 
-- title: Clear, descriptive page title
-- description: Concise summary for SEO/navigation
+- title：清晰、描述性的页面标题
+- description：用于 SEO/导航的简明摘要
 
-## Writing standards
+## 写作标准
 
-- Second-person voice ("you")
-- Prerequisites at start of procedural content
-- Test all code examples before publishing
-- Match style and formatting of existing pages
-- Include both basic and advanced use cases
-- Language tags on all code blocks
-- Alt text on all images
-- Relative paths for internal links
+- 第二人称（"您"）
+- 流程内容开始处列出前提条件
+- 发布前测试所有代码示例
+- 与现有页面的风格和格式保持一致
+- 同时包含基本和高级用例
+- 所有代码块都添加语言标签
+- 所有图片都添加替代文本（alt text）
+- 内部链接使用相对路径
 
-## Git workflow
+## Git 工作流程
 
-- NEVER use --no-verify when committing
-- Ask how to handle uncommitted changes before starting
-- Create a new branch when no clear branch exists for changes
-- Commit frequently throughout development
-- NEVER skip or disable pre-commit hooks
+- 提交时永远不要使用 --no-verify 选项
+- 在开始前询问如何处理未提交的更改
+- 当没有明确的分支用于更改时，创建一个新分支
+- 在开发过程中频繁提交
+- 永远不要跳过或禁用 pre-commit 钩子
 
-## Do not
+## 不要
 
-- Skip frontmatter on any MDX file
-- Use absolute URLs for internal links
-- Include untested code examples
-- Make assumptions - always ask for clarification
+- 跳过任何 MDX 文件的前置元数据
+- 对内部链接使用绝对 URL
+- 包含未经测试的代码示例
+- 做出假设 - 始终要求澄清
 ```

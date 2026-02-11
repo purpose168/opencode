@@ -1,67 +1,67 @@
 # opencode GitHub Action
 
-A GitHub Action that integrates [opencode](https://opencode.ai) directly into your GitHub workflow.
+一个将 [opencode](https://opencode.ai) 直接集成到您的 GitHub 工作流程中的 GitHub Action。
 
-Mention `/opencode` in your comment, and opencode will execute tasks within your GitHub Actions runner.
+在您的评论中提及 `/opencode`，opencode 将在您的 GitHub Actions 运行器中执行任务。
 
-## Features
+## 功能特性
 
-#### Explain an issue
+#### 解释问题
 
-Leave the following comment on a GitHub issue. `opencode` will read the entire thread, including all comments, and reply with a clear explanation.
+在 GitHub issue 上留下以下评论。`opencode` 将阅读整个讨论线程，包括所有评论，并回复清晰的解释。
 
 ```
 /opencode explain this issue
 ```
 
-#### Fix an issue
+#### 修复问题
 
-Leave the following comment on a GitHub issue. opencode will create a new branch, implement the changes, and open a PR with the changes.
+在 GitHub issue 上留下以下评论。opencode 将创建一个新分支，实现更改，并打开包含这些更改的 PR。
 
 ```
 /opencode fix this
 ```
 
-#### Review PRs and make changes
+#### 审查 PR 并进行更改
 
-Leave the following comment on a GitHub PR. opencode will implement the requested change and commit it to the same PR.
+在 GitHub PR 上留下以下评论。opencode 将实现请求的更改并将其提交到同一个 PR。
 
 ```
 Delete the attachment from S3 when the note is removed /oc
 ```
 
-#### Review specific code lines
+#### 审查特定代码行
 
-Leave a comment directly on code lines in the PR's "Files" tab. opencode will automatically detect the file, line numbers, and diff context to provide precise responses.
+在 PR 的 "Files" 选项卡中直接对代码行发表评论。opencode 将自动检测文件、行号和差异上下文，以提供精确的响应。
 
 ```
-[Comment on specific lines in Files tab]
+[在 Files 选项卡中对特定行发表评论]
 /oc add error handling here
 ```
 
-When commenting on specific lines, opencode receives:
+当对特定行发表评论时，opencode 会收到：
 
-- The exact file being reviewed
-- The specific lines of code
-- The surrounding diff context
-- Line number information
+- 正在审查的确切文件
+- 特定的代码行
+- 周围的差异上下文
+- 行号信息
 
-This allows for more targeted requests without needing to specify file paths or line numbers manually.
+这允许更有针对性的请求，而无需手动指定文件路径或行号。
 
-## Installation
+## 安装
 
-Run the following command in the terminal from your GitHub repo:
+在您的 GitHub 仓库的终端中运行以下命令：
 
 ```bash
 opencode github install
 ```
 
-This will walk you through installing the GitHub app, creating the workflow, and setting up secrets.
+这将引导您完成 GitHub 应用的安装、工作流程的创建以及密钥的设置。
 
-### Manual Setup
+### 手动设置
 
-1. Install the GitHub app https://github.com/apps/opencode-agent. Make sure it is installed on the target repository.
-2. Add the following workflow file to `.github/workflows/opencode.yml` in your repo. Set the appropriate `model` and required API keys in `env`.
+1. 安装 GitHub 应用 https://github.com/apps/opencode-agent。确保它已安装在目标仓库上。
+2. 在您的仓库中添加以下工作流程文件到 `.github/workflows/opencode.yml`。在 `env` 中设置适当的 `model` 和所需的 API 密钥。
 
    ```yml
    name: opencode
@@ -94,23 +94,23 @@ This will walk you through installing the GitHub app, creating the workflow, and
              model: anthropic/claude-sonnet-4-20250514
    ```
 
-3. Store the API keys in secrets. In your organization or project **settings**, expand **Secrets and variables** on the left and select **Actions**. Add the required API keys.
+3. 将 API 密钥存储在密钥中。在您的组织或项目的 **设置** 中，展开左侧的 **Secrets and variables** 并选择 **Actions**。添加所需的 API 密钥。
 
-## Support
+## 支持
 
-This is an early release. If you encounter issues or have feedback, please create an issue at https://github.com/sst/opencode/issues.
+这是一个早期版本。如果您遇到问题或有反馈，请在 https://github.com/sst/opencode/issues 创建一个 issue。
 
-## Development
+## 开发
 
-To test locally:
+要在本地测试：
 
-1. Navigate to a test repo (e.g. `hello-world`):
+1. 导航到测试仓库（例如 `hello-world`）：
 
    ```bash
    cd hello-world
    ```
 
-2. Run:
+2. 运行：
 
    ```bash
    MODEL=anthropic/claude-sonnet-4-20250514 \
@@ -121,42 +121,42 @@ To test locally:
      bun /path/to/opencode/github/index.ts
    ```
 
-   - `MODEL`: The model used by opencode. Same as the `MODEL` defined in the GitHub workflow.
-   - `ANTHROPIC_API_KEY`: Your model provider API key. Same as the keys defined in the GitHub workflow.
-   - `GITHUB_RUN_ID`: Dummy value to emulate GitHub action environment.
-   - `MOCK_TOKEN`: A GitHub personal access token. This token is used to verify you have `admin` or `write` access to the test repo. Generate a token [here](https://github.com/settings/personal-access-tokens).
-   - `MOCK_EVENT`: Mock GitHub event payload (see templates below).
-   - `/path/to/opencode`: Path to your cloned opencode repo. `bun /path/to/opencode/github/index.ts` runs your local version of `opencode`.
+   - `MODEL`：opencode 使用的模型。与 GitHub 工作流程中定义的 `MODEL` 相同。
+   - `ANTHROPIC_API_KEY`：您的模型提供商 API 密钥。与 GitHub 工作流程中定义的密钥相同。
+   - `GITHUB_RUN_ID`：模拟 GitHub action 环境的虚拟值。
+   - `MOCK_TOKEN`：GitHub 个人访问令牌。此令牌用于验证您对测试仓库有 `admin` 或 `write` 权限。在此 [生成令牌](https://github.com/settings/personal-access-tokens)。
+   - `MOCK_EVENT`：模拟的 GitHub 事件负载（见下面的模板）。
+   - `/path/to/opencode`：您克隆的 opencode 仓库的路径。`bun /path/to/opencode/github/index.ts` 运行您本地版本的 `opencode`。
 
-### Issue comment event
+### Issue 评论事件
 
 ```
 MOCK_EVENT='{"eventName":"issue_comment","repo":{"owner":"sst","repo":"hello-world"},"actor":"fwang","payload":{"issue":{"number":4},"comment":{"id":1,"body":"hey opencode, summarize thread"}}}'
 ```
 
-Replace:
+替换：
 
-- `"owner":"sst"` with repo owner
-- `"repo":"hello-world"` with repo name
-- `"actor":"fwang"` with the GitHub username of commenter
-- `"number":4` with the GitHub issue id
-- `"body":"hey opencode, summarize thread"` with comment body
+- `"owner":"sst"` 为仓库所有者
+- `"repo":"hello-world"` 为仓库名称
+- `"actor":"fwang"` 为评论者的 GitHub 用户名
+- `"number":4` 为 GitHub issue ID
+- `"body":"hey opencode, summarize thread"` 为评论内容
 
-### Issue comment with image attachment.
+### 带有图片附件的 Issue 评论
 
 ```
 MOCK_EVENT='{"eventName":"issue_comment","repo":{"owner":"sst","repo":"hello-world"},"actor":"fwang","payload":{"issue":{"number":4},"comment":{"id":1,"body":"hey opencode, what is in my image ![Image](https://github.com/user-attachments/assets/xxxxxxxx)"}}}'
 ```
 
-Replace the image URL `https://github.com/user-attachments/assets/xxxxxxxx` with a valid GitHub attachment (you can generate one by commenting with an image in any issue).
+将图片 URL `https://github.com/user-attachments/assets/xxxxxxxx` 替换为有效的 GitHub 附件（您可以通过在任何 issue 中评论并附上图片来生成一个）。
 
-### PR comment event
+### PR 评论事件
 
 ```
 MOCK_EVENT='{"eventName":"issue_comment","repo":{"owner":"sst","repo":"hello-world"},"actor":"fwang","payload":{"issue":{"number":4,"pull_request":{}},"comment":{"id":1,"body":"hey opencode, summarize thread"}}}'
 ```
 
-### PR review comment event
+### PR 审查评论事件
 
 ```
 MOCK_EVENT='{"eventName":"pull_request_review_comment","repo":{"owner":"sst","repo":"hello-world"},"actor":"fwang","payload":{"pull_request":{"number":7},"comment":{"id":1,"body":"hey opencode, add error handling","path":"src/components/Button.tsx","diff_hunk":"@@ -45,8 +45,11 @@\n- const handleClick = () => {\n-   console.log('clicked')\n+ const handleClick = useCallback(() => {\n+   console.log('clicked')\n+   doSomething()\n+ }, [doSomething])","line":47,"original_line":45,"position":10,"commit_id":"abc123","original_commit_id":"def456"}}}'

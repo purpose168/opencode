@@ -1,34 +1,34 @@
-## Usage
+## 使用方法
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+这些模板依赖通过 [pnpm](https://pnpm.io) 进行维护，使用 `pnpm up -Lri` 命令。
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+这就是为什么你会看到 `pnpm-lock.yaml` 文件。不过，任何包管理器都可以使用。一旦你克隆了模板，这个文件可以安全地删除。
 
 ```bash
-$ npm install # or pnpm install or yarn install
+$ npm install # 或 pnpm install 或 yarn install
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+### 在 [Solid 网站](https://solidjs.com) 上了解更多信息，并在我们的 [Discord](https://discord.com/invite/solidjs) 上与我们聊天
 
-## Available Scripts
+## 可用脚本
 
-In the project directory, you can run:
+在项目目录中，你可以运行：
 
-### `npm run dev` or `npm start`
+### `npm run dev` 或 `npm start`
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+在开发模式下运行应用程序。<br>
+打开 [http://localhost:3000](http://localhost:3000) 在浏览器中查看。
 
-The page will reload if you make edits.<br>
+如果你进行编辑，页面将重新加载。<br>
 
 ### `npm run build`
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+将应用程序构建到生产环境的 `dist` 文件夹中。<br>
+它会在生产模式下正确打包 Solid，并优化构建以获得最佳性能。
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+构建会被压缩，文件名包含哈希值。<br>
+你的应用程序已准备好部署！
 
-## Deployment
+## 部署
 
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+你可以将 `dist` 文件夹部署到任何静态主机提供商（netlify、surge、now 等）

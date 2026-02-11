@@ -1,32 +1,32 @@
 # SolidStart
 
-Everything you need to build a Solid project, powered by [`solid-start`](https://start.solidjs.com);
+构建 Solid 项目所需的一切，由 [`solid-start`](https://start.solidjs.com) 提供支持；
 
-## Creating a project
+## 创建项目
 
 ```bash
-# create a new project in the current directory
+# 在当前目录创建新项目
 npm init solid@latest
 
-# create a new project in my-app
+# 在 my-app 目录创建新项目
 npm init solid@latest my-app
 ```
 
-## Developing
+## 开发
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+创建项目并使用 `npm install`（或 `pnpm install` 或 `yarn`）安装依赖后，启动开发服务器：
 
 ```bash
 npm run dev
 
-# or start the server and open the app in a new browser tab
+# 或启动服务器并在新浏览器标签页中打开应用
 npm run dev -- --open
 ```
 
-## Building
+## 构建
 
-Solid apps are built with _presets_, which optimise your project for deployment to different environments.
+Solid 应用使用 _预设（presets）_ 构建，这些预设会优化您的项目以部署到不同环境。
 
-By default, `npm run build` will generate a Node app that you can run with `npm start`. To use a different preset, add it to the `devDependencies` in `package.json` and specify in your `app.config.js`.
+默认情况下，`npm run build` 会生成一个 Node 应用，您可以使用 `npm start` 运行它。要使用不同的预设，请将其添加到 `package.json` 中的 `devDependencies` 并在 `app.config.js` 中指定。
 
-## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
+## 此项目由 [Solid CLI](https://github.com/solidjs-community/solid-cli) 创建

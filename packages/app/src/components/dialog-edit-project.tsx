@@ -81,20 +81,20 @@ export function DialogEditProject(props: { project: LocalProject }) {
   }
 
   return (
-    <Dialog title="Edit project">
+    <Dialog title="编辑项目">
       <form onSubmit={handleSubmit} class="flex flex-col gap-6 px-2.5 pb-3">
         <div class="flex flex-col gap-4">
           <TextField
             autofocus
             type="text"
-            label="Name"
+            label="名称"
             placeholder={folderName()}
             value={store.name}
             onChange={(v) => setStore("name", v)}
           />
 
           <div class="flex flex-col gap-2">
-            <label class="text-12-medium text-text-weak">Icon</label>
+            <label class="text-12-medium text-text-weak">图标</label>
             <div class="flex gap-3 items-start">
               <div class="relative">
                 <div
@@ -120,7 +120,7 @@ export function DialogEditProject(props: { project: LocalProject }) {
                       </div>
                     }
                   >
-                    <img src={store.iconUrl} alt="Project icon" class="size-full object-cover" />
+                    <img src={store.iconUrl} alt="项目图标" class="size-full object-cover" />
                   </Show>
                 </div>
                 <Show when={store.iconUrl}>
@@ -135,15 +135,15 @@ export function DialogEditProject(props: { project: LocalProject }) {
               </div>
               <input id="icon-upload" type="file" accept="image/*" class="hidden" onChange={handleInputChange} />
               <div class="flex flex-col gap-1.5 text-12-regular text-text-weak">
-                <span>Click or drag an image</span>
-                <span>Recommended: 128x128px</span>
+                <span>点击或拖拽图片</span>
+                <span>推荐尺寸：128x128px</span>
               </div>
             </div>
           </div>
 
           <Show when={!store.iconUrl}>
             <div class="flex flex-col gap-2">
-              <label class="text-12-medium text-text-weak">Color</label>
+              <label class="text-12-medium text-text-weak">颜色</label>
               <div class="flex gap-2">
                 <For each={AVATAR_COLOR_KEYS}>
                   {(color) => (
@@ -168,10 +168,10 @@ export function DialogEditProject(props: { project: LocalProject }) {
 
         <div class="flex justify-end gap-2">
           <Button type="button" variant="ghost" size="large" onClick={() => dialog.close()}>
-            Cancel
+            取消
           </Button>
           <Button type="submit" variant="primary" size="large" disabled={store.saving}>
-            {store.saving ? "Saving..." : "Save"}
+            {store.saving ? "保存中..." : "保存"}
           </Button>
         </div>
       </form>

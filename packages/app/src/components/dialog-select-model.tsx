@@ -27,8 +27,8 @@ const ModelList: Component<{
   return (
     <List
       class={`flex-1 min-h-0 [&_[data-slot=list-scroll]]:flex-1 [&_[data-slot=list-scroll]]:min-h-0 ${props.class ?? ""}`}
-      search={{ placeholder: "Search models", autofocus: true }}
-      emptyMessage="No model results"
+      search={{ placeholder: "搜索模型", autofocus: true }}
+      emptyMessage="无模型结果"
       key={(x) => `${x.provider.id}:${x.id}`}
       items={models}
       current={local.model.current()}
@@ -55,10 +55,10 @@ const ModelList: Component<{
         <div class="w-full flex items-center gap-x-2 text-13-regular">
           <span class="truncate">{i.name}</span>
           <Show when={i.provider.id === "opencode" && (!i.cost || i.cost?.input === 0)}>
-            <Tag>Free</Tag>
+            <Tag>免费</Tag>
           </Show>
           <Show when={i.latest}>
-            <Tag>Latest</Tag>
+            <Tag>最新</Tag>
           </Show>
         </div>
       )}
@@ -77,7 +77,7 @@ export const ModelSelectorPopover: Component<{
       <Kobalte.Trigger as="div">{props.children}</Kobalte.Trigger>
       <Kobalte.Portal>
         <Kobalte.Content class="w-72 h-80 flex flex-col rounded-md border border-border-base bg-surface-raised-stronger-non-alpha shadow-md z-50 outline-none">
-          <Kobalte.Title class="sr-only">Select model</Kobalte.Title>
+          <Kobalte.Title class="sr-only">选择模型</Kobalte.Title>
           <ModelList provider={props.provider} onSelect={() => setOpen(false)} class="p-1" />
         </Kobalte.Content>
       </Kobalte.Portal>
@@ -90,7 +90,7 @@ export const DialogSelectModel: Component<{ provider?: string }> = (props) => {
 
   return (
     <Dialog
-      title="Select model"
+      title="选择模型"
       action={
         <Button
           class="h-7 -my-1 text-14-medium"
@@ -98,7 +98,7 @@ export const DialogSelectModel: Component<{ provider?: string }> = (props) => {
           tabIndex={-1}
           onClick={() => dialog.show(() => <DialogSelectProvider />)}
         >
-          Connect provider
+          连接提供者
         </Button>
       }
     >
@@ -108,7 +108,7 @@ export const DialogSelectModel: Component<{ provider?: string }> = (props) => {
         class="ml-3 mt-5 mb-6 text-text-base self-start"
         onClick={() => dialog.show(() => <DialogManageModels />)}
       >
-        Manage models
+        管理模型
       </Button>
     </Dialog>
   )

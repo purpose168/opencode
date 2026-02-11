@@ -1,14 +1,14 @@
-Use this tool to read the current to-do list for the session. This tool should be used proactively and frequently to ensure that you are aware of
-the status of the current task list. You should make use of this tool as often as possible, especially in the following situations:
-- At the beginning of conversations to see what's pending
-- Before starting new tasks to prioritize work
-- When the user asks about previous tasks or plans
-- Whenever you're uncertain about what to do next
-- After completing tasks to update your understanding of remaining work
-- After every few messages to ensure you're on track
+使用此工具读取会话的当前待办事项列表。此工具应主动且频繁使用，以确保您了解
+当前任务列表的状态。您应尽可能频繁使用此工具，特别是在以下情况：
+- 在对话开始时查看待处理的事项
+- 在开始新任务之前以确定工作优先级
+- 当用户询问之前的任务或计划时
+- 当您不确定下一步该做什么时
+- 完成任务后以更新您对剩余工作的了解
+- 每隔几条消息后以确保您在正轨上
 
-Usage:
-- This tool takes in no parameters. So leave the input blank or empty. DO NOT include a dummy object, placeholder string or a key like "input" or "empty". LEAVE IT BLANK.
-- Returns a list of todo items with their status, priority, and content
-- Use this information to track progress and plan next steps
-- If no todos exist yet, an empty list will be returned
+使用说明：
+- 此工具不接受任何参数。因此将输入留空或空白。不要包含虚拟对象、占位符字符串或像"input"或"empty"这样的键。保持为空白。
+- 返回待办事项列表，包含其状态、优先级和内容
+- 使用此信息跟踪进度并规划下一步
+- 如果尚不存在待办事项，将返回空列表

@@ -106,7 +106,7 @@ export function DialogSelectServer() {
     setStore("adding", false)
 
     if (!result.healthy) {
-      setStore("error", "Could not connect to server")
+      setStore("error", "无法连接到服务器")
       return
     }
 
@@ -115,11 +115,11 @@ export function DialogSelectServer() {
   }
 
   return (
-    <Dialog title="Servers" description="Switch which OpenCode server this app connects to.">
+    <Dialog title="服务器" description="切换此应用连接的 OpenCode 服务器。">
       <div class="flex flex-col gap-4 pb-4">
         <List
-          search={{ placeholder: "Search servers", autofocus: true }}
-          emptyMessage="No servers yet"
+          search={{ placeholder: "搜索服务器", autofocus: true }}
+          emptyMessage="暂无服务器"
           items={sortedItems}
           key={(x) => x}
           current={current()}
@@ -148,14 +148,14 @@ export function DialogSelectServer() {
 
         <div class="mt-6 px-3 flex flex-col gap-1.5">
           <div class="px-3">
-            <h3 class="text-14-regular text-text-weak">Add a server</h3>
+            <h3 class="text-14-regular text-text-weak">添加服务器</h3>
           </div>
           <form onSubmit={handleSubmit}>
             <div class="flex items-start gap-2">
               <div class="flex-1 min-w-0 h-auto">
                 <TextField
                   type="text"
-                  label="Server URL"
+                  label="服务器 URL"
                   hideLabel
                   placeholder="http://localhost:4096"
                   value={store.url}
@@ -168,7 +168,7 @@ export function DialogSelectServer() {
                 />
               </div>
               <Button type="submit" variant="secondary" icon="plus-small" size="large" disabled={store.adding}>
-                {store.adding ? "Checking..." : "Add"}
+                {store.adding ? "检查中..." : "添加"}
               </Button>
             </div>
           </form>

@@ -1,27 +1,27 @@
 # @opencode-ai/slack
 
-Slack bot integration for opencode that creates threaded conversations.
+用于 opencode 的 Slack 机器人集成，可创建线程化对话。
 
-## Setup
+## 设置
 
-1. Create a Slack app at https://api.slack.com/apps
-2. Enable Socket Mode
-3. Add the following OAuth scopes:
-   - `chat:write`
-   - `app_mentions:read`
-   - `channels:history`
-   - `groups:history`
-4. Install the app to your workspace
-5. Set environment variables in `.env`:
-   - `SLACK_BOT_TOKEN` - Bot User OAuth Token
-   - `SLACK_SIGNING_SECRET` - Signing Secret from Basic Information
-   - `SLACK_APP_TOKEN` - App-Level Token from Basic Information
+1. 在 https://api.slack.com/apps 创建一个 Slack 应用
+2. 启用 Socket 模式（Socket Mode）
+3. 添加以下 OAuth 权限范围（OAuth scopes）：
+   - `chat:write` - 聊天写入权限
+   - `app_mentions:read` - 应用提及读取权限
+   - `channels:history` - 频道历史记录权限
+   - `groups:history` - 群组历史记录权限
+4. 将应用安装到您的工作区
+5. 在 `.env` 文件中设置环境变量：
+   - `SLACK_BOT_TOKEN` - 机器人用户 OAuth 令牌（Bot User OAuth Token）
+   - `SLACK_SIGNING_SECRET` - 从基本信息中获取的签名密钥（Signing Secret）
+   - `SLACK_APP_TOKEN` - 从基本信息中获取的应用级令牌（App-Level Token）
 
-## Usage
+## 使用方法
 
 ```bash
-# Edit .env with your Slack app credentials
+# 使用您的 Slack 应用凭据编辑 .env 文件
 bun dev
 ```
 
-The bot will respond to messages in channels where it's added, creating separate opencode sessions for each thread.
+机器人将响应其被添加到的频道中的消息，为每个线程创建独立的 opencode 会话。

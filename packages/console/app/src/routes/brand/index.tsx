@@ -24,7 +24,15 @@ import wordmarkSimpleLightSvg from "../../asset/brand/opencode-wordmark-simple-l
 import wordmarkSimpleDarkSvg from "../../asset/brand/opencode-wordmark-simple-dark.svg"
 const brandAssets = "/opencode-brand-assets.zip"
 
+/**
+ * 品牌指南页面
+ */
 export default function Brand() {
+  /**
+   * 下载文件函数
+   * @param url 文件 URL
+   * @param filename 文件名
+   */
   const downloadFile = async (url: string, filename: string) => {
     try {
       const response = await fetch(url)
@@ -40,7 +48,7 @@ export default function Brand() {
 
       window.URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error("Download failed:", error)
+      console.error("下载失败:", error)
       const link = document.createElement("a")
       link.href = url
       link.target = "_blank"
@@ -53,21 +61,21 @@ export default function Brand() {
 
   return (
     <main data-page="enterprise">
-      <Title>OpenCode | Brand</Title>
+      <Title>OpenCode | 品牌</Title>
       <Link rel="canonical" href={`${config.baseUrl}/brand`} />
-      <Meta name="description" content="OpenCode brand guidelines" />
+      <Meta name="description" content="OpenCode 品牌指南" />
       <div data-component="container">
         <Header />
 
         <div data-component="content">
           <section data-component="brand-content">
-            <h1>Brand guidelines</h1>
-            <p>Resources and assets to help you work with the OpenCode brand.</p>
+            <h1>品牌指南</h1>
+            <p>帮助您使用 OpenCode 品牌的资源和资产。</p>
             <button
               data-component="download-button"
               onClick={() => downloadFile(brandAssets, "opencode-brand-assets.zip")}
             >
-              Download all assets
+              下载所有资产
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M13.9583 10.6247L10 14.583L6.04167 10.6247M10 2.08301V13.958M16.25 17.9163H3.75"
@@ -80,7 +88,7 @@ export default function Brand() {
 
             <div data-component="brand-grid">
               <div>
-                <img src={previewLogoLight} alt="OpenCode brand guidelines" />
+                <img src={previewLogoLight} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(logoLightPng, "opencode-logo-light.png")}>
                     PNG
@@ -107,7 +115,7 @@ export default function Brand() {
                 </div>
               </div>
               <div>
-                <img src={previewLogoDark} alt="OpenCode brand guidelines" />
+                <img src={previewLogoDark} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(logoDarkPng, "opencode-logo-dark.png")}>
                     PNG
@@ -134,7 +142,7 @@ export default function Brand() {
                 </div>
               </div>
               <div>
-                <img src={previewWordmarkLight} alt="OpenCode brand guidelines" />
+                <img src={previewWordmarkLight} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(wordmarkLightPng, "opencode-wordmark-light.png")}>
                     PNG
@@ -161,7 +169,7 @@ export default function Brand() {
                 </div>
               </div>
               <div>
-                <img src={previewWordmarkDark} alt="OpenCode brand guidelines" />
+                <img src={previewWordmarkDark} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(wordmarkDarkPng, "opencode-wordmark-dark.png")}>
                     PNG
@@ -188,7 +196,7 @@ export default function Brand() {
                 </div>
               </div>
               <div>
-                <img src={previewWordmarkSimpleLight} alt="OpenCode brand guidelines" />
+                <img src={previewWordmarkSimpleLight} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(wordmarkSimpleLightPng, "opencode-wordmark-simple-light.png")}>
                     PNG
@@ -215,7 +223,7 @@ export default function Brand() {
                 </div>
               </div>
               <div>
-                <img src={previewWordmarkSimpleDark} alt="OpenCode brand guidelines" />
+                <img src={previewWordmarkSimpleDark} alt="OpenCode 品牌指南" />
                 <div data-component="actions">
                   <button onClick={() => downloadFile(wordmarkSimpleDarkPng, "opencode-wordmark-simple-dark.png")}>
                     PNG

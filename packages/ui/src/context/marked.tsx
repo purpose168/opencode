@@ -1,3 +1,7 @@
+/**
+ * Markdown 解析上下文
+ * 用于配置和提供 Markdown 解析功能，支持数学公式和代码高亮
+ */
 import { marked } from "marked"
 import markedKatex from "marked-katex-extension"
 import markedShiki from "marked-shiki"
@@ -5,6 +9,10 @@ import { bundledLanguages, type BundledLanguage } from "shiki"
 import { createSimpleContext } from "./helper"
 import { getSharedHighlighter, registerCustomTheme, ThemeRegistrationResolved } from "@pierre/diffs"
 
+/**
+ * 注册自定义主题 "OpenCode"
+ * 定义代码高亮的颜色方案
+ */
 registerCustomTheme("OpenCode", () => {
   return Promise.resolve({
     name: "OpenCode",
@@ -375,22 +383,37 @@ registerCustomTheme("OpenCode", () => {
   } as unknown as ThemeRegistrationResolved)
 })
 
-export const { use: useMarked, provider: MarkedProvider } = createSimpleContext({
+/**
+ * Markdown 解析上下文
+ * 提供配置好的 Markdown 解析器
+ */
+export const { 
+  /** 使用 Markdown 解析器的钩子 */
+  use: useMarked, 
+  /** Markdown 解析器提供者组件 */
+  provider: MarkedProvider 
+} = createSimpleContext({
   name: "Marked",
   init: () => {
     return marked.use(
+      // 使用 Katex 扩展支持数学公式
       markedKatex({
         throwOnError: false,
       }),
+      // 使用 Shiki 扩展支持代码高亮
       markedShiki({
         async highlight(code, lang) {
+          // 获取共享的代码高亮器
           const highlighter = await getSharedHighlighter({ themes: ["OpenCode"], langs: [] })
+          // 检查语言是否支持
           if (!(lang in bundledLanguages)) {
             lang = "text"
           }
+          // 加载未加载的语言
           if (!highlighter.getLoadedLanguages().includes(lang)) {
             await highlighter.loadLanguage(lang as BundledLanguage)
           }
+          // 生成 HTML
           return highlighter.codeToHtml(code, {
             lang: lang || "text",
             theme: "OpenCode",

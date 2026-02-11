@@ -30,9 +30,9 @@ export const DialogSelectModelUnpaid: Component = () => {
   })
 
   return (
-    <Dialog title="Select model">
+    <Dialog title="选择模型">
       <div class="flex flex-col gap-3 px-2.5">
-        <div class="text-14-medium text-text-base px-2.5">Free models provided by OpenCode</div>
+        <div class="text-14-medium text-text-base px-2.5">OpenCode 提供的免费模型</div>
         <List
           ref={(ref) => (listRef = ref)}
           items={local.model.list}
@@ -48,9 +48,9 @@ export const DialogSelectModelUnpaid: Component = () => {
           {(i) => (
             <div class="w-full flex items-center gap-x-2.5">
               <span>{i.name}</span>
-              <Tag>Free</Tag>
+              <Tag>免费</Tag>
               <Show when={i.latest}>
-                <Tag>Latest</Tag>
+                <Tag>最新</Tag>
               </Show>
             </div>
           )}
@@ -61,7 +61,7 @@ export const DialogSelectModelUnpaid: Component = () => {
       <div class="px-1.5 pb-1.5">
         <div class="w-full rounded-sm border border-border-weak-base bg-surface-raised-base">
           <div class="w-full flex flex-col items-start gap-4 px-1.5 pt-4 pb-4">
-            <div class="px-2 text-14-medium text-text-base">Add more models from popular providers</div>
+            <div class="px-2 text-14-medium text-text-base">从热门提供者添加更多模型</div>
             <div class="w-full">
               <List
                 class="w-full px-0"
@@ -83,10 +83,10 @@ export const DialogSelectModelUnpaid: Component = () => {
                     <ProviderIcon data-slot="list-item-extra-icon" id={i.id as IconName} />
                     <span>{i.name}</span>
                     <Show when={i.id === "opencode"}>
-                      <Tag>Recommended</Tag>
+                      <Tag>推荐</Tag>
                     </Show>
                     <Show when={i.id === "anthropic"}>
-                      <div class="text-14-regular text-text-weak">Connect with Claude Pro/Max or API key</div>
+                      <div class="text-14-regular text-text-weak">使用 Claude Pro/Max 或 API 密钥连接</div>
                     </Show>
                   </div>
                 )}
@@ -99,7 +99,7 @@ export const DialogSelectModelUnpaid: Component = () => {
                   dialog.show(() => <DialogSelectProvider />)
                 }}
               >
-                View all providers
+                查看所有提供者
               </Button>
             </div>
           </div>

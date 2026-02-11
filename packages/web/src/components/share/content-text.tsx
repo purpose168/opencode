@@ -3,11 +3,13 @@ import { createSignal } from "solid-js"
 import { createOverflow } from "./common"
 import { CopyButton } from "./copy-button"
 
+// 文本内容组件属性接口
 interface Props {
   text: string
   expand?: boolean
   compact?: boolean
 }
+// 文本内容组件
 export function ContentText(props: Props) {
   const [expanded, setExpanded] = createSignal(false)
   const overflow = createOverflow()
@@ -28,7 +30,7 @@ export function ContentText(props: Props) {
           data-slot="expand-button"
           onClick={() => setExpanded((e) => !e)}
         >
-          {expanded() ? "Show less" : "Show more"}
+          {expanded() ? "收起" : "展开更多"}
         </button>
       )}
       <CopyButton text={props.text} />

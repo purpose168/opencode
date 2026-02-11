@@ -7,8 +7,8 @@ import copyWordmarkDark from "../asset/lander/wordmark-dark.svg"
 import copyBrandAssetsLight from "../asset/lander/brand-assets-light.svg"
 import copyBrandAssetsDark from "../asset/lander/brand-assets-dark.svg"
 
-// SVG files for copying (separate from button icons)
-// Replace these with your actual SVG files for copying
+// 用于复制的 SVG 文件（与按钮图标分开）
+// 请用您实际的 SVG 文件替换这些文件
 import copyLogoSvgLight from "../asset/lander/opencode-logo-light.svg"
 import copyLogoSvgDark from "../asset/lander/opencode-logo-dark.svg"
 import copyWordmarkSvgLight from "../asset/lander/opencode-wordmark-light.svg"
@@ -21,37 +21,53 @@ import { createEffect, onCleanup } from "solid-js"
 import { config } from "~/config"
 import "./header-context-menu.css"
 
+/**
+ * 检查是否为深色模式
+ * @returns 是否为深色模式
+ */
 const isDarkMode = () => window.matchMedia("(prefers-color-scheme: dark)").matches
 
+/**
+ * 获取 SVG 内容
+ * @param svgPath SVG 文件路径
+ * @returns SVG 文本内容
+ */
 const fetchSvgContent = async (svgPath: string): Promise<string> => {
   try {
     const response = await fetch(svgPath)
     const svgText = await response.text()
     return svgText
   } catch (err) {
-    console.error("Failed to fetch SVG content:", err)
+    console.error("获取 SVG 内容失败:", err)
     throw err
   }
 }
 
+/**
+ * 头部组件
+ */
 export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
   const navigate = useNavigate()
+  // 异步获取 GitHub 数据
   const githubData = createAsync(() => github())
+  // 格式化星标数量
   const starCount = createMemo(() =>
     githubData()?.stars
       ? new Intl.NumberFormat("en-US", {
-          notation: "compact",
-          compactDisplay: "short",
+          notation: "compact",     // 紧凑表示法
+          compactDisplay: "short", // 简短显示
         }).format(githubData()?.stars!)
       : config.github.starsFormatted.compact,
   )
 
+  // 创建状态存储
   const [store, setStore] = createStore({
-    mobileMenuOpen: false,
-    contextMenuOpen: false,
-    contextMenuPosition: { x: 0, y: 0 },
+    mobileMenuOpen: false,      // 移动端菜单是否打开
+    contextMenuOpen: false,      // 上下文菜单是否打开
+    contextMenuPosition: { x: 0, y: 0 }, // 上下文菜单位置
   })
 
+  // 监听上下文菜单状态
   createEffect(() => {
     const handleClickOutside = () => {
       setStore("contextMenuOpen", false)
@@ -80,6 +96,9 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
     }
   })
 
+  /**
+   * 处理 Logo 上下文菜单
+   */
   const handleLogoContextMenu = (event: MouseEvent) => {
     event.preventDefault()
     const logoElement = (event.currentTarget as HTMLElement).querySelector("a")
@@ -93,6 +112,9 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
     setStore("contextMenuOpen", true)
   }
 
+  /**
+   * 复制文字标记到剪贴板
+   */
   const copyWordmarkToClipboard = async () => {
     try {
       const isDark = isDarkMode()
@@ -100,10 +122,13 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
       const wordmarkSvg = await fetchSvgContent(wordmarkSvgPath)
       await navigator.clipboard.writeText(wordmarkSvg)
     } catch (err) {
-      console.error("Failed to copy wordmark to clipboard:", err)
+      console.error("复制文字标记到剪贴板失败:", err)
     }
   }
 
+  /**
+   * 复制 Logo 到剪贴板
+   */
   const copyLogoToClipboard = async () => {
     try {
       const isDark = isDarkMode()
@@ -111,7 +136,7 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
       const logoSvg = await fetchSvgContent(logoSvgPath)
       await navigator.clipboard.writeText(logoSvg)
     } catch (err) {
-      console.error("Failed to copy logo to clipboard:", err)
+      console.error("复制 Logo 到剪贴板失败:", err)
     }
   }
 
@@ -132,17 +157,17 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
           <button class="context-menu-item" onClick={copyLogoToClipboard}>
             <img data-slot="copy light" src={copyLogoLight} alt="Logo" />
             <img data-slot="copy dark" src={copyLogoDark} alt="Logo" />
-            Copy logo as SVG
+            复制 Logo 为 SVG
           </button>
           <button class="context-menu-item" onClick={copyWordmarkToClipboard}>
             <img data-slot="copy light" src={copyWordmarkLight} alt="Wordmark" />
             <img data-slot="copy dark" src={copyWordmarkDark} alt="Wordmark" />
-            Copy wordmark as SVG
+            复制文字标记为 SVG
           </button>
           <button class="context-menu-item" onClick={() => navigate("/brand")}>
             <img data-slot="copy light" src={copyBrandAssetsLight} alt="Brand Assets" />
             <img data-slot="copy dark" src={copyBrandAssetsDark} alt="Brand Assets" />
-            Brand assets
+            品牌资产
           </button>
         </div>
       </Show>
@@ -154,15 +179,15 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
             </a>
           </li>
           <li>
-            <a href="/docs">Docs</a>
+            <a href="/docs">文档</a>
           </li>
           <li>
-            <A href="/enterprise">Enterprise</A>
+            <A href="/enterprise">企业版</A>
           </li>
           <li>
             <Switch>
               <Match when={props.zen}>
-                <a href="/auth">Login</a>
+                <a href="/auth">登录</a>
               </Match>
               <Match when={!props.zen}>
                 <A href="/zen">Zen</A>
@@ -184,7 +209,7 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
                     stroke-linecap="square"
                   />{" "}
                 </svg>{" "}
-                Free{" "}
+                免费{" "}
               </A>{" "}
             </li>
           </Show>
@@ -199,7 +224,7 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
           class="nav-toggle"
           onClick={() => setStore("mobileMenuOpen", !store.mobileMenuOpen)}
         >
-          <span class="sr-only">Open menu</span>
+          <span class="sr-only">打开菜单</span>
           <Switch>
             <Match when={store.mobileMenuOpen}>
               <svg
@@ -239,7 +264,7 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
             <nav data-component="nav-mobile-menu-list">
               <ul>
                 <li>
-                  <A href="/">Home</A>
+                  <A href="/">首页</A>
                 </li>
                 <li>
                   <a href={config.github.repoUrl} target="_blank">
@@ -247,15 +272,15 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
                   </a>
                 </li>
                 <li>
-                  <a href="/docs">Docs</a>
+                  <a href="/docs">文档</a>
                 </li>
                 <li>
-                  <A href="/enterprise">Enterprise</A>
+                  <A href="/enterprise">企业版</A>
                 </li>
                 <li>
                   <Switch>
                     <Match when={props.zen}>
-                      <a href="/auth">Login</a>
+                      <a href="/auth">登录</a>
                     </Match>
                     <Match when={!props.zen}>
                       <A href="/zen">Zen</A>
@@ -265,7 +290,7 @@ export function Header(props: { zen?: boolean; hideGetStarted?: boolean }) {
                 <Show when={!props.hideGetStarted}>
                   <li>
                     <A href="/download" data-slot="cta-button">
-                      Get started for free
+                      免费开始使用
                     </A>
                   </li>
                 </Show>

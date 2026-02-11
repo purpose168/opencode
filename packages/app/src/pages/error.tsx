@@ -42,26 +42,26 @@ function formatInitError(error: InitError): string {
   const data = error.data
   switch (error.name) {
     case "MCPFailed":
-      return `MCP server "${data.name}" failed. Note, opencode does not support MCP authentication yet.`
+      return `MCP 服务器 "${data.name}" 失败。注意，OpenCode 尚未支持 MCP 认证。`
     case "ProviderAuthError": {
       const providerID = typeof data.providerID === "string" ? data.providerID : "unknown"
       const message = typeof data.message === "string" ? data.message : safeJson(data.message)
-      return `Provider authentication failed (${providerID}): ${message}`
+      return `提供者认证失败 (${providerID}): ${message}`
     }
     case "APIError": {
-      const message = typeof data.message === "string" ? data.message : "API error"
+      const message = typeof data.message === "string" ? data.message : "API 错误"
       const lines: string[] = [message]
 
       if (typeof data.statusCode === "number") {
-        lines.push(`Status: ${data.statusCode}`)
+        lines.push(`状态: ${data.statusCode}`)
       }
 
       if (typeof data.isRetryable === "boolean") {
-        lines.push(`Retryable: ${data.isRetryable}`)
+        lines.push(`可重试: ${data.isRetryable}`)
       }
 
       if (typeof data.responseBody === "string" && data.responseBody) {
-        lines.push(`Response body:\n${data.responseBody}`)
+        lines.push(`响应体:\n${data.responseBody}`)
       }
 
       return lines.join("\n")
@@ -73,23 +73,23 @@ function formatInitError(error: InitError): string {
         suggestions?: string[]
       }
       return [
-        `Model not found: ${providerID}/${modelID}`,
-        ...(Array.isArray(suggestions) && suggestions.length ? ["Did you mean: " + suggestions.join(", ")] : []),
-        `Check your config (opencode.json) provider/model names`,
+        `模型未找到: ${providerID}/${modelID}`,
+        ...(Array.isArray(suggestions) && suggestions.length ? ["您是指: " + suggestions.join(", ")] : []),
+        `检查您的配置 (opencode.json) 提供者/模型名称`,
       ].join("\n")
     }
     case "ProviderInitError": {
       const providerID = typeof data.providerID === "string" ? data.providerID : "unknown"
-      return `Failed to initialize provider "${providerID}". Check credentials and configuration.`
+      return `初始化提供者 "${providerID}" 失败。检查凭据和配置。`
     }
     case "ConfigJsonError": {
       const message = typeof data.message === "string" ? data.message : ""
-      return `Config file at ${data.path} is not valid JSON(C)` + (message ? `: ${message}` : "")
+      return `位于 ${data.path} 的配置文件不是有效的 JSON(C)` + (message ? `: ${message}` : "")
     }
     case "ConfigDirectoryTypoError":
-      return `Directory "${data.dir}" in ${data.path} is not valid. Rename the directory to "${data.suggestion}" or remove it. This is a common typo.`
+      return `位于 ${data.path} 中的目录 "${data.dir}" 无效。将目录重命名为 "${data.suggestion}" 或删除它。这是一个常见的拼写错误。`
     case "ConfigFrontmatterError":
-      return `Failed to parse frontmatter in ${data.path}:\n${data.message}`
+      return `解析 ${data.path} 中的前置内容失败:\n${data.message}`
     case "ConfigInvalidError": {
       const issues = Array.isArray(data.issues)
         ? data.issues.map(
@@ -97,7 +97,7 @@ function formatInitError(error: InitError): string {
           )
         : []
       const message = typeof data.message === "string" ? data.message : ""
-      return [`Config file at ${data.path} is invalid` + (message ? `: ${message}` : ""), ...issues].join("\n")
+      return [`位于 ${data.path} 的配置文件无效` + (message ? `: ${message}` : ""), ...issues].join("\n")
     }
     case "UnknownError":
       return typeof data.message === "string" ? data.message : safeJson(data)
@@ -206,8 +206,8 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
       <div class="w-2/3 max-w-3xl flex flex-col items-center justify-center gap-8">
         <Logo class="w-58.5 opacity-12 shrink-0" />
         <div class="flex flex-col items-center gap-2 text-center">
-          <h1 class="text-lg font-medium text-text-strong">Something went wrong</h1>
-          <p class="text-sm text-text-weak">An error occurred while loading the application.</p>
+          <h1 class="text-lg font-medium text-text-strong">出现了问题</h1>
+          <p class="text-sm text-text-weak">加载应用程序时发生错误。</p>
         </div>
         <TextField
           value={formatError(props.error)}
@@ -215,42 +215,42 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
           copyable
           multiline
           class="max-h-96 w-full font-mono text-xs no-scrollbar"
-          label="Error Details"
+          label="错误详情"
           hideLabel
         />
         <div class="flex items-center gap-3">
           <Button size="large" onClick={platform.restart}>
-            Restart
+            重启
           </Button>
           <Show when={platform.checkUpdate}>
             <Show
               when={store.version}
               fallback={
                 <Button size="large" variant="ghost" onClick={checkForUpdates} disabled={store.checking}>
-                  {store.checking ? "Checking..." : "Check for updates"}
+                  {store.checking ? "检查中..." : "检查更新"}
                 </Button>
               }
             >
               <Button size="large" onClick={installUpdate}>
-                Update to {store.version}
+                更新到 {store.version}
               </Button>
             </Show>
           </Show>
         </div>
         <div class="flex flex-col items-center gap-2">
           <div class="flex items-center justify-center gap-1">
-            Please report this error to the OpenCode team
+            请向 OpenCode 团队报告此错误
             <button
               type="button"
               class="flex items-center text-text-interactive-base gap-1"
               onClick={() => platform.openLink("https://opencode.ai/desktop-feedback")}
             >
-              <div>on Discord</div>
+              <div>在 Discord 上</div>
               <Icon name="discord" class="text-text-interactive-base" />
             </button>
           </div>
           <Show when={platform.version}>
-            <p class="text-xs text-text-weak">Version: {platform.version}</p>
+            <p class="text-xs text-text-weak">版本: {platform.version}</p>
           </Show>
         </div>
       </div>

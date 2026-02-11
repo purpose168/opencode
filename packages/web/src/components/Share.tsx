@@ -1,18 +1,34 @@
-import { For, Show, onMount, Suspense, onCleanup, createMemo, createSignal, SuspenseList, createEffect } from "solid-js"
+/**
+ * 分享组件
+ *
+ * 用于显示和分享 OpenCode 会话的组件，包括消息展示、状态管理和滚动控制
+ */
 import { DateTime } from "luxon"
+import type { Session } from "opencode/session/index"
+import type { Message } from "opencode/session/message"
+import type { MessageV2 } from "opencode/session/message-v2"
+import { For, Show, Suspense, SuspenseList, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js"
 import { createStore, reconcile, unwrap } from "solid-js/store"
 import { IconArrowDown } from "./icons"
 import { IconOpencode } from "./icons/custom"
 import styles from "./share.module.css"
-import type { MessageV2 } from "opencode/session/message-v2"
-import type { Message } from "opencode/session/message"
-import type { Session } from "opencode/session/index"
 import { Part, ProviderIcon } from "./share/part"
 
+/**
+ * 带部分的消息类型
+ */
 type MessageWithParts = MessageV2.Info & { parts: MessageV2.Part[] }
 
+/**
+ * 连接状态类型
+ */
 type Status = "disconnected" | "connecting" | "connected" | "error" | "reconnecting"
 
+/**
+ * 滚动到指定锚点
+ *
+ * @param id - 锚点 ID
+ */
 function scrollToAnchor(id: string) {
   const el = document.getElementById(id)
   if (!el) return
@@ -20,37 +36,53 @@ function scrollToAnchor(id: string) {
   el.scrollIntoView({ behavior: "smooth" })
 }
 
+/**
+ * 获取状态文本
+ *
+ * @param status - 状态数组，包含状态类型和可选的错误消息
+ * @returns 状态文本
+ */
 function getStatusText(status: [Status, string?]): string {
   switch (status[0]) {
     case "connected":
-      return "Connected, waiting for messages..."
+      return "已连接，等待消息..."
     case "connecting":
-      return "Connecting..."
+      return "连接中..."
     case "disconnected":
-      return "Disconnected"
+      return "已断开连接"
     case "reconnecting":
-      return "Reconnecting..."
+      return "重新连接中..."
     case "error":
-      return status[1] || "Error"
+      return status[1] || "错误"
     default:
-      return "Unknown"
+      return "未知"
   }
 }
 
+/**
+ * 分享组件
+ *
+ * @param props - 组件属性
+ * @param props.id - 会话 ID
+ * @param props.api - API URL
+ * @param props.info - 会话信息
+ */
 export default function Share(props: { id: string; api: string; info: Session.Info }) {
-  let lastScrollY = 0
-  let hasScrolledToAnchor = false
-  let scrollTimeout: number | undefined
-  let scrollSentinel: HTMLElement | undefined
-  let scrollObserver: IntersectionObserver | undefined
+  let lastScrollY = 0 // 上次滚动位置
+  let hasScrolledToAnchor = false // 是否已滚动到锚点
+  let scrollTimeout: number | undefined // 滚动超时计时器
+  let scrollSentinel: HTMLElement | undefined // 滚动哨兵元素
+  let scrollObserver: IntersectionObserver | undefined // 滚动观察者
 
   const params = new URLSearchParams(window.location.search)
-  const debug = params.get("debug") === "true"
+  const debug = params.get("debug") === "true" // 是否开启调试模式
 
+  // 滚动按钮状态
   const [showScrollButton, setShowScrollButton] = createSignal(false)
   const [isButtonHovered, setIsButtonHovered] = createSignal(false)
-  const [isNearBottom, setIsNearBottom] = createSignal(false)
+  const [isNearBottom, setIsNearBottom] = createSignal(false) // 是否接近页面底部
 
+  // 会话状态存储
   const [store, setStore] = createStore<{
     info?: Session.Info
     messages: Record<string, MessageWithParts>
@@ -66,55 +98,62 @@ export default function Share(props: { id: string; api: string; info: Session.In
     },
     messages: {},
   })
+
+  // 排序后的消息列表
   const messages = createMemo(() => Object.values(store.messages).toSorted((a, b) => a.id?.localeCompare(b.id)))
-  const [connectionStatus, setConnectionStatus] = createSignal<[Status, string?]>(["disconnected", "Disconnected"])
+
+  // 连接状态
+  const [connectionStatus, setConnectionStatus] = createSignal<[Status, string?]>(["disconnected", "已断开连接"])
+
+  // 调试：打印 store 内容
   createEffect(() => {
     console.log(unwrap(store))
   })
 
+  // 组件挂载时的操作
   onMount(() => {
     const apiUrl = props.api
 
     if (!props.id) {
-      setConnectionStatus(["error", "id not found"])
+      setConnectionStatus(["error", "未找到 ID"])
       return
     }
 
     if (!apiUrl) {
-      console.error("API URL not found in environment variables")
-      setConnectionStatus(["error", "API URL not found"])
+      console.error("环境变量中未找到 API URL")
+      setConnectionStatus(["error", "未找到 API URL"])
       return
     }
 
     let reconnectTimer: number | undefined
     let socket: WebSocket | null = null
 
-    // Function to create and set up WebSocket with auto-reconnect
+    // 创建和设置 WebSocket 连接，支持自动重连
     const setupWebSocket = () => {
-      // Close any existing connection
+      // 关闭现有的连接
       if (socket) {
         socket.close()
       }
 
       setConnectionStatus(["connecting"])
 
-      // Always use secure WebSocket protocol (wss)
+      // 始终使用安全的 WebSocket 协议 (wss)
       const wsBaseUrl = apiUrl.replace(/^https?:\/\//, "wss://")
       const wsUrl = `${wsBaseUrl}/share_poll?id=${props.id}`
-      console.log("Connecting to WebSocket URL:", wsUrl)
+      console.log("连接到 WebSocket URL:", wsUrl)
 
-      // Create WebSocket connection
+      // 创建 WebSocket 连接
       socket = new WebSocket(wsUrl)
 
-      // Handle connection opening
+      // 处理连接打开
       socket.onopen = () => {
         setConnectionStatus(["connected"])
-        console.log("WebSocket connection established")
+        console.log("WebSocket 连接已建立")
       }
 
-      // Handle incoming messages
+      // 处理接收消息
       socket.onmessage = (event) => {
-        console.log("WebSocket message received")
+        console.log("收到 WebSocket 消息")
         try {
           const d = JSON.parse(event.data)
           const [root, type, ...splits] = d.key.split("/")
@@ -140,33 +179,33 @@ export default function Share(props: { id: string; api: string; info: Session.In
             })
           }
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error)
+          console.error("解析 WebSocket 消息时出错:", error)
         }
       }
 
-      // Handle errors
+      // 处理错误
       socket.onerror = (error) => {
-        console.error("WebSocket error:", error)
-        setConnectionStatus(["error", "Connection failed"])
+        console.error("WebSocket 错误:", error)
+        setConnectionStatus(["error", "连接失败"])
       }
 
-      // Handle connection close and reconnection
+      // 处理连接关闭和重连
       socket.onclose = (event) => {
-        console.log(`WebSocket closed: ${event.code} ${event.reason}`)
+        console.log(`WebSocket 已关闭: ${event.code} ${event.reason}`)
         setConnectionStatus(["reconnecting"])
 
-        // Try to reconnect after 2 seconds
+        // 2 秒后尝试重连
         clearTimeout(reconnectTimer)
         reconnectTimer = window.setTimeout(setupWebSocket, 2000) as unknown as number
       }
     }
 
-    // Initial connection
+    // 初始连接
     setupWebSocket()
 
-    // Clean up on component unmount
+    // 组件卸载时清理
     onCleanup(() => {
-      console.log("Cleaning up WebSocket connection")
+      console.log("清理 WebSocket 连接")
       if (socket) {
         socket.close()
       }
@@ -174,31 +213,34 @@ export default function Share(props: { id: string; api: string; info: Session.In
     })
   })
 
+  /**
+   * 检查是否需要显示滚动按钮
+   */
   function checkScrollNeed() {
     const currentScrollY = window.scrollY
     const isScrollingDown = currentScrollY > lastScrollY
-    const scrolled = currentScrollY > 200 // Show after scrolling 200px
+    const scrolled = currentScrollY > 200 // 滚动 200px 后显示
 
-    // Only show when scrolling down, scrolled enough, and not near bottom
+    // 仅当向下滚动、滚动足够距离且不在底部附近时显示
     const shouldShow = isScrollingDown && scrolled && !isNearBottom()
 
-    // Update last scroll position
+    // 更新上次滚动位置
     lastScrollY = currentScrollY
 
     if (shouldShow) {
       setShowScrollButton(true)
-      // Clear existing timeout
+      // 清除现有的超时
       if (scrollTimeout) {
         clearTimeout(scrollTimeout)
       }
-      // Hide button after 3 seconds of no scrolling (unless hovered)
+      // 无滚动 1.5 秒后隐藏按钮（除非悬停）
       scrollTimeout = window.setTimeout(() => {
         if (!isButtonHovered()) {
           setShowScrollButton(false)
         }
       }, 1500)
     } else if (!isButtonHovered()) {
-      // Only hide if not hovered (to prevent disappearing while user is about to click)
+      // 仅当未悬停时隐藏（防止用户准备点击时消失）
       setShowScrollButton(false)
       if (scrollTimeout) {
         clearTimeout(scrollTimeout)
@@ -206,10 +248,11 @@ export default function Share(props: { id: string; api: string; info: Session.In
     }
   }
 
+  // 滚动相关的挂载操作
   onMount(() => {
-    lastScrollY = window.scrollY // Initialize scroll position
+    lastScrollY = window.scrollY // 初始化滚动位置
 
-    // Create sentinel element
+    // 创建哨兵元素
     const sentinel = document.createElement("div")
     sentinel.style.height = "1px"
     sentinel.style.position = "absolute"
@@ -218,13 +261,13 @@ export default function Share(props: { id: string; api: string; info: Session.In
     sentinel.style.pointerEvents = "none"
     document.body.appendChild(sentinel)
 
-    // Create intersection observer
+    // 创建交叉观察器
     const observer = new IntersectionObserver((entries) => {
       setIsNearBottom(entries[0].isIntersecting)
     })
     observer.observe(sentinel)
 
-    // Store references for cleanup
+    // 存储引用以便清理
     scrollSentinel = sentinel
     scrollObserver = observer
 
@@ -233,11 +276,12 @@ export default function Share(props: { id: string; api: string; info: Session.In
     window.addEventListener("resize", checkScrollNeed)
   })
 
+  // 滚动相关的清理操作
   onCleanup(() => {
     window.removeEventListener("scroll", checkScrollNeed)
     window.removeEventListener("resize", checkScrollNeed)
 
-    // Clean up observer and sentinel
+    // 清理观察器和哨兵元素
     if (scrollObserver) {
       scrollObserver.disconnect()
     }
@@ -250,6 +294,11 @@ export default function Share(props: { id: string; api: string; info: Session.In
     }
   })
 
+  /**
+   * 会话数据计算属性
+   *
+   * 从 store 中提取和汇总会话数据，包括创建时间、完成时间、消息、模型、成本和令牌使用情况
+   */
   const data = createMemo(() => {
     const result = {
       rootDir: undefined as string | undefined,
@@ -323,7 +372,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
                 </For>
               ) : (
                 <li>
-                  <span data-element-label>Models</span>
+                  <span data-element-label>模型</span>
                   <span data-placeholder>&mdash;</span>
                 </li>
               )}
@@ -338,7 +387,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
         </div>
 
         <div>
-          <Show when={data().messages.length > 0} fallback={<p>Waiting for messages...</p>}>
+          <Show when={data().messages.length > 0} fallback={<p>等待消息...</p>}>
             <div class={styles.parts}>
               <SuspenseList revealOrder="forwards">
                 <For each={data().messages}>
@@ -397,7 +446,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
                   <p data-section="copy">{getStatusText(connectionStatus())}</p>
                   <ul data-section="stats">
                     <li>
-                      <span data-element-label>Cost</span>
+                      <span data-element-label>成本</span>
                       {data().cost !== undefined ? (
                         <span>${data().cost.toFixed(2)}</span>
                       ) : (
@@ -405,11 +454,11 @@ export default function Share(props: { id: string; api: string; info: Session.In
                       )}
                     </li>
                     <li>
-                      <span data-element-label>Input Tokens</span>
+                      <span data-element-label>输入令牌</span>
                       {data().tokens.input ? <span>{data().tokens.input}</span> : <span data-placeholder>&mdash;</span>}
                     </li>
                     <li>
-                      <span data-element-label>Output Tokens</span>
+                      <span data-element-label>输出令牌</span>
                       {data().tokens.output ? (
                         <span>{data().tokens.output}</span>
                       ) : (
@@ -417,7 +466,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
                       )}
                     </li>
                     <li>
-                      <span data-element-label>Reasoning Tokens</span>
+                      <span data-element-label>推理令牌</span>
                       {data().tokens.reasoning ? (
                         <span>{data().tokens.reasoning}</span>
                       ) : (
@@ -440,7 +489,7 @@ export default function Share(props: { id: string; api: string; info: Session.In
                 "overflow-y": "auto",
               }}
             >
-              <Show when={data().messages.length > 0} fallback={<p>Waiting for messages...</p>}>
+              <Show when={data().messages.length > 0} fallback={<p>等待消息...</p>}>
                 <ul style={{ "list-style-type": "none", padding: 0 }}>
                   <For each={data().messages}>
                     {(msg) => (
@@ -485,8 +534,8 @@ export default function Share(props: { id: string; api: string; info: Session.In
                 }, 3000)
               }
             }}
-            title="Scroll to bottom"
-            aria-label="Scroll to bottom"
+            title="滚动到底部"
+            aria-label="滚动到底部"
           >
             <IconArrowDown width={20} height={20} />
           </button>
@@ -496,6 +545,12 @@ export default function Share(props: { id: string; api: string; info: Session.In
   )
 }
 
+/**
+ * 将 V1 版本的消息转换为 V2 版本
+ *
+ * @param v1 - V1 版本的消息
+ * @returns V2 版本的消息，包含 parts 数组
+ */
 export function fromV1(v1: Message.Info): MessageWithParts {
   if (v1.role === "assistant") {
     return {
@@ -581,7 +636,7 @@ export function fromV1(v1: Message.Info): MessageWithParts {
                     metadata,
                   }
                 }
-                throw new Error("unknown tool invocation state")
+                throw new Error("未知的工具调用状态")
               })(),
             },
           ]
@@ -630,5 +685,5 @@ export function fromV1(v1: Message.Info): MessageWithParts {
     }
   }
 
-  throw new Error("unknown message type")
+  throw new Error("未知的消息类型")
 }

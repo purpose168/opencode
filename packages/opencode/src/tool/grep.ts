@@ -1,24 +1,27 @@
 import z from "zod"
-import { Tool } from "./tool"
 import { Ripgrep } from "../file/ripgrep"
+import { Tool } from "./tool"
 
-import DESCRIPTION from "./grep.txt"
 import { Instance } from "../project/instance"
+import DESCRIPTION from "./grep.txt"
 
+// 每行最大长度限制
 const MAX_LINE_LENGTH = 2000
 
+// 定义grep工具，用于在文件内容中搜索正则表达式模式
 export const GrepTool = Tool.define("grep", {
   description: DESCRIPTION,
   parameters: z.object({
-    pattern: z.string().describe("The regex pattern to search for in file contents"),
-    path: z.string().optional().describe("The directory to search in. Defaults to the current working directory."),
-    include: z.string().optional().describe('File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")'),
+    pattern: z.string().describe("在文件内容中搜索的正则表达式模式"),
+    path: z.string().optional().describe("要搜索的目录。默认为当前工作目录。"),
+    include: z.string().optional().describe('搜索中要包含的文件模式（例如"*.js"、"*.{ts,tsx}"）'),
   }),
   async execute(params, ctx) {
     if (!params.pattern) {
-      throw new Error("pattern is required")
+      throw new Error("pattern是必需的")
     }
 
+    // 请求grep权限
     await ctx.ask({
       permission: "grep",
       patterns: [params.pattern],
@@ -32,6 +35,7 @@ export const GrepTool = Tool.define("grep", {
 
     const searchPath = params.path || Instance.directory
 
+    // 构建ripgrep命令参数
     const rgPath = await Ripgrep.filepath()
     const args = ["-nH", "--field-match-separator=|", "--regexp", params.pattern]
     if (params.include) {
@@ -39,6 +43,7 @@ export const GrepTool = Tool.define("grep", {
     }
     args.push(searchPath)
 
+    // 启动ripgrep进程
     const proc = Bun.spawn([rgPath, ...args], {
       stdout: "pipe",
       stderr: "pipe",
@@ -48,22 +53,25 @@ export const GrepTool = Tool.define("grep", {
     const errorOutput = await new Response(proc.stderr).text()
     const exitCode = await proc.exited
 
+    // 处理未找到文件的情况
     if (exitCode === 1) {
       return {
         title: params.pattern,
         metadata: { matches: 0, truncated: false },
-        output: "No files found",
+        output: "未找到文件",
       }
     }
 
+    // 处理ripgrep执行失败的情况
     if (exitCode !== 0) {
-      throw new Error(`ripgrep failed: ${errorOutput}`)
+      throw new Error(`ripgrep失败：${errorOutput}`)
     }
 
-    // Handle both Unix (\n) and Windows (\r\n) line endings
+    // 处理Unix（\n）和Windows（\r\n）行尾符
     const lines = output.trim().split(/\r?\n/)
     const matches = []
 
+    // 解析匹配结果
     for (const line of lines) {
       if (!line) continue
 
@@ -85,8 +93,10 @@ export const GrepTool = Tool.define("grep", {
       })
     }
 
+    // 按修改时间降序排序
     matches.sort((a, b) => b.modTime - a.modTime)
 
+    // 限制最多返回100个匹配项
     const limit = 100
     const truncated = matches.length > limit
     const finalMatches = truncated ? matches.slice(0, limit) : matches
@@ -95,11 +105,12 @@ export const GrepTool = Tool.define("grep", {
       return {
         title: params.pattern,
         metadata: { matches: 0, truncated: false },
-        output: "No files found",
+        output: "未找到文件",
       }
     }
 
-    const outputLines = [`Found ${finalMatches.length} matches`]
+    // 构建输出
+    const outputLines = [`找到 ${finalMatches.length} 个匹配项`]
 
     let currentFile = ""
     for (const match of finalMatches) {
@@ -108,16 +119,17 @@ export const GrepTool = Tool.define("grep", {
           outputLines.push("")
         }
         currentFile = match.path
-        outputLines.push(`${match.path}:`)
+        outputLines.push(`${match.path}：`)
       }
       const truncatedLineText =
         match.lineText.length > MAX_LINE_LENGTH ? match.lineText.substring(0, MAX_LINE_LENGTH) + "..." : match.lineText
-      outputLines.push(`  Line ${match.lineNum}: ${truncatedLineText}`)
+      outputLines.push(`  行 ${match.lineNum}：${truncatedLineText}`)
     }
 
+    // 添加截断提示
     if (truncated) {
       outputLines.push("")
-      outputLines.push("(Results are truncated. Consider using a more specific path or pattern.)")
+      outputLines.push("（结果已被截断。考虑使用更具体的路径或模式。）")
     }
 
     return {

@@ -7,8 +7,10 @@ import Default from 'toolbeam-docs-theme/overrides/Header.astro';
 import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
 
+// 获取当前路径
 const path = Astro.url.pathname;
 
+// 获取社交链接和头部链接
 const links = astroConfig.social || [];
 const headerLinks = config.headerLinks;
 
@@ -51,9 +53,9 @@ const headerLinks = config.headerLinks;
 	}
 
 	.title-wrapper {
-		/* Prevent long titles overflowing and covering the search and menu buttons on narrow viewports. */
+		/* 防止长标题溢出并在窄视口上覆盖搜索和菜单按钮。 */
 		overflow: clip;
-		/* Avoid clipping focus ring around link inside title wrapper. */
+		/* 避免裁剪标题包装器内链接周围的焦点环。 */
     padding: calc(0.25rem + 2px) 0.25rem calc(0.25rem - 2px);
 		margin: -0.25rem;
 	}
@@ -113,14 +115,14 @@ const headerLinks = config.headerLinks;
 			);
 			display: grid;
 			grid-template-columns:
-        /* 1 (site title): runs up until the main content column’s left edge or the width of the title, whichever is the largest  */
+        /* 1（网站标题）：运行直到主内容列的左边缘或标题的宽度，以较大者为准 */
 				minmax(
 					calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
 					auto
 				)
-				/* 2 (search box): all free space that is available. */
+				/* 2（搜索框）：所有可用的空闲空间。 */
 				1fr
-				/* 3 (right items): use the space that these need. */
+				/* 3（右侧项目）：使用这些项目所需的空间。 */
 				auto;
 			align-content: center;
 		}

@@ -20,7 +20,7 @@ export const WebFetchTool = Tool.define("webfetch", {
   async execute(params, ctx) {
     // Validate URL
     if (!params.url.startsWith("http://") && !params.url.startsWith("https://")) {
-      throw new Error("URL must start with http:// or https://")
+      throw new Error("URL必须以http://或https://开头")
     }
 
     await ctx.ask({
@@ -75,12 +75,12 @@ export const WebFetchTool = Tool.define("webfetch", {
     // Check content length
     const contentLength = response.headers.get("content-length")
     if (contentLength && parseInt(contentLength) > MAX_RESPONSE_SIZE) {
-      throw new Error("Response too large (exceeds 5MB limit)")
+      throw new Error("响应过大（超过5MB限制）")
     }
 
     const arrayBuffer = await response.arrayBuffer()
     if (arrayBuffer.byteLength > MAX_RESPONSE_SIZE) {
-      throw new Error("Response too large (exceeds 5MB limit)")
+      throw new Error("响应过大（超过5MB限制）")
     }
 
     const content = new TextDecoder().decode(arrayBuffer)

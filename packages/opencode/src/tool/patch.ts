@@ -1,42 +1,43 @@
-import z from "zod"
-import * as path from "path"
-import * as fs from "fs/promises"
-import { Tool } from "./tool"
-import { FileTime } from "../file/time"
-import { Bus } from "../bus"
-import { FileWatcher } from "../file/watcher"
-import { Instance } from "../project/instance"
-import { Patch } from "../patch"
-import { Filesystem } from "../util/filesystem"
 import { createTwoFilesPatch } from "diff"
+import * as fs from "fs/promises"
+import * as path from "path"
+import z from "zod"
+import { Bus } from "../bus"
+import { FileTime } from "../file/time"
+import { FileWatcher } from "../file/watcher"
+import { Patch } from "../patch"
+import { Instance } from "../project/instance"
+import { Filesystem } from "../util/filesystem"
+import { Tool } from "./tool"
 
+// 补丁参数定义
 const PatchParams = z.object({
-  patchText: z.string().describe("The full patch text that describes all changes to be made"),
+  patchText: z.string().describe("描述所有要进行的更改的完整补丁文本"),
 })
 
+// 定义补丁工具，用于应用补丁修改多个文件
 export const PatchTool = Tool.define("patch", {
-  description:
-    "Apply a patch to modify multiple files. Supports adding, updating, and deleting files with context-aware changes.",
+  description: "应用补丁以修改多个文件。支持添加、更新和删除具有上下文感知的文件。",
   parameters: PatchParams,
   async execute(params, ctx) {
     if (!params.patchText) {
-      throw new Error("patchText is required")
+      throw new Error("patchText是必需的")
     }
 
-    // Parse the patch to get hunks
+    // 解析补丁以获取hunks
     let hunks: Patch.Hunk[]
     try {
       const parseResult = Patch.parsePatch(params.patchText)
       hunks = parseResult.hunks
     } catch (error) {
-      throw new Error(`Failed to parse patch: ${error}`)
+      throw new Error(`解析补丁失败：${error}`)
     }
 
     if (hunks.length === 0) {
-      throw new Error("No file changes found in patch")
+      throw new Error("在补丁中未找到文件更改")
     }
 
-    // Validate file paths and check permissions
+    // 验证文件路径并检查权限
     const fileChanges: Array<{
       filePath: string
       oldContent: string
@@ -50,6 +51,7 @@ export const PatchTool = Tool.define("patch", {
     for (const hunk of hunks) {
       const filePath = path.resolve(Instance.directory, hunk.path)
 
+      // 检查是否需要外部目录权限
       if (!Filesystem.contains(Instance.directory, filePath)) {
         const parentDir = path.dirname(filePath)
         await ctx.ask({
@@ -82,23 +84,23 @@ export const PatchTool = Tool.define("patch", {
           break
 
         case "update":
-          // Check if file exists for update
+          // 对于更新操作，检查文件是否存在
           const stats = await fs.stat(filePath).catch(() => null)
           if (!stats || stats.isDirectory()) {
-            throw new Error(`File not found or is directory: ${filePath}`)
+            throw new Error(`文件未找到或是目录：${filePath}`)
           }
 
-          // Read file and update time tracking (like edit tool does)
+          // 读取文件并更新时间跟踪（类似于编辑工具）
           await FileTime.assert(ctx.sessionID, filePath)
           const oldContent = await fs.readFile(filePath, "utf-8")
           let newContent = oldContent
 
-          // Apply the update chunks to get new content
+          // 应用更新块以获取新内容
           try {
             const fileUpdate = Patch.deriveNewContentsFromChunks(filePath, hunk.chunks)
             newContent = fileUpdate.content
           } catch (error) {
-            throw new Error(`Failed to apply update to ${filePath}: ${error}`)
+            throw new Error(`无法将更新应用于${filePath}：${error}`)
           }
 
           const diff = createTwoFilesPatch(filePath, filePath, oldContent, newContent)
@@ -115,7 +117,7 @@ export const PatchTool = Tool.define("patch", {
           break
 
         case "delete":
-          // Check if file exists for deletion
+          // 对于删除操作，检查文件是否存在
           await FileTime.assert(ctx.sessionID, filePath)
           const contentToDelete = await fs.readFile(filePath, "utf-8")
           const deleteDiff = createTwoFilesPatch(filePath, filePath, contentToDelete, "")
@@ -132,7 +134,7 @@ export const PatchTool = Tool.define("patch", {
       }
     }
 
-    // Check permissions if needed
+    // 如果需要，检查权限
     await ctx.ask({
       permission: "edit",
       patterns: fileChanges.map((c) => path.relative(Instance.worktree, c.filePath)),
@@ -142,13 +144,13 @@ export const PatchTool = Tool.define("patch", {
       },
     })
 
-    // Apply the changes
+    // 应用更改
     const changedFiles: string[] = []
 
     for (const change of fileChanges) {
       switch (change.type) {
         case "add":
-          // Create parent directories
+          // 创建父目录
           const addDir = path.dirname(change.filePath)
           if (addDir !== "." && addDir !== "/") {
             await fs.mkdir(addDir, { recursive: true })
@@ -164,14 +166,14 @@ export const PatchTool = Tool.define("patch", {
 
         case "move":
           if (change.movePath) {
-            // Create parent directories for destination
+            // 为目标创建父目录
             const moveDir = path.dirname(change.movePath)
             if (moveDir !== "." && moveDir !== "/") {
               await fs.mkdir(moveDir, { recursive: true })
             }
-            // Write to new location
+            // 写入新位置
             await fs.writeFile(change.movePath, change.newContent, "utf-8")
-            // Remove original
+            // 删除原始文件
             await fs.unlink(change.filePath)
             changedFiles.push(change.movePath)
           }
@@ -183,28 +185,28 @@ export const PatchTool = Tool.define("patch", {
           break
       }
 
-      // Update file time tracking
+      // 更新文件时间跟踪
       FileTime.read(ctx.sessionID, change.filePath)
       if (change.movePath) {
         FileTime.read(ctx.sessionID, change.movePath)
       }
     }
 
-    // Publish file change events
+    // 发布文件更改事件
     for (const filePath of changedFiles) {
       await Bus.publish(FileWatcher.Event.Updated, { file: filePath, event: "change" })
     }
 
-    // Generate output summary
+    // 生成输出摘要
     const relativePaths = changedFiles.map((filePath) => path.relative(Instance.worktree, filePath))
-    const summary = `${fileChanges.length} files changed`
+    const summary = `${fileChanges.length} 个文件已更改`
 
     return {
       title: summary,
       metadata: {
         diff: totalDiff,
       },
-      output: `Patch applied successfully. ${summary}:\n${relativePaths.map((p) => `  ${p}`).join("\n")}`,
+      output: `补丁应用成功。${summary}：\n${relativePaths.map((p) => `  ${p}`).join("\n")}`,
     }
   },
 })

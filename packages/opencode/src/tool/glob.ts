@@ -1,22 +1,24 @@
-import z from "zod"
 import path from "path"
-import { Tool } from "./tool"
-import DESCRIPTION from "./glob.txt"
+import z from "zod"
 import { Ripgrep } from "../file/ripgrep"
 import { Instance } from "../project/instance"
+import DESCRIPTION from "./glob.txt"
+import { Tool } from "./tool"
 
+// 定义glob工具，用于使用glob模式匹配文件
 export const GlobTool = Tool.define("glob", {
   description: DESCRIPTION,
   parameters: z.object({
-    pattern: z.string().describe("The glob pattern to match files against"),
+    pattern: z.string().describe("用于匹配文件的glob模式"),
     path: z
       .string()
       .optional()
       .describe(
-        `The directory to search in. If not specified, the current working directory will be used. IMPORTANT: Omit this field to use the default directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a valid directory path if provided.`,
+        `要搜索的目录。如果未指定，将使用当前工作目录。重要提示：省略此字段以使用默认目录。不要输入"undefined"或"null" - 只需省略它即可使用默认行为。如果提供，必须是有效的目录路径。`,
       ),
   }),
   async execute(params, ctx) {
+    // 请求glob权限
     await ctx.ask({
       permission: "glob",
       patterns: [params.pattern],
@@ -27,12 +29,15 @@ export const GlobTool = Tool.define("glob", {
       },
     })
 
+    // 解析搜索路径
     let search = params.path ?? Instance.directory
     search = path.isAbsolute(search) ? search : path.resolve(Instance.directory, search)
 
+    // 限制最多返回100个文件
     const limit = 100
     const files = []
     let truncated = false
+    // 使用Ripgrep搜索文件
     for await (const file of Ripgrep.files({
       cwd: search,
       glob: [params.pattern],
@@ -51,15 +56,17 @@ export const GlobTool = Tool.define("glob", {
         mtime: stats,
       })
     }
+    // 按修改时间降序排序
     files.sort((a, b) => b.mtime - a.mtime)
 
+    // 构建输出
     const output = []
-    if (files.length === 0) output.push("No files found")
+    if (files.length === 0) output.push("未找到文件")
     if (files.length > 0) {
       output.push(...files.map((f) => f.path))
       if (truncated) {
         output.push("")
-        output.push("(Results are truncated. Consider using a more specific path or pattern.)")
+        output.push("（结果已被截断。考虑使用更具体的路径或模式。）")
       }
     }
 

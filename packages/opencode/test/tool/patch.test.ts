@@ -23,7 +23,7 @@ describe("tool.patch", () => {
     await Instance.provide({
       directory: "/tmp",
       fn: async () => {
-        expect(patchTool.execute({ patchText: "" }, ctx)).rejects.toThrow("patchText is required")
+        expect(patchTool.execute({ patchText: "" }, ctx)).rejects.toThrow("patchText是必需的")
       },
     })
   })
@@ -32,7 +32,7 @@ describe("tool.patch", () => {
     await Instance.provide({
       directory: "/tmp",
       fn: async () => {
-        expect(patchTool.execute({ patchText: "invalid patch" }, ctx)).rejects.toThrow("Failed to parse patch")
+        expect(patchTool.execute({ patchText: "invalid patch" }, ctx)).rejects.toThrow("解析补丁失败")
       },
     })
   })
@@ -44,7 +44,7 @@ describe("tool.patch", () => {
         const emptyPatch = `*** Begin Patch
 *** End Patch`
 
-        expect(patchTool.execute({ patchText: emptyPatch }, ctx)).rejects.toThrow("No file changes found in patch")
+        expect(patchTool.execute({ patchText: emptyPatch }, ctx)).rejects.toThrow("在补丁中未找到文件更改")
       },
     })
   })
@@ -58,7 +58,7 @@ describe("tool.patch", () => {
 +malicious content
 *** End Patch`
         patchTool.execute({ patchText: maliciousPatch }, ctx)
-        // TODO: this sucks
+        // TODO: 这很糟糕
         await new Promise((resolve) => setTimeout(resolve, 1000))
         const pending = await PermissionNext.list()
         expect(pending.find((p) => p.sessionID === ctx.sessionID)).toBeDefined()
@@ -84,7 +84,7 @@ describe("tool.patch", () => {
         expect(result.metadata.diff).toBeDefined()
         expect(result.output).toContain("Patch applied successfully")
 
-        // Verify file was created
+        // 验证文件已创建
         const filePath = path.join(fixture.path, "test-file.txt")
         const content = await fs.readFile(filePath, "utf-8")
         expect(content).toBe("Hello World\nThis is a test file")
@@ -111,7 +111,7 @@ describe("tool.patch", () => {
         expect(result.metadata.diff).toBeDefined()
         expect(result.output).toContain("Patch applied successfully")
 
-        // Verify file was created with correct content
+        // 验证文件已创建且内容正确
         const filePath = path.join(fixture.path, "config.js")
         const content = await fs.readFile(filePath, "utf-8")
         expect(content).toBe('const API_KEY = "test-key"\nconst DEBUG = false\nconst VERSION = "1.0"')
@@ -140,7 +140,7 @@ describe("tool.patch", () => {
         expect(result.metadata.diff).toBeDefined()
         expect(result.output).toContain("Patch applied successfully")
 
-        // Verify all files were created
+        // 验证所有文件已创建
         for (let i = 1; i <= 3; i++) {
           const filePath = path.join(fixture.path, `file${i}.txt`)
           const content = await fs.readFile(filePath, "utf-8")
@@ -166,7 +166,7 @@ describe("tool.patch", () => {
         expect(result.title).toContain("files changed")
         expect(result.output).toContain("Patch applied successfully")
 
-        // Verify nested file was created
+        // 验证嵌套文件已创建
         const nestedPath = path.join(fixture.path, "deep", "nested", "file.txt")
         const exists = await fs
           .access(nestedPath)
@@ -186,7 +186,7 @@ describe("tool.patch", () => {
     await Instance.provide({
       directory: fixture.path,
       fn: async () => {
-        // First create a file with simple content
+        // 首先创建一个包含简单内容的文件
         const patchText1 = `*** Begin Patch
 *** Add File: test.txt
 +line 1
@@ -196,7 +196,7 @@ describe("tool.patch", () => {
 
         await patchTool.execute({ patchText: patchText1 }, ctx)
 
-        // Now create an update patch
+        // 现在创建一个更新补丁
         const patchText2 = `*** Begin Patch
 *** Update File: test.txt
 @@
@@ -243,7 +243,7 @@ describe("tool.patch", () => {
         expect(result.metadata.diff).toBeDefined()
         expect(result.output).toContain("Patch applied successfully")
 
-        // Verify all files were created
+        // 验证所有文件已创建
         const newPath = path.join(fixture.path, "new.txt")
         const newContent = await fs.readFile(newPath, "utf-8")
         expect(newContent).toBe("This is a new file\nwith multiple lines")

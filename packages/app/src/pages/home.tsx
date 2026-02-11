@@ -40,7 +40,7 @@ export default function Home() {
 
     if (platform.openDirectoryPickerDialog && server.isLocal()) {
       const result = await platform.openDirectoryPickerDialog?.({
-        title: "Open project",
+        title: "打开项目",
         multiple: true,
       })
       resolve(result)
@@ -75,9 +75,9 @@ export default function Home() {
         <Match when={sync.data.project.length > 0}>
           <div class="mt-20 w-full flex flex-col gap-4">
             <div class="flex gap-2 items-center justify-between pl-3">
-              <div class="text-14-medium text-text-strong">Recent projects</div>
+              <div class="text-14-medium text-text-strong">最近的项目</div>
               <Button icon="folder-add-left" size="normal" class="pl-2 pr-3" onClick={chooseProject}>
-                Open project
+                打开项目
               </Button>
             </div>
             <ul class="flex flex-col gap-2">
@@ -107,12 +107,12 @@ export default function Home() {
           <div class="mt-30 mx-auto flex flex-col items-center gap-3">
             <Icon name="folder-add-left" size="large" />
             <div class="flex flex-col gap-1 items-center justify-center">
-              <div class="text-14-medium text-text-strong">No recent projects</div>
-              <div class="text-12-regular text-text-weak">Get started by opening a local project</div>
+              <div class="text-14-medium text-text-strong">没有最近的项目</div>
+              <div class="text-12-regular text-text-weak">通过打开本地项目开始</div>
             </div>
             <div />
             <Button class="px-3" onClick={chooseProject}>
-              Open project
+              打开项目
             </Button>
           </div>
         </Match>

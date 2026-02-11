@@ -32,8 +32,10 @@ import type { Diagnostic } from "vscode-languageserver-types"
 
 import styles from "./part.module.css"
 
+// 最小持续时间（毫秒）
 const MIN_DURATION = 2000
 
+// 部件属性接口
 export interface PartProps {
   index: number
   message: MessageV2.Info
@@ -41,6 +43,7 @@ export interface PartProps {
   last: boolean
 }
 
+// 部件组件
 export function Part(props: PartProps) {
   const [copied, setCopied] = createSignal(false)
   const id = createMemo(() => props.message.id + "-" + props.index)
@@ -55,7 +58,7 @@ export function Part(props: PartProps) {
       data-copied={copied() ? true : undefined}
     >
       <div data-component="decoration">
-        <div data-slot="anchor" title="Link to this message">
+        <div data-slot="anchor" title="链接到此消息">
           <a
             href={`#${id()}`}
             onClick={(e) => {
@@ -65,7 +68,7 @@ export function Part(props: PartProps) {
               const { origin, pathname, search } = window.location
               navigator.clipboard
                 .writeText(`${origin}${pathname}${search}${hash}`)
-                .catch((err) => console.error("Copy failed", err))
+                .catch((err) => console.error("复制失败", err))
 
               setCopied(true)
               setTimeout(() => setCopied(false), 3000)
@@ -126,7 +129,7 @@ export function Part(props: PartProps) {
             <IconHashtag width={18} height={18} />
             <IconCheckCircle width={18} height={18} />
           </a>
-          <span data-slot="tooltip">Copied!</span>
+          <span data-slot="tooltip">已复制！</span>
         </div>
         <div data-slot="bar"></div>
       </div>
@@ -155,13 +158,13 @@ export function Part(props: PartProps) {
         {props.message.role === "assistant" && props.part.type === "reasoning" && (
           <div data-component="tool">
             <div data-component="tool-title">
-              <span data-slot="name">Thinking</span>
+              <span data-slot="name">思考中</span>
             </div>
             <Show when={props.part.text}>
               <div data-component="assistant-reasoning">
-                <ResultsButton showCopy="Show details" hideCopy="Hide details">
+                <ResultsButton showCopy="显示详情" hideCopy="隐藏详情">
                   <div data-component="assistant-reasoning-markdown">
-                    <ContentMarkdown expand text={props.part.text || "Thinking..."} />
+                    <ContentMarkdown expand text={props.part.text || "思考中..."} />
                   </div>
                 </ResultsButton>
               </div>
@@ -170,13 +173,13 @@ export function Part(props: PartProps) {
         )}
         {props.message.role === "user" && props.part.type === "file" && (
           <div data-component="attachment">
-            <div data-slot="copy">Attachment</div>
+            <div data-slot="copy">附件</div>
             <div data-slot="filename">{props.part.filename}</div>
           </div>
         )}
         {props.message.role === "user" && props.part.type === "file" && (
           <div data-component="attachment">
-            <div data-slot="copy">Attachment</div>
+            <div data-slot="copy">附件</div>
             <div data-slot="filename">{props.part.filename}</div>
           </div>
         )}
@@ -300,6 +303,7 @@ export function Part(props: PartProps) {
   )
 }
 
+// 工具属性类型
 type ToolProps = {
   id: MessageV2.ToolPart["id"]
   tool: MessageV2.ToolPart["tool"]
@@ -308,6 +312,7 @@ type ToolProps = {
   isLastPart?: boolean
 }
 
+// 待办事项类型
 interface Todo {
   id: string
   content: string
@@ -315,6 +320,7 @@ interface Todo {
   priority: "low" | "medium" | "high"
 }
 
+// 去除工作目录前缀
 function stripWorkingDirectory(filePath?: string, workingDir?: string) {
   if (filePath === undefined || workingDir === undefined) return filePath
 
@@ -331,6 +337,7 @@ function stripWorkingDirectory(filePath?: string, workingDir?: string) {
   return filePath
 }
 
+// 获取 Shiki 语言类型
 function getShikiLang(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase() ?? ""
   const langs = map.languages(ext)
@@ -343,6 +350,7 @@ function getShikiLang(filename: string) {
   return type ? (overrides[type] ?? type) : "plaintext"
 }
 
+// 获取诊断信息
 function getDiagnostics(diagnosticsByFile: Record<string, Diagnostic[]>, currentFile: string): JSX.Element[] {
   const result: JSX.Element[] = []
 
@@ -358,7 +366,7 @@ function getDiagnostics(diagnosticsByFile: Record<string, Diagnostic[]>, current
       result.push(
         <pre>
           <span data-color="red" data-marker="label">
-            Error
+            错误
           </span>
           <span data-color="dimmed" data-separator>
             [{line}:{column}]
@@ -372,6 +380,7 @@ function getDiagnostics(diagnosticsByFile: Record<string, Diagnostic[]>, current
   return result
 }
 
+// 格式化错误字符串
 function formatErrorString(error: string): JSX.Element {
   const errorMarker = "Error: "
   const startsWithError = error.startsWith(errorMarker)
@@ -379,7 +388,7 @@ function formatErrorString(error: string): JSX.Element {
   return startsWithError ? (
     <pre>
       <span data-color="red" data-marker="label" data-separator>
-        Error
+        错误
       </span>
       <span>{error.slice(errorMarker.length)}</span>
     </pre>
@@ -390,6 +399,7 @@ function formatErrorString(error: string): JSX.Element {
   )
 }
 
+// 待办事项写入工具组件
 export function TodoWriteTool(props: ToolProps) {
   const priority: Record<Todo["status"], number> = {
     in_progress: 0,
@@ -406,9 +416,9 @@ export function TodoWriteTool(props: ToolProps) {
     <>
       <div data-component="tool-title">
         <span data-slot="name">
-          <Switch fallback="Updating plan">
-            <Match when={starting()}>Creating plan</Match>
-            <Match when={finished()}>Completing plan</Match>
+          <Switch fallback="更新计划">
+            <Match when={starting()}>创建计划</Match>
+            <Match when={finished()}>完成计划</Match>
           </Switch>
         </span>
       </div>
@@ -428,6 +438,7 @@ export function TodoWriteTool(props: ToolProps) {
   )
 }
 
+// Grep 工具组件
 export function GrepTool(props: ToolProps) {
   return (
     <>
@@ -439,7 +450,7 @@ export function GrepTool(props: ToolProps) {
         <Switch>
           <Match when={props.state.metadata?.matches && props.state.metadata?.matches > 0}>
             <ResultsButton
-              showCopy={props.state.metadata?.matches === 1 ? "1 match" : `${props.state.metadata?.matches} matches`}
+              showCopy={props.state.metadata?.matches === 1 ? "1 个匹配" : `${props.state.metadata?.matches} 个匹配`}
             >
               <ContentText expand compact text={props.state.output} />
             </ResultsButton>
@@ -453,6 +464,7 @@ export function GrepTool(props: ToolProps) {
   )
 }
 
+// 列表工具组件
 export function ListTool(props: ToolProps) {
   const path = createMemo(() =>
     props.state.input?.path !== props.message.path.cwd
@@ -481,11 +493,12 @@ export function ListTool(props: ToolProps) {
   )
 }
 
+// 网络获取工具组件
 export function WebFetchTool(props: ToolProps) {
   return (
     <>
       <div data-component="tool-title">
-        <span data-slot="name">Fetch</span>
+        <span data-slot="name">获取</span>
         <span data-slot="target">{props.state.input.url}</span>
       </div>
       <div data-component="tool-result">
@@ -504,13 +517,14 @@ export function WebFetchTool(props: ToolProps) {
   )
 }
 
+// 读取工具组件
 export function ReadTool(props: ToolProps) {
   const filePath = createMemo(() => stripWorkingDirectory(props.state.input?.filePath, props.message.path.cwd))
 
   return (
     <>
       <div data-component="tool-title">
-        <span data-slot="name">Read</span>
+        <span data-slot="name">读取</span>
         <span data-slot="target" title={props.state.input?.filePath}>
           {filePath()}
         </span>
@@ -521,7 +535,7 @@ export function ReadTool(props: ToolProps) {
             <ContentError>{formatErrorString(props.state.output)}</ContentError>
           </Match>
           <Match when={typeof props.state.metadata?.preview === "string"}>
-            <ResultsButton showCopy="Show preview" hideCopy="Hide preview">
+            <ResultsButton showCopy="显示预览" hideCopy="隐藏预览">
               <ContentCode lang={getShikiLang(filePath() || "")} code={props.state.metadata?.preview} />
             </ResultsButton>
           </Match>
@@ -536,6 +550,7 @@ export function ReadTool(props: ToolProps) {
   )
 }
 
+// 写入工具组件
 export function WriteTool(props: ToolProps) {
   const filePath = createMemo(() => stripWorkingDirectory(props.state.input?.filePath, props.message.path.cwd))
   const diagnostics = createMemo(() => getDiagnostics(props.state.metadata?.diagnostics, props.state.input.filePath))
@@ -543,7 +558,7 @@ export function WriteTool(props: ToolProps) {
   return (
     <>
       <div data-component="tool-title">
-        <span data-slot="name">Write</span>
+        <span data-slot="name">写入</span>
         <span data-slot="target" title={props.state.input?.filePath}>
           {filePath()}
         </span>
@@ -557,7 +572,7 @@ export function WriteTool(props: ToolProps) {
             <ContentError>{formatErrorString(props.state.output)}</ContentError>
           </Match>
           <Match when={props.state.input?.content}>
-            <ResultsButton showCopy="Show contents" hideCopy="Hide contents">
+            <ResultsButton showCopy="显示内容" hideCopy="隐藏内容">
               <ContentCode lang={getShikiLang(filePath() || "")} code={props.state.input?.content} />
             </ResultsButton>
           </Match>
@@ -567,6 +582,7 @@ export function WriteTool(props: ToolProps) {
   )
 }
 
+// 编辑工具组件
 export function EditTool(props: ToolProps) {
   const filePath = createMemo(() => stripWorkingDirectory(props.state.input.filePath, props.message.path.cwd))
   const diagnostics = createMemo(() => getDiagnostics(props.state.metadata?.diagnostics, props.state.input.filePath))
@@ -574,7 +590,7 @@ export function EditTool(props: ToolProps) {
   return (
     <>
       <div data-component="tool-title">
-        <span data-slot="name">Edit</span>
+        <span data-slot="name">编辑</span>
         <span data-slot="target" title={props.state.input?.filePath}>
           {filePath()}
         </span>
@@ -598,6 +614,7 @@ export function EditTool(props: ToolProps) {
   )
 }
 
+// Bash 工具组件
 export function BashTool(props: ToolProps) {
   return (
     <ContentBash
@@ -608,6 +625,7 @@ export function BashTool(props: ToolProps) {
   )
 }
 
+// Glob 工具组件
 export function GlobTool(props: ToolProps) {
   return (
     <>
@@ -619,7 +637,7 @@ export function GlobTool(props: ToolProps) {
         <Match when={props.state.metadata?.count && props.state.metadata?.count > 0}>
           <div data-component="tool-result">
             <ResultsButton
-              showCopy={props.state.metadata?.count === 1 ? "1 result" : `${props.state.metadata?.count} results`}
+              showCopy={props.state.metadata?.count === 1 ? "1 个结果" : `${props.state.metadata?.count} 个结果`}
             >
               <ContentText expand compact text={props.state.output} />
             </ResultsButton>
@@ -633,17 +651,19 @@ export function GlobTool(props: ToolProps) {
   )
 }
 
+// 结果按钮组件属性接口
 interface ResultsButtonProps extends ParentProps {
   showCopy?: string
   hideCopy?: string
 }
+// 结果按钮组件
 function ResultsButton(props: ResultsButtonProps) {
   const [show, setShow] = createSignal(false)
 
   return (
     <>
       <button type="button" data-component="button-text" data-more onClick={() => setShow((e) => !e)}>
-        <span>{show() ? props.hideCopy || "Hide results" : props.showCopy || "Show results"}</span>
+        <span>{show() ? props.hideCopy || "隐藏结果" : props.showCopy || "显示结果"}</span>
         <span data-slot="icon">
           <Show when={show()} fallback={<IconChevronRight width={11} height={11} />}>
             <IconChevronDown width={11} height={11} />
@@ -655,10 +675,12 @@ function ResultsButton(props: ResultsButtonProps) {
   )
 }
 
+// 间隔组件
 export function Spacer() {
   return <div data-component="spacer"></div>
 }
 
+// 页脚组件
 function Footer(props: ParentProps<{ title: string }>) {
   return (
     <div data-component="content-footer" title={props.title}>
@@ -667,19 +689,21 @@ function Footer(props: ParentProps<{ title: string }>) {
   )
 }
 
+// 工具页脚组件
 function ToolFooter(props: { time: number }) {
-  return props.time > MIN_DURATION && <Footer title={`${props.time}ms`}>{formatDuration(props.time)}</Footer>
+  return props.time > MIN_DURATION && <Footer title={`${props.time}毫秒`}>{formatDuration(props.time)}</Footer>
 }
 
+// 任务工具组件
 function TaskTool(props: ToolProps) {
   return (
     <>
       <div data-component="tool-title">
-        <span data-slot="name">Task</span>
+        <span data-slot="name">任务</span>
         <span data-slot="target">{props.state.input.description}</span>
       </div>
       <div data-component="tool-input">&ldquo;{props.state.input.prompt}&rdquo;</div>
-      <ResultsButton showCopy="Show output" hideCopy="Hide output">
+      <ResultsButton showCopy="显示输出" hideCopy="隐藏输出">
         <div data-component="tool-output">
           <ContentMarkdown expand text={props.state.output} />
         </div>
@@ -688,6 +712,7 @@ function TaskTool(props: ToolProps) {
   )
 }
 
+// 回退工具组件
 export function FallbackTool(props: ToolProps) {
   return (
     <>
@@ -718,8 +743,8 @@ export function FallbackTool(props: ToolProps) {
   )
 }
 
-// Converts nested objects/arrays into [path, value] pairs.
-// E.g. {a:{b:{c:1}}, d:[{e:2}, 3]} => [["a.b.c",1], ["d[0].e",2], ["d[1]",3]]
+// 将嵌套的对象/数组转换为 [路径, 值] 对
+// 例如：{a:{b:{c:1}}, d:[{e:2}, 3]} => [["a.b.c",1], ["d[0].e",2], ["d[1]",3]]
 function flattenToolArgs(obj: any, prefix: string = ""): Array<[string, any]> {
   const entries: Array<[string, any]> = []
 
@@ -747,6 +772,7 @@ function flattenToolArgs(obj: any, prefix: string = ""): Array<[string, any]> {
   return entries
 }
 
+// 获取提供商
 function getProvider(model: string) {
   const lowerModel = model.toLowerCase()
 
@@ -758,6 +784,7 @@ function getProvider(model: string) {
   return "any"
 }
 
+// 提供商图标组件
 export function ProviderIcon(props: { model: string; size?: number }) {
   const provider = getProvider(props.model)
   const size = props.size || 16

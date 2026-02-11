@@ -7,7 +7,16 @@ import { KeyTable } from "./schema/key.sql"
 import { UserTable } from "./schema/user.sql"
 import { AuthTable } from "./schema/auth.sql"
 
+/**
+ * API 密钥管理命名空间
+ * 提供密钥列表查询、创建和删除功能
+ */
 export namespace Key {
+  /**
+   * 获取密钥列表
+   * @returns 密钥列表，包含密钥信息
+   * @note 对于非管理员用户，只返回自己的密钥，密钥值会被隐藏
+   */
   export const list = fn(z.void(), async () => {
     const keys = await Database.use((tx) =>
       tx
@@ -33,7 +42,7 @@ export namespace Key {
         )
         .orderBy(sql`${KeyTable.name} DESC`),
     )
-    // only return value for user's keys
+    // 只返回用户自己的密钥值
     return keys.map((key) => ({
       ...key,
       key: key.userID === Actor.userID() ? key.key : undefined,
@@ -41,6 +50,11 @@ export namespace Key {
     }))
   })
 
+  /**
+   * 创建密钥
+   * @param input 输入参数，包含用户 ID 和密钥名称
+   * @returns 创建的密钥 ID
+   */
   export const create = fn(
     z.object({
       userID: z.string(),
@@ -49,7 +63,7 @@ export namespace Key {
     async (input) => {
       const { name } = input
 
-      // Generate secret key: sk- + 64 random characters (upper, lower, numbers)
+      // 生成密钥：sk- + 64 个随机字符（大写、小写、数字）
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
       let secretKey = "sk-"
       const array = new Uint32Array(64)
@@ -74,8 +88,13 @@ export namespace Key {
     },
   )
 
+  /**
+   * 删除密钥
+   * @param input 输入参数，包含密钥 ID
+   * @note 只有管理员可以删除其他用户的密钥
+   */
   export const remove = fn(z.object({ id: z.string() }), async (input) => {
-    // only admin can remove other user's keys
+    // 只有管理员可以删除其他用户的密钥
     await Database.use((tx) =>
       tx
         .update(KeyTable)

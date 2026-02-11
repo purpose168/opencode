@@ -66,21 +66,21 @@ export function SessionContextUsage(props: SessionContextUsageProps) {
           <>
             <div class="flex items-center gap-2">
               <span class="text-text-invert-strong">{ctx().tokens}</span>
-              <span class="text-text-invert-base">Tokens</span>
+              <span class="text-text-invert-base">标记</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-text-invert-strong">{ctx().percentage ?? 0}%</span>
-              <span class="text-text-invert-base">Usage</span>
+              <span class="text-text-invert-base">使用率</span>
             </div>
           </>
         )}
       </Show>
       <div class="flex items-center gap-2">
         <span class="text-text-invert-strong">{cost()}</span>
-        <span class="text-text-invert-base">Cost</span>
+        <span class="text-text-invert-base">成本</span>
       </div>
       <Show when={variant() === "button"}>
-        <div class="text-11-regular text-text-invert-base mt-1">Click to view context</div>
+        <div class="text-11-regular text-text-invert-base mt-1">点击查看上下文</div>
       </Show>
     </div>
   )

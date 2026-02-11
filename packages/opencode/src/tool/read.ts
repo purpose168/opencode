@@ -1,24 +1,27 @@
-import z from "zod"
+import { iife } from "@/util/iife"
 import * as fs from "fs"
 import * as path from "path"
-import { Tool } from "./tool"
-import { LSP } from "../lsp"
+import z from "zod"
 import { FileTime } from "../file/time"
-import DESCRIPTION from "./read.txt"
-import { Filesystem } from "../util/filesystem"
-import { Instance } from "../project/instance"
 import { Identifier } from "../id/id"
-import { iife } from "@/util/iife"
+import { LSP } from "../lsp"
+import { Instance } from "../project/instance"
+import { Filesystem } from "../util/filesystem"
+import DESCRIPTION from "./read.txt"
+import { Tool } from "./tool"
 
+// 默认读取行数限制
 const DEFAULT_READ_LIMIT = 2000
-const MAX_LINE_LENGTH = 2000
+// 每行最大长度限制
+const MAX_LINE_LENGTH = 200
 
+// 定义读取工具，用于读取文件内容
 export const ReadTool = Tool.define("read", {
   description: DESCRIPTION,
   parameters: z.object({
-    filePath: z.string().describe("The path to the file to read"),
-    offset: z.coerce.number().describe("The line number to start reading from (0-based)").optional(),
-    limit: z.coerce.number().describe("The number of lines to read (defaults to 2000)").optional(),
+    filePath: z.string().describe("要读取的文件的路径"),
+    offset: z.coerce.number().describe("开始读取的行号（从0开始）").optional(),
+    limit: z.coerce.number().describe("要读取的行数（默认为2000）").optional(),
   }),
   async execute(params, ctx) {
     let filepath = params.filePath
@@ -27,6 +30,7 @@ export const ReadTool = Tool.define("read", {
     }
     const title = path.relative(Instance.worktree, filepath)
 
+    // 检查是否需要外部目录权限
     if (!ctx.extra?.["bypassCwdCheck"] && !Filesystem.contains(Instance.directory, filepath)) {
       const parentDir = path.dirname(filepath)
       await ctx.ask({
@@ -40,6 +44,7 @@ export const ReadTool = Tool.define("read", {
       })
     }
 
+    // 请求读取权限
     await ctx.ask({
       permission: "read",
       patterns: [filepath],
@@ -47,19 +52,20 @@ export const ReadTool = Tool.define("read", {
       metadata: {},
     })
 
+    // 检查是否应该阻止读取（例如.env文件）
     const block = iife(() => {
       const basename = path.basename(filepath)
       const whitelist = [".env.sample", ".env.example", ".example", ".env.template"]
 
       if (whitelist.some((w) => basename.endsWith(w))) return false
-      // Block .env, .env.local, .env.production, etc. but not .envrc
+      // 阻止.env、.env.local、.env.production等，但不阻止.envrc
       if (/^\.env(\.|$)/.test(basename)) return true
 
       return false
     })
 
     if (block) {
-      throw new Error(`The user has blocked you from reading ${filepath}, DO NOT make further attempts to read it`)
+      throw new Error(`用户已阻止您读取${filepath}，请勿再尝试读取它`)
     }
 
     const file = Bun.file(filepath)
@@ -77,17 +83,18 @@ export const ReadTool = Tool.define("read", {
         .slice(0, 3)
 
       if (suggestions.length > 0) {
-        throw new Error(`File not found: ${filepath}\n\nDid you mean one of these?\n${suggestions.join("\n")}`)
+        throw new Error(`文件未找到：${filepath}\n\n您是指这些文件中的一个吗？\n${suggestions.join("\n")}`)
       }
 
-      throw new Error(`File not found: ${filepath}`)
+      throw new Error(`文件未找到：${filepath}`)
     }
 
+    // 检查是否为图片或PDF文件
     const isImage = file.type.startsWith("image/") && file.type !== "image/svg+xml"
     const isPdf = file.type === "application/pdf"
     if (isImage || isPdf) {
       const mime = file.type
-      const msg = `${isImage ? "Image" : "PDF"} read successfully`
+      const msg = `${isImage ? "图片" : "PDF"}读取成功`
       return {
         title,
         output: msg,
@@ -107,9 +114,11 @@ export const ReadTool = Tool.define("read", {
       }
     }
 
+    // 检查是否为二进制文件
     const isBinary = await isBinaryFile(filepath, file)
-    if (isBinary) throw new Error(`Cannot read binary file: ${filepath}`)
+    if (isBinary) throw new Error(`无法读取二进制文件：${filepath}`)
 
+    // 读取文件内容
     const limit = params.limit ?? DEFAULT_READ_LIMIT
     const offset = params.offset || 0
     const lines = await file.text().then((text) => text.split("\n"))
@@ -121,6 +130,7 @@ export const ReadTool = Tool.define("read", {
     })
     const preview = raw.slice(0, 20).join("\n")
 
+    // 构建输出
     let output = "<file>\n"
     output += content.join("\n")
 
@@ -129,13 +139,13 @@ export const ReadTool = Tool.define("read", {
     const hasMoreLines = totalLines > lastReadLine
 
     if (hasMoreLines) {
-      output += `\n\n(File has more lines. Use 'offset' parameter to read beyond line ${lastReadLine})`
+      output += `\n\n（文件还有更多行。使用'offset'参数读取第${lastReadLine}行之后的内容）`
     } else {
-      output += `\n\n(End of file - total ${totalLines} lines)`
+      output += `\n\n（文件结束 - 共${totalLines}行）`
     }
     output += "\n</file>"
 
-    // just warms the lsp client
+    // 通知LSP客户端
     LSP.touchFile(filepath, false)
     FileTime.read(ctx.sessionID, filepath)
 
@@ -149,9 +159,10 @@ export const ReadTool = Tool.define("read", {
   },
 })
 
+// 检查文件是否为二进制文件
 async function isBinaryFile(filepath: string, file: Bun.BunFile): Promise<boolean> {
   const ext = path.extname(filepath).toLowerCase()
-  // binary check for common non-text extensions
+  // 常见非文本扩展名的二进制检查
   switch (ext) {
     case ".zip":
     case ".tar":
@@ -202,6 +213,6 @@ async function isBinaryFile(filepath: string, file: Bun.BunFile): Promise<boolea
       nonPrintableCount++
     }
   }
-  // If >30% non-printable characters, consider it binary
+  // 如果>30%的不可打印字符，则认为是二进制文件
   return nonPrintableCount / bytes.length > 0.3
 }

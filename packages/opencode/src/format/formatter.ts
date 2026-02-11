@@ -1,17 +1,19 @@
-import { readableStreamToText } from "bun"
-import { BunProc } from "../bun"
-import { Instance } from "../project/instance"
-import { Filesystem } from "../util/filesystem"
-import { Flag } from "@/flag/flag"
+import { Flag } from "@/flag/flag" // 导入标志工具
+import { readableStreamToText } from "bun" // 导入可读流转文本工具
+import { BunProc } from "../bun" // 导入Bun进程工具
+import { Instance } from "../project/instance" // 导入实例管理模块
+import { Filesystem } from "../util/filesystem" // 导入文件系统工具
 
+// 格式化工具信息接口
 export interface Info {
-  name: string
-  command: string[]
-  environment?: Record<string, string>
-  extensions: string[]
-  enabled(): Promise<boolean>
+  name: string // 格式化工具名称
+  command: string[] // 格式化命令
+  environment?: Record<string, string> // 环境变量
+  extensions: string[] // 支持的文件扩展名
+  enabled(): Promise<boolean> // 是否启用的检查函数
 }
 
+// Go语言格式化工具
 export const gofmt: Info = {
   name: "gofmt",
   command: ["gofmt", "-w", "$FILE"],
@@ -21,6 +23,7 @@ export const gofmt: Info = {
   },
 }
 
+// Elixir语言格式化工具
 export const mix: Info = {
   name: "mix",
   command: ["mix", "format", "$FILE"],
@@ -30,6 +33,7 @@ export const mix: Info = {
   },
 }
 
+// Prettier通用格式化工具
 export const prettier: Info = {
   name: "prettier",
   command: [BunProc.which(), "x", "prettier", "--write", "$FILE"],
@@ -75,6 +79,7 @@ export const prettier: Info = {
   },
 }
 
+// Oxfmt JavaScript/TypeScript格式化工具
 export const oxfmt: Info = {
   name: "oxfmt",
   command: [BunProc.which(), "x", "oxfmt", "$FILE"],
@@ -94,6 +99,7 @@ export const oxfmt: Info = {
   },
 }
 
+// Biome JavaScript/TypeScript格式化工具
 export const biome: Info = {
   name: "biome",
   command: [BunProc.which(), "x", "@biomejs/biome", "format", "--write", "$FILE"],
@@ -140,6 +146,7 @@ export const biome: Info = {
   },
 }
 
+// Zig语言格式化工具
 export const zig: Info = {
   name: "zig",
   command: ["zig", "fmt", "$FILE"],
@@ -149,6 +156,7 @@ export const zig: Info = {
   },
 }
 
+// C/C++语言格式化工具
 export const clang: Info = {
   name: "clang-format",
   command: ["clang-format", "-i", "$FILE"],
@@ -159,6 +167,7 @@ export const clang: Info = {
   },
 }
 
+// Kotlin语言格式化工具
 export const ktlint: Info = {
   name: "ktlint",
   command: ["ktlint", "-F", "$FILE"],
@@ -168,6 +177,7 @@ export const ktlint: Info = {
   },
 }
 
+// Python语言格式化工具
 export const ruff: Info = {
   name: "ruff",
   command: ["ruff", "format", "$FILE"],
@@ -198,6 +208,7 @@ export const ruff: Info = {
   },
 }
 
+// R语言格式化工具
 export const rlang: Info = {
   name: "air",
   command: ["air", "format", "$FILE"],
@@ -214,7 +225,7 @@ export const rlang: Info = {
       await proc.exited
       const output = await readableStreamToText(proc.stdout)
 
-      // Check for "Air: An R language server and formatter"
+      // 检查是否包含"Air: An R language server and formatter"
       const firstLine = output.split("\n")[0]
       const hasR = firstLine.includes("R language")
       const hasFormatter = firstLine.includes("formatter")
@@ -225,6 +236,7 @@ export const rlang: Info = {
   },
 }
 
+// Python语言格式化工具(uv)
 export const uvformat: Info = {
   name: "uv format",
   command: ["uv", "format", "--", "$FILE"],
@@ -240,6 +252,7 @@ export const uvformat: Info = {
   },
 }
 
+// Ruby语言格式化工具
 export const rubocop: Info = {
   name: "rubocop",
   command: ["rubocop", "--autocorrect", "$FILE"],
@@ -249,6 +262,7 @@ export const rubocop: Info = {
   },
 }
 
+// Ruby语言格式化工具(standardrb)
 export const standardrb: Info = {
   name: "standardrb",
   command: ["standardrb", "--fix", "$FILE"],
@@ -258,6 +272,7 @@ export const standardrb: Info = {
   },
 }
 
+// HTML/ERB格式化工具
 export const htmlbeautifier: Info = {
   name: "htmlbeautifier",
   command: ["htmlbeautifier", "$FILE"],
@@ -267,6 +282,7 @@ export const htmlbeautifier: Info = {
   },
 }
 
+// Dart语言格式化工具
 export const dart: Info = {
   name: "dart",
   command: ["dart", "format", "$FILE"],
@@ -276,6 +292,7 @@ export const dart: Info = {
   },
 }
 
+// OCaml语言格式化工具
 export const ocamlformat: Info = {
   name: "ocamlformat",
   command: ["ocamlformat", "-i", "$FILE"],
@@ -287,6 +304,7 @@ export const ocamlformat: Info = {
   },
 }
 
+// Terraform语言格式化工具
 export const terraform: Info = {
   name: "terraform",
   command: ["terraform", "fmt", "$FILE"],
@@ -296,6 +314,7 @@ export const terraform: Info = {
   },
 }
 
+// LaTeX格式化工具
 export const latexindent: Info = {
   name: "latexindent",
   command: ["latexindent", "-w", "-s", "$FILE"],
@@ -305,6 +324,7 @@ export const latexindent: Info = {
   },
 }
 
+// Gleam语言格式化工具
 export const gleam: Info = {
   name: "gleam",
   command: ["gleam", "format", "$FILE"],
@@ -314,6 +334,7 @@ export const gleam: Info = {
   },
 }
 
+// Shell脚本格式化工具
 export const shfmt: Info = {
   name: "shfmt",
   command: ["shfmt", "-w", "$FILE"],
@@ -323,6 +344,7 @@ export const shfmt: Info = {
   },
 }
 
+// Nix语言格式化工具
 export const nixfmt: Info = {
   name: "nixfmt",
   command: ["nixfmt", "$FILE"],
@@ -332,6 +354,7 @@ export const nixfmt: Info = {
   },
 }
 
+// Rust语言格式化工具
 export const rustfmt: Info = {
   name: "rustfmt",
   command: ["rustfmt", "$FILE"],

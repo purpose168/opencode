@@ -1,13 +1,19 @@
 import { JSX, Show } from "solid-js"
 import "./modal.css"
 
+/**
+ * 模态框组件属性接口
+ */
 interface ModalProps {
-  open: boolean
-  onClose: () => void
-  title?: string
-  children: JSX.Element
+  open: boolean         // 是否打开
+  onClose: () => void   // 关闭回调
+  title?: string        // 标题（可选）
+  children: JSX.Element  // 内容
 }
 
+/**
+ * 模态框组件
+ */
 export function Modal(props: ModalProps) {
   return (
     <Show when={props.open}>

@@ -1,9 +1,16 @@
+/*
+ * 差异变化组件样式
+ * 定义差异变化组件的基础样式和条形图变体样式
+ */
+
+/* 差异变化组件容器样式 */
 [data-component="diff-changes"] {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   align-items: center;
 
+  /* 添加变化样式 */
   [data-slot="diff-changes-additions"] {
     font-family: var(--font-family-mono);
     font-feature-settings: var(--font-family-mono--font-feature-settings);
@@ -16,6 +23,7 @@
     color: var(--text-diff-add-base);
   }
 
+  /* 删除变化样式 */
   [data-slot="diff-changes-deletions"] {
     font-family: var(--font-family-mono);
     font-feature-settings: var(--font-family-mono--font-feature-settings);
@@ -29,6 +37,7 @@
   }
 }
 
+/* 条形图变体样式 */
 [data-component="diff-changes"][data-variant="bars"] {
   width: 18px;
   flex-shrink: 0;

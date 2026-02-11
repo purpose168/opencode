@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="background-color: var(--background-base)">
+<html lang="zh-CN" style="background-color: var(--background-base)">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,22 +13,31 @@
     <meta name="theme-color" content="#131010" media="(prefers-color-scheme: dark)" />
     <meta property="og:image" content="/social-share.png" />
     <meta property="twitter:image" content="/social-share.png" />
-    <!-- Theme preload script - applies cached theme to avoid FOUC -->
+    <!-- 主题预加载脚本 - 应用缓存的主题以避免 FOUC (Flash of Unstyled Content) -->
     <script id="oc-theme-preload-script">
       ;(function () {
+        // 获取存储的主题 ID
         var themeId = localStorage.getItem("opencode-theme-id")
+        // 如果没有主题 ID，则退出
         if (!themeId) return
 
+        // 获取存储的颜色方案，默认为 "system"
         var scheme = localStorage.getItem("opencode-color-scheme") || "system"
+        // 确定是否使用深色模式
         var isDark = scheme === "dark" || (scheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
+        // 设置模式变量
         var mode = isDark ? "dark" : "light"
 
+        // 将主题和颜色方案应用到文档根元素
         document.documentElement.dataset.theme = themeId
         document.documentElement.dataset.colorScheme = mode
 
+        // 如果是默认主题 "oc-1"，则退出
         if (themeId === "oc-1") return
 
+        // 获取存储的主题 CSS
         var css = localStorage.getItem("opencode-theme-css-" + themeId + "-" + mode)
+        // 如果有存储的 CSS，则创建并添加样式元素
         if (css) {
           var style = document.createElement("style")
           style.id = "oc-theme-preload"
@@ -46,7 +55,7 @@
     </script>
   </head>
   <body class="antialiased overscroll-none text-12-regular overflow-hidden">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>您需要启用 JavaScript 来运行此应用。</noscript>
     <div id="root" class="flex flex-col h-screen"></div>
     <script src="/src/index.tsx" type="module"></script>
   </body>

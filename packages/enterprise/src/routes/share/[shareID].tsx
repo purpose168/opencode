@@ -28,8 +28,19 @@ import { type IconName } from "@opencode-ai/ui/icons/provider"
 import { Meta, Title } from "@solidjs/meta"
 import { Base64 } from "js-base64"
 
+/**
+ * 客户端差异比较组件
+ */
 const ClientOnlyDiff = clientOnly(() => import("@opencode-ai/ui/diff").then((m) => ({ default: m.Diff })))
+
+/**
+ * 客户端代码组件
+ */
 const ClientOnlyCode = clientOnly(() => import("@opencode-ai/ui/code").then((m) => ({ default: m.Code })))
+
+/**
+ * 客户端工作池提供者
+ */
 const ClientOnlyWorkerPoolProvider = clientOnly(() =>
   import("@opencode-ai/ui/pierre/worker").then((m) => ({
     default: (props: { children: any }) => (
@@ -38,6 +49,9 @@ const ClientOnlyWorkerPoolProvider = clientOnly(() =>
   })),
 )
 
+/**
+ * 会话数据缺失错误
+ */
 const SessionDataMissingError = NamedError.create(
   "SessionDataMissingError",
   z.object({
@@ -46,6 +60,11 @@ const SessionDataMissingError = NamedError.create(
   }),
 )
 
+/**
+ * 获取分享数据
+ * @param shareID 分享ID
+ * @returns 分享数据
+ */
 const getData = query(async (shareID) => {
   "use server"
   const share = await Share.get(shareID)
@@ -146,10 +165,13 @@ const getData = query(async (shareID) => {
   return result
 }, "getShareData")
 
+/**
+ * 分享页面组件
+ */
 export default function () {
   const params = useParams()
   const data = createAsync(async () => {
-    if (!params.shareID) throw new Error("Missing shareID")
+    if (!params.shareID) throw new Error("缺少shareID")
     const now = Date.now()
     const data = getData(params.shareID)
     console.log("getData", Date.now() - now)
@@ -170,8 +192,8 @@ export default function () {
         const details = error instanceof Error ? (error.stack ?? error.message) : String(error)
         return (
           <div class="min-h-screen w-full bg-background-base text-text-base flex flex-col items-center justify-center gap-4 p-6 text-center">
-            <p class="text-16-medium">Unable to render this share.</p>
-            <p class="text-14-regular text-text-weaker">Check the console for more details.</p>
+            <p class="text-16-medium">无法渲染此分享。</p>
+            <p class="text-14-regular text-text-weaker">请查看控制台获取更多详情。</p>
             <pre class="text-12-mono text-left whitespace-pre-wrap break-words w-full max-w-200 bg-background-stronger rounded-md p-4">
               {details}
             </pre>
@@ -183,7 +205,7 @@ export default function () {
       <Show when={data()}>
         {(data) => {
           const match = createMemo(() => Binary.search(data().session, data().sessionID, (s) => s.id))
-          if (!match().found) throw new Error(`Session ${data().sessionID} not found`)
+          if (!match().found) throw new Error(`会话 ${data().sessionID} 未找到`)
           const info = createMemo(() => data().session[match().index])
           const ogImage = createMemo(() => {
             const models = new Set<string>()
@@ -214,7 +236,7 @@ export default function () {
               <Show when={info().title}>
                 <Title>{info().title} | OpenCode</Title>
               </Show>
-              <Meta name="description" content="opencode - The AI coding agent built for the terminal." />
+              <Meta name="description" content="opencode - 为终端构建的AI编码助手。" />
               <Meta property="og:image" content={ogImage()} />
               <Meta name="twitter:image" content={ogImage()} />
               <ClientOnlyWorkerPoolProvider>
@@ -264,6 +286,9 @@ export default function () {
                           }))
                         })
 
+                        /**
+                         * 生成标题组件
+                         */
                         const title = () => (
                           <div class="flex flex-col gap-4">
                             <div class="flex flex-col gap-2 sm:flex-row sm:gap-4 sm:items-center sm:h-8 justify-start self-stretch">
@@ -288,6 +313,9 @@ export default function () {
                           </div>
                         )
 
+                        /**
+                         * 生成会话轮次组件
+                         */
                         const turns = () => (
                           <div class="relative mt-2 pb-8 min-w-0 w-full h-full overflow-y-auto no-scrollbar">
                             <div class="px-4 py-6">{title()}</div>
@@ -434,14 +462,14 @@ export default function () {
                                   <Tabs classList={{ "md:hidden": wide(), "lg:hidden": !wide() }}>
                                     <Tabs.List>
                                       <Tabs.Trigger value="session" class="w-1/2" classes={{ button: "w-full" }}>
-                                        Session
+                                        会话
                                       </Tabs.Trigger>
                                       <Tabs.Trigger
                                         value="review"
                                         class="w-1/2 !border-r-0"
                                         classes={{ button: "w-full" }}
                                       >
-                                        {diffs().length} Files Changed
+                                        {diffs().length} 个文件已更改
                                       </Tabs.Trigger>
                                     </Tabs.List>
                                     <Tabs.Content value="session" class="!overflow-hidden">

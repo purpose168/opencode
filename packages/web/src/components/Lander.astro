@@ -9,9 +9,11 @@ import TuiScreenshot from "../assets/lander/screenshot-splash.png";
 import VscodeScreenshot from "../assets/lander/screenshot-vscode.png";
 import GithubScreenshot from "../assets/lander/screenshot-github.png";
 
+// 获取页面数据
 const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline, image, actions = [] } = data.hero || {};
 
+// 图片属性配置
 const imageAttrs = {
     loading: 'eager' as const,
     decoding: 'async' as const,
@@ -19,14 +21,17 @@ const imageAttrs = {
     alt: image?.alt || '',
 };
 
+// 获取社交链接
 const github = config.social.filter(s => s.icon === 'github')[0];
 const discord = config.social.filter(s => s.icon === 'discord')[0];
 
+// 安装命令配置
 const command = "curl -fsSL"
 const protocol = "https://"
 const url = "opencode.ai/install"
 const bash = "| bash"
 
+// 图片配置
 let darkImage: ImageMetadata | undefined;
 let lightImage: ImageMetadata | undefined;
 let rawHtml: string | undefined;
@@ -51,12 +56,12 @@ if (image) {
         />
         <Image src={lightImage} {...imageAttrs} class="dark:sl-hidden" />
       </div>
-      <h1>The AI coding agent built for the terminal.</h1>
+      <h1>为终端构建的 AI 编程智能体。</h1>
     </section>
 
     <section class="cta">
       <div class="col1">
-        <a href="/docs">Get Started</a>
+        <a href="/docs">开始使用</a>
       </div>
       <div class="col2">
       <button class="command" data-command={`${command} ${protocol}${url} ${bash}`}>
@@ -73,12 +78,12 @@ if (image) {
 
     <section class="content">
       <ul>
-        <li><b>Native TUI</b>: A responsive, native, themeable terminal UI.</li>
-        <li><b>LSP enabled</b>: Automatically loads the right LSPs for the LLM.</li>
-        <li><b>Multi-session</b>: Start multiple agents in parallel on the same project.</li>
-        <li><b>Shareable links</b>: Share a link to any sessions for reference or to debug.</li>
-        <li><b>Claude Pro</b>: Log in with Anthropic to use your Claude Pro or Max account.</li>
-        <li><b>Use any model</b>: Supports 75+ LLM providers through <a href="https://models.dev">Models.dev</a>, including local models.</li>
+        <li><b>原生 TUI</b>：响应式、原生、可主题化的终端界面。</li>
+        <li><b>启用 LSP</b>：自动为 LLM 加载正确的 LSP。</li>
+        <li><b>多会话</b>：在同一项目上并行启动多个智能体。</li>
+        <li><b>可分享链接</b>：分享任何会话的链接以供参考或调试。</li>
+        <li><b>Claude Pro</b>：使用 Anthropic 登录以使用您的 Claude Pro 或 Max 账户。</li>
+        <li><b>使用任何模型</b>：通过 <a href="https://models.dev">Models.dev</a> 支持 75+ 个 LLM 提供商，包括本地模型。</li>
       </ul>
     </section>
 
@@ -148,26 +153,26 @@ if (image) {
     <section class="images">
       <div class="left">
         <figure>
-          <figcaption>opencode TUI with the tokyonight theme</figcaption>
+          <figcaption>使用 tokyonight 主题的 opencode TUI</figcaption>
           <a href="/docs/cli">
-            <Image src={TuiScreenshot} alt="opencode TUI with the tokyonight theme" />
+            <Image src={TuiScreenshot} alt="使用 tokyonight 主题的 opencode TUI" />
           </a>
         </figure>
       </div>
       <div class="right">
         <div class="row1">
           <figure>
-            <figcaption>opencode in VS Code</figcaption>
+            <figcaption>VS Code 中的 opencode</figcaption>
             <a href="/docs/ide">
-              <Image src={VscodeScreenshot} alt="opencode in VS Code" />
+              <Image src={VscodeScreenshot} alt="VS Code 中的 opencode" />
             </a>
           </figure>
         </div>
         <div class="row2">
           <figure>
-            <figcaption>opencode in GitHub</figcaption>
+            <figcaption>GitHub 中的 opencode</figcaption>
             <a href="/docs/github">
-              <Image src={GithubScreenshot} alt="opencode in GitHub" />
+              <Image src={GithubScreenshot} alt="GitHub 中的 opencode" />
             </a>
           </figure>
         </div>
@@ -188,6 +193,7 @@ if (image) {
 </div>
 
 <style>
+/* 英雄区域样式配置 */
 .hero {
   --padding: 3rem;
   --vertical-padding: 1.5rem;
@@ -206,6 +212,7 @@ if (image) {
   }
 }
 
+/* 顶部区域样式 */
 section.top {
   padding: var(--padding);
 
@@ -222,6 +229,7 @@ section.top {
   }
 }
 
+/* 行动号召区域样式 */
 section.cta {
   display: flex;
   flex-direction: row;
@@ -265,6 +273,7 @@ section.cta {
     }
   }
 
+  /* 命令按钮样式 */
   .command {
     all: unset;
     display: flex;
@@ -329,6 +338,7 @@ section.cta {
   }
 }
 
+/* 内容区域样式 */
 section.content {
   border-top: 2px solid var(--sl-color-border);
   padding: var(--padding);
@@ -346,6 +356,7 @@ section.content {
   }
 }
 
+/* 图片区域样式 */
 section.images {
   --images-height: 600px;
   display: grid;
@@ -489,6 +500,7 @@ section.images {
   }
 }
 
+/* 替代安装方式区域样式 */
 section.alternatives {
   border-top: 2px solid var(--sl-color-border);
   display: grid;
@@ -562,6 +574,7 @@ section.alternatives {
     }
   }
 
+  /* 命令按钮样式 */
   .command {
     all: unset;
     display: flex;
@@ -631,6 +644,7 @@ section.alternatives {
   }
 }
 
+/* 页脚区域样式 */
 section.footer {
   border-top: 2px solid var(--sl-color-border);
   display: flex;
@@ -647,7 +661,7 @@ section.footer {
     border-left: 2px solid var(--sl-color-border);
   }
 
-  /* Below 800px: first two columns shrink to content, third expands */
+  /* 800px 以下：前两列缩小到内容大小，第三列扩展 */
   @media (max-width: 50rem) {
     & > div.col1,
     & > div.col2 {
@@ -661,7 +675,7 @@ section.footer {
     }
   }
 
-  /* Mobile: third column on its own row */
+  /* 移动端：第三列单独占一行 */
   @media (max-width: 30rem) {
     flex-wrap: wrap;
 
@@ -680,6 +694,7 @@ section.footer {
 </style>
 
 <style is:global>
+/* 全局样式：当页面有英雄区域时隐藏默认头部 */
 :root[data-has-hero] {
   header.header {
     display: none;
@@ -698,12 +713,17 @@ section.footer {
 </style>
 
 <script>
+  /* 获取所有命令按钮元素 */
   const buttons = document.querySelectorAll("button.command") as NodeListOf<HTMLButtonElement>
 
+  /* 为每个按钮添加点击事件监听器 */
   buttons.forEach(button => {
     button.addEventListener("click", () => {
+      /* 将命令复制到剪贴板 */
       navigator.clipboard.writeText(button.dataset.command!)
+      /* 切换成功状态类 */
       button.classList.toggle("success")
+      /* 1.5秒后移除成功状态 */
       setTimeout(() => {
         button.classList.toggle("success");
       }, 1500)

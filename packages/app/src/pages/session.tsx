@@ -145,7 +145,7 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
             <Select
               options={sessions()}
               current={currentSession()}
-              placeholder="New session"
+              placeholder="新会话"
               label={(x) => x.title}
               value={(x) => x.id}
               onSelect={navigateToSession}
@@ -154,7 +154,7 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
             />
           </div>
           <Show when={currentSession()}>
-            <TooltipKeybind class="hidden xl:block" title="New session" keybind={command.keybind("session.new")}>
+            <TooltipKeybind class="hidden xl:block" title="新建会话" keybind={command.keybind("session.new")}>
               <IconButton as={A} href={`/${params.dir}/session`} icon="edit-small-2" variant="ghost" />
             </TooltipKeybind>
           </Show>
@@ -186,7 +186,7 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
             <Show when={currentSession()?.summary?.files}>
               <TooltipKeybind
                 class="hidden md:block shrink-0"
-                title="Toggle review"
+                title="切换审查"
                 keybind={command.keybind("review.toggle")}
               >
                 <Button variant="ghost" class="group/review-toggle size-6 p-0" onClick={layout.review.toggle}>
@@ -212,7 +212,7 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
             </Show>
             <TooltipKeybind
               class="hidden md:block shrink-0"
-              title="Toggle terminal"
+              title="切换终端"
               keybind={command.keybind("terminal.toggle")}
             >
               <Button variant="ghost" class="group/terminal-toggle size-6 p-0" onClick={layout.terminal.toggle}>
@@ -238,9 +238,9 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
           </div>
           <Show when={shareEnabled() && currentSession()}>
             <Popover
-              title="Share session"
+              title="分享会话"
               trigger={
-                <Tooltip class="shrink-0" value="Share session">
+                <Tooltip class="shrink-0" value="分享会话">
                   <IconButton icon="share" variant="ghost" class="" />
                 </Tooltip>
               }
@@ -256,7 +256,7 @@ function Header(props: { onMobileMenuToggle?: () => void }) {
                         .share({ sessionID: session.id, directory: sync.directory })
                         .then((r) => r.data?.share?.url)
                         .catch((e) => {
-                          console.error("Failed to share session", e)
+                          console.error("分享会话失败", e)
                           return undefined
                         })
                     }
@@ -436,44 +436,44 @@ export default function Page() {
   command.register(() => [
     {
       id: "session.new",
-      title: "New session",
-      description: "Create a new session",
-      category: "Session",
+      title: "新建会话",
+      description: "创建新会话",
+      category: "会话",
       keybind: "mod+shift+s",
       slash: "new",
       onSelect: () => navigate(`/${params.dir}/session`),
     },
     {
       id: "file.open",
-      title: "Open file",
-      description: "Search and open a file",
-      category: "File",
+      title: "打开文件",
+      description: "搜索并打开文件",
+      category: "文件",
       keybind: "mod+p",
       slash: "open",
       onSelect: () => dialog.show(() => <DialogSelectFile />),
     },
     {
       id: "terminal.toggle",
-      title: "Toggle terminal",
-      description: "Show or hide the terminal",
-      category: "View",
+      title: "切换终端",
+      description: "显示或隐藏终端",
+      category: "视图",
       keybind: "ctrl+`",
       slash: "terminal",
       onSelect: () => layout.terminal.toggle(),
     },
     {
       id: "review.toggle",
-      title: "Toggle review",
-      description: "Show or hide the review panel",
-      category: "View",
+      title: "切换审查",
+      description: "显示或隐藏审查面板",
+      category: "视图",
       keybind: "mod+shift+r",
       onSelect: () => layout.review.toggle(),
     },
     {
       id: "terminal.new",
-      title: "New terminal",
-      description: "Create a new terminal tab",
-      category: "Terminal",
+      title: "新建终端",
+      description: "创建新终端标签",
+      category: "终端",
       keybind: "ctrl+shift+`",
       onSelect: () => terminal.new(),
     },

@@ -1,3 +1,8 @@
+/**
+ * 头像组件样式
+ * 定义了头像的基本样式、尺寸和状态
+ */
+
 [data-component="avatar"] {
   --avatar-bg: var(--color-surface-info-base);
   --avatar-fg: var(--color-text-base);
@@ -14,11 +19,13 @@
   color: var(--avatar-fg);
 }
 
+/* 当头像有图片时的样式 */
 [data-component="avatar"][data-has-image] {
   background-color: transparent;
   border: none;
 }
 
+/* 小尺寸头像样式 */
 [data-component="avatar"][data-size="small"] {
   width: 1.25rem;
   height: 1.25rem;
@@ -26,6 +33,7 @@
   line-height: 1;
 }
 
+/* 正常尺寸头像样式 */
 [data-component="avatar"][data-size="normal"] {
   width: 1.5rem;
   height: 1.5rem;
@@ -33,6 +41,7 @@
   line-height: 1.5rem;
 }
 
+/* 大尺寸头像样式 */
 [data-component="avatar"][data-size="large"] {
   width: 2rem;
   height: 2rem;

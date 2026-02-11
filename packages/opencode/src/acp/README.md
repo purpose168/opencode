@@ -1,50 +1,50 @@
-# ACP (Agent Client Protocol) Implementation
+# ACP (智能体客户端协议) 实现
 
-This directory contains a clean, protocol-compliant implementation of the [Agent Client Protocol](https://agentclientprotocol.com/) for opencode.
+此目录包含一个干净、符合协议规范的 [智能体客户端协议](https://agentclientprotocol.com/) 实现，用于 opencode。
 
-## Architecture
+## 架构
 
-The implementation follows a clean separation of concerns:
+该实现遵循清晰的关注点分离原则：
 
-### Core Components
+### 核心组件
 
-- **`agent.ts`** - Implements the `Agent` interface from `@agentclientprotocol/sdk`
-  - Handles initialization and capability negotiation
-  - Manages session lifecycle (`session/new`, `session/load`)
-  - Processes prompts and returns responses
-  - Properly implements ACP protocol v1
+- **`agent.ts`** - 实现 `@agentclientprotocol/sdk` 中的 `Agent` 接口
+  - 处理初始化和能力协商
+  - 管理会话生命周期（`session/new`、`session/load`）
+  - 处理提示并返回响应
+  - 正确实现 ACP 协议 v1
 
-- **`client.ts`** - Implements the `Client` interface for client-side capabilities
-  - File operations (`readTextFile`, `writeTextFile`)
-  - Permission requests (auto-approves for now)
-  - Terminal support (stub implementation)
+- **`client.ts`** - 实现客户端能力的 `Client` 接口
+  - 文件操作（`readTextFile`、`writeTextFile`）
+  - 权限请求（目前自动批准）
+  - 终端支持（存根实现）
 
-- **`session.ts`** - Session state management
-  - Creates and tracks ACP sessions
-  - Maps ACP sessions to internal opencode sessions
-  - Maintains working directory context
-  - Handles MCP server configurations
+- **`session.ts`** - 会话状态管理
+  - 创建和跟踪 ACP 会话
+  - 将 ACP 会话映射到内部 opencode 会话
+  - 维护工作目录上下文
+  - 处理 MCP 服务器配置
 
-- **`server.ts`** - ACP server startup and lifecycle
-  - Sets up JSON-RPC over stdio using the official library
-  - Manages graceful shutdown on SIGTERM/SIGINT
-  - Provides Instance context for the agent
+- **`server.ts`** - ACP 服务器启动和生命周期管理
+  - 使用官方库设置基于标准输入输出的 JSON-RPC
+  - 管理 SIGTERM/SIGINT 信号的优雅关闭
+  - 为智能体提供实例上下文
 
-- **`types.ts`** - Type definitions for internal use
+- **`types.ts`** - 内部使用的类型定义
 
-## Usage
+## 使用方法
 
-### Command Line
+### 命令行
 
 ```bash
-# Start the ACP server in the current directory
+# 在当前目录启动 ACP 服务器
 opencode acp
 
-# Start in a specific directory
+# 在特定目录启动
 opencode acp --cwd /path/to/project
 ```
 
-### Programmatic
+### 程序化使用
 
 ```typescript
 import { ACPServer } from "./acp/server"
@@ -52,9 +52,9 @@ import { ACPServer } from "./acp/server"
 await ACPServer.start()
 ```
 
-### Integration with Zed
+### 与 Zed 集成
 
-Add to your Zed configuration (`~/.config/zed/settings.json`):
+添加到您的 Zed 配置文件（`~/.config/zed/settings.json`）：
 
 ```json
 {
@@ -67,98 +67,98 @@ Add to your Zed configuration (`~/.config/zed/settings.json`):
 }
 ```
 
-## Protocol Compliance
+## 协议合规性
 
-This implementation follows the ACP specification v1:
+此实现遵循 ACP 规范 v1：
 
-✅ **Initialization**
+✅ **初始化**
 
-- Proper `initialize` request/response with protocol version negotiation
-- Capability advertisement (`agentCapabilities`)
-- Authentication support (stub)
+- 正确的 `initialize` 请求/响应和协议版本协商
+- 能力广告（`agentCapabilities`）
+- 认证支持（存根）
 
-✅ **Session Management**
+✅ **会话管理**
 
-- `session/new` - Create new conversation sessions
-- `session/load` - Resume existing sessions (basic support)
-- Working directory context (`cwd`)
-- MCP server configuration support
+- `session/new` - 创建新的对话会话
+- `session/load` - 恢复现有会话（基本支持）
+- 工作目录上下文（`cwd`）
+- MCP 服务器配置支持
 
-✅ **Prompting**
+✅ **提示处理**
 
-- `session/prompt` - Process user messages
-- Content block handling (text, resources)
-- Response with stop reasons
+- `session/prompt` - 处理用户消息
+- 内容块处理（文本、资源）
+- 带停止原因的响应
 
-✅ **Client Capabilities**
+✅ **客户端能力**
 
-- File read/write operations
-- Permission requests
-- Terminal support (stub for future)
+- 文件读写操作
+- 权限请求
+- 终端支持（未来的存根）
 
-## Current Limitations
+## 当前限制
 
-### Not Yet Implemented
+### 尚未实现
 
-1. **Streaming Responses** - Currently returns complete responses instead of streaming via `session/update` notifications
-2. **Tool Call Reporting** - Doesn't report tool execution progress
-3. **Session Modes** - No mode switching support yet
-4. **Authentication** - No actual auth implementation
-5. **Terminal Support** - Placeholder only
-6. **Session Persistence** - `session/load` doesn't restore actual conversation history
+1. **流式响应** - 目前返回完整响应，而不是通过 `session/update` 通知进行流式传输
+2. **工具调用报告** - 不报告工具执行进度
+3. **会话模式** - 尚未支持模式切换
+4. **认证** - 没有实际的认证实现
+5. **终端支持** - 仅占位符
+6. **会话持久性** - `session/load` 不恢复实际对话历史
 
-### Future Enhancements
+### 未来增强
 
-- **Real-time Streaming**: Implement `session/update` notifications for progressive responses
-- **Tool Call Visibility**: Report tool executions as they happen
-- **Session Persistence**: Save and restore full conversation history
-- **Mode Support**: Implement different operational modes (ask, code, etc.)
-- **Enhanced Permissions**: More sophisticated permission handling
-- **Terminal Integration**: Full terminal support via opencode's bash tool
+- **实时流式传输**：实现 `session/update` 通知以获取渐进式响应
+- **工具调用可见性**：实时报告工具执行情况
+- **会话持久性**：保存和恢复完整对话历史
+- **模式支持**：实现不同的操作模式（询问、代码等）
+- **增强权限**：更复杂的权限处理
+- **终端集成**：通过 opencode 的 bash 工具提供完整的终端支持
 
-## Testing
+## 测试
 
 ```bash
-# Run ACP tests
+# 运行 ACP 测试
 bun test test/acp.test.ts
 
-# Test manually with stdio
+# 使用标准输入输出手动测试
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1}}' | opencode acp
 ```
 
-## Design Decisions
+## 设计决策
 
-### Why the Official Library?
+### 为什么使用官方库？
 
-We use `@agentclientprotocol/sdk` instead of implementing JSON-RPC ourselves because:
+我们使用 `@agentclientprotocol/sdk` 而不是自己实现 JSON-RPC，因为：
 
-- Ensures protocol compliance
-- Handles edge cases and future protocol versions
-- Reduces maintenance burden
-- Works with other ACP clients automatically
+- 确保协议合规性
+- 处理边缘情况和未来的协议版本
+- 减少维护负担
+- 自动与其他 ACP 客户端配合使用
 
-### Clean Architecture
+### 干净的架构
 
-Each component has a single responsibility:
+每个组件都有单一职责：
 
-- **Agent** = Protocol interface
-- **Client** = Client-side operations
-- **Session** = State management
-- **Server** = Lifecycle and I/O
+- **智能体** = 协议接口
+- **客户端** = 客户端操作
+- **会话** = 状态管理
+- **服务器** = 生命周期和 I/O
 
-This makes the codebase maintainable and testable.
+这使得代码库可维护且可测试。
 
-### Mapping to OpenCode
+### 映射到 OpenCode
 
-ACP sessions map cleanly to opencode's internal session model:
+ACP 会话清晰地映射到 opencode 的内部会话模型：
 
-- ACP `session/new` → creates internal Session
-- ACP `session/prompt` → uses SessionPrompt.prompt()
-- Working directory context preserved per-session
-- Tool execution uses existing ToolRegistry
+- ACP `session/new` → 创建内部会话
+- ACP `session/prompt` → 使用 SessionPrompt.prompt()
+- 每个会话保留工作目录上下文
+- 工具执行使用现有的 ToolRegistry
 
-## References
+## 参考资料
 
-- [ACP Specification](https://agentclientprotocol.com/)
-- [TypeScript Library](https://github.com/agentclientprotocol/typescript-sdk)
-- [Protocol Examples](https://github.com/agentclientprotocol/typescript-sdk/tree/main/src/examples)
+- [ACP 规范](https://agentclientprotocol.com/)
+- [TypeScript 库](https://github.com/agentclientprotocol/typescript-sdk)
+- [协议示例](https://github.com/agentclientprotocol/typescript-sdk/tree/main/src/examples)

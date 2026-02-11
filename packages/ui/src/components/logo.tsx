@@ -1,3 +1,12 @@
+/**
+ * Logo 组件
+ * 包含 Mark 和 Logo 两个 SVG 图标组件
+ */
+
+/**
+ * Mark 组件
+ * 显示一个简单的 logo 标记
+ */
 export const Mark = (props: { class?: string }) => {
   return (
     <svg
@@ -13,6 +22,10 @@ export const Mark = (props: { class?: string }) => {
   )
 }
 
+/**
+ * Logo 组件
+ * 显示完整的 logo 文本
+ */
 export const Logo = (props: { class?: string }) => {
   return (
     <svg

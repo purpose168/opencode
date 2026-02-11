@@ -12,7 +12,7 @@ describe("Patch namespace", () => {
   })
 
   afterEach(async () => {
-    // Clean up temp directory
+    // 清理临时目录
     await fs.rm(tempDir, { recursive: true, force: true })
   })
 
@@ -83,7 +83,7 @@ describe("Patch namespace", () => {
     test("should throw error for invalid patch format", () => {
       const invalidPatch = `This is not a valid patch`
 
-      expect(() => Patch.parsePatch(invalidPatch)).toThrow("Invalid patch format")
+      expect(() => Patch.parsePatch(invalidPatch)).toThrow("无效的补丁格式：缺少开始/结束标记")
     })
   })
 

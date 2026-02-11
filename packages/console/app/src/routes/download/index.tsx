@@ -11,8 +11,15 @@ import { config } from "~/config"
 import { createSignal, onMount, Show, JSX } from "solid-js"
 import { DownloadPlatform } from "./types"
 
+/**
+ * 操作系统类型
+ */
 type OS = "macOS" | "Windows" | "Linux" | null
 
+/**
+ * 检测操作系统类型
+ * @returns 检测到的操作系统类型
+ */
 function detectOS(): OS {
   if (typeof navigator === "undefined") return null
   const platform = navigator.platform.toLowerCase()
@@ -24,6 +31,11 @@ function detectOS(): OS {
   return null
 }
 
+/**
+ * 根据操作系统获取下载平台
+ * @param os 操作系统类型
+ * @returns 下载平台标识
+ */
 function getDownloadPlatform(os: OS): DownloadPlatform {
   switch (os) {
     case "macOS":
@@ -37,10 +49,18 @@ function getDownloadPlatform(os: OS): DownloadPlatform {
   }
 }
 
+/**
+ * 获取下载链接
+ * @param platform 下载平台标识
+ * @returns 下载链接
+ */
 function getDownloadHref(platform: DownloadPlatform) {
   return `/download/${platform}`
 }
 
+/**
+ * 下载图标组件
+ */
 function IconDownload(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -54,6 +74,9 @@ function IconDownload(props: JSX.SvgSVGAttributes<SVGSVGElement>) {
   )
 }
 
+/**
+ * 复制状态组件
+ */
 function CopyStatus() {
   return (
     <span data-component="copy-status">
@@ -63,6 +86,9 @@ function CopyStatus() {
   )
 }
 
+/**
+ * 下载页面组件
+ */
 export default function Download() {
   const [detectedOS, setDetectedOS] = createSignal<OS>(null)
 
@@ -70,6 +96,11 @@ export default function Download() {
     setDetectedOS(detectOS())
   })
 
+  /**
+   * 处理复制命令点击事件
+   * @param command 要复制的命令
+   * @returns 点击事件处理函数
+   */
   const handleCopyClick = (command: string) => (event: Event) => {
     const button = event.currentTarget as HTMLButtonElement
     navigator.clipboard.writeText(command)
@@ -80,24 +111,24 @@ export default function Download() {
   }
   return (
     <main data-page="download">
-      <Title>OpenCode | Download</Title>
+      <Title>OpenCode | 下载</Title>
       <Link rel="canonical" href={`${config.baseUrl}/download`} />
-      <Meta name="description" content="Download OpenCode for macOS, Windows, and Linux" />
+      <Meta name="description" content="下载适用于 macOS、Windows 和 Linux 的 OpenCode" />
       <div data-component="container">
         <Header hideGetStarted />
 
         <div data-component="content">
           <section data-component="download-hero">
             <div data-component="hero-icon">
-              <img src={desktopAppIcon} alt="OpenCode Desktop" />
+              <img src={desktopAppIcon} alt="OpenCode 桌面版" />
             </div>
             <div data-component="hero-text">
-              <h1>Download OpenCode</h1>
-              <p>Available in Beta for macOS, Windows, and Linux</p>
+              <h1>下载 OpenCode</h1>
+              <p>Beta 版本已支持 macOS、Windows 和 Linux</p>
               <Show when={detectedOS()}>
                 <a href={getDownloadHref(getDownloadPlatform(detectedOS()))} data-component="download-button">
                   <IconDownload />
-                  Download for {detectedOS()}
+                  下载 {detectedOS()} 版本
                 </a>
               </Show>
             </div>
@@ -105,7 +136,7 @@ export default function Download() {
 
           <section data-component="download-section">
             <div data-component="section-label">
-              <span>[1]</span> OpenCode Terminal
+              <span>[1]</span> OpenCode 终端
             </div>
             <div data-component="section-content">
               <button
@@ -146,7 +177,7 @@ export default function Download() {
 
           <section data-component="download-section">
             <div data-component="section-label">
-              <span>[2]</span> OpenCode Desktop (Beta)
+              <span>[2]</span> OpenCode 桌面版 (Beta)
             </div>
             <div data-component="section-content">
               <button data-component="cli-row" onClick={handleCopyClick("brew install --cask opencode-desktop")}>
@@ -170,7 +201,7 @@ export default function Download() {
                   </span>
                 </div>
                 <a href={getDownloadHref("darwin-aarch64-dmg")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
               <div data-component="download-row">
@@ -186,7 +217,7 @@ export default function Download() {
                   <span>macOS (Intel)</span>
                 </div>
                 <a href={getDownloadHref("darwin-x64-dmg")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
               <div data-component="download-row">
@@ -209,7 +240,7 @@ export default function Download() {
                   <span>Windows (x64)</span>
                 </div>
                 <a href={getDownloadHref("windows-x64-nsis")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
               <div data-component="download-row">
@@ -225,7 +256,7 @@ export default function Download() {
                   <span>Linux (.deb)</span>
                 </div>
                 <a href={getDownloadHref("linux-x64-deb")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
               <div data-component="download-row">
@@ -241,7 +272,7 @@ export default function Download() {
                   <span>Linux (.rpm)</span>
                 </div>
                 <a href={getDownloadHref("linux-x64-rpm")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
               <div data-component="download-row">
@@ -257,7 +288,7 @@ export default function Download() {
                   <span>Linux (.AppImage)</span>
                 </div>
                 <a href={getDownloadHref("linux-x64-appimage")} data-component="action-button">
-                  Download
+                  下载
                 </a>
               </div>
             </div>
@@ -265,7 +296,7 @@ export default function Download() {
 
           <section data-component="download-section">
             <div data-component="section-label">
-              <span>[3]</span> OpenCode Extensions
+              <span>[3]</span> OpenCode 扩展
             </div>
             <div data-component="section-content">
               <div data-component="download-row">
@@ -371,7 +402,7 @@ export default function Download() {
 
           <section data-component="download-section">
             <div data-component="section-label">
-              <span>[4]</span> OpenCode Integrations
+              <span>[4]</span> OpenCode 集成
             </div>
             <div data-component="section-content">
               <div data-component="download-row">
@@ -417,56 +448,57 @@ export default function Download() {
           </div>
           <ul>
             <li>
-              <Faq question="What is OpenCode?">
-                OpenCode is an open source agent that helps you write and run code with any AI model. It's available as
-                a terminal-based interface, desktop app, or IDE extension.
+              <Faq question="什么是 OpenCode？">
+                OpenCode 是一个开源智能体，可帮助您使用任何 AI 模型编写和运行代码。它提供终端界面、桌面应用和 IDE 扩展三种使用方式。
               </Faq>
             </li>
             <li>
-              <Faq question="How do I use OpenCode?">
-                The easiest way to get started is to read the <a href="/docs">intro</a>.
+              <Faq question="如何使用 OpenCode？">
+                最简单的开始方式是阅读 <a href="/docs">入门指南</a>。
               </Faq>
             </li>
             <li>
-              <Faq question="Do I need extra AI subscriptions to use OpenCode?">
-                Not necessarily, but probably. You'll need an AI subscription if you want to connect OpenCode to a paid
-                provider, although you can work with{" "}
+              <Faq question="使用 OpenCode 是否需要额外的 AI 订阅？">
+                不一定，但可能需要。如果您想将 OpenCode 连接到付费 AI 提供商，则需要相应的订阅，不过您也可以免费使用{
+                " "}
                 <a href="/docs/providers/#lm-studio" target="_blank">
-                  local models
-                </a>{" "}
-                for free. While we encourage users to use <A href="/zen">Zen</A>, OpenCode works with all popular
-                providers such as OpenAI, Anthropic, xAI etc.
+                  本地模型
+                </a>{
+                " "}
+                。虽然我们鼓励用户使用 <A href="/zen">Zen</A>，但 OpenCode 兼容所有主流 AI 提供商，如 OpenAI、Anthropic、xAI 等。
               </Faq>
             </li>
             <li>
-              <Faq question="Can I only use OpenCode in the terminal?">
-                Not anymore! OpenCode is now available as an app for your desktop.
+              <Faq question="我只能在终端中使用 OpenCode 吗？">
+                不再是了！OpenCode 现在已经提供桌面应用版本。
               </Faq>
             </li>
             <li>
-              <Faq question="How much does OpenCode cost?">
-                OpenCode is 100% free to use. Any additional costs will come from your subscription to a model provider.
-                While OpenCode works with any model provider, we recommend using <A href="/zen">Zen</A>.
+              <Faq question="OpenCode 的使用成本是多少？">
+                OpenCode 完全免费使用。任何额外成本都来自您对模型提供商的订阅。虽然 OpenCode 兼容所有模型提供商，但我们推荐使用 <A href="/zen">Zen</A>。
               </Faq>
             </li>
             <li>
-              <Faq question="What about data and privacy?">
-                Your data and information is only stored when you create sharable links in OpenCode. Learn more about{" "}
-                <a href="/docs/share/#privacy">share pages</a>.
+              <Faq question="关于数据和隐私问题？">
+                您的数据和信息仅在您在 OpenCode 中创建可共享链接时才会被存储。了解更多关于{
+                " "}
+                <a href="/docs/share/#privacy">共享页面</a>的信息。
               </Faq>
             </li>
             <li>
-              <Faq question="Is OpenCode open source?">
-                Yes, OpenCode is fully open source. The source code is public on{" "}
+              <Faq question="OpenCode 是开源的吗？">
+                是的，OpenCode 完全开源。源代码在{
+                " "}
                 <a href={config.github.repoUrl} target="_blank">
                   GitHub
-                </a>{" "}
-                under the{" "}
+                </a>{
+                " "}
+                上公开，使用{
+                " "}
                 <a href={`${config.github.repoUrl}?tab=MIT-1-ov-file#readme`} target="_blank">
-                  MIT License
+                  MIT 许可证
                 </a>
-                , meaning anyone can use, modify, or contribute to its development. Anyone from the community can file
-                issues, submit pull requests, and extend functionality.
+                ，意味着任何人都可以使用、修改或为其开发做出贡献。社区中的任何人都可以提交问题、拉取请求和扩展功能。
               </Faq>
             </li>
           </ul>

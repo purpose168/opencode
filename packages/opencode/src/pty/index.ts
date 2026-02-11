@@ -100,7 +100,7 @@ export namespace Pty {
 
     const cwd = input.cwd || Instance.directory
     const env = { ...process.env, ...input.env, TERM: "xterm-256color" } as Record<string, string>
-    log.info("creating session", { id, cmd: command, args, cwd })
+    log.info("创建会话", { id, cmd: command, args, cwd })
 
     const spawn = await pty()
     const ptyProcess = spawn(command, args, {
@@ -137,7 +137,7 @@ export namespace Pty {
       }
     })
     ptyProcess.onExit(({ exitCode }) => {
-      log.info("session exited", { id, exitCode })
+      log.info("会话已退出", { id, exitCode })
       session.info.status = "exited"
       Bus.publish(Event.Exited, { id, exitCode })
       state().delete(id)
@@ -162,7 +162,7 @@ export namespace Pty {
   export async function remove(id: string) {
     const session = state().get(id)
     if (!session) return
-    log.info("removing session", { id })
+    log.info("移除会话", { id })
     try {
       session.process.kill()
     } catch {}
@@ -193,7 +193,7 @@ export namespace Pty {
       ws.close()
       return
     }
-    log.info("client connected to session", { id })
+    log.info("客户端已连接到会话", { id })
     session.subscribers.add(ws)
     if (session.buffer) {
       ws.send(session.buffer)
@@ -204,7 +204,7 @@ export namespace Pty {
         session.process.write(String(message))
       },
       onClose: () => {
-        log.info("client disconnected from session", { id })
+        log.info("客户端已从会话断开连接", { id })
         session.subscribers.delete(ws)
       },
     }

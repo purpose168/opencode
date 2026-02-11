@@ -135,7 +135,7 @@ export const WebSearchTool = Tool.define("websearch", {
       clearTimeout(timeoutId)
 
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error("Search request timed out")
+        throw new Error("搜索请求超时")
       }
 
       throw error

@@ -211,7 +211,7 @@ export function DialogSelect<T>(props: DialogSelectProps<T>) {
               input = r
               setTimeout(() => input.focus(), 1)
             }}
-            placeholder={props.placeholder ?? "Search"}
+            placeholder={props.placeholder ?? "搜索"}
           />
         </box>
       </box>
